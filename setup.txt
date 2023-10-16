@@ -1,0 +1,10 @@
+# install WSL with Ubuntu
+wsl --install Ubuntu
+
+# resart computer and run WSL
+wsl
+
+# in wsl terminal
+
+sudo apt -y update
+sudo apt -y install make
