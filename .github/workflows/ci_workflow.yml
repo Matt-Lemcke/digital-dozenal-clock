@@ -2,8 +2,7 @@ name: CI
 
 # Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events
-  push:
+  # Triggers the workflow on pull request events
   pull_request:
 
   # Allows you to run this workflow manually from the Actions tab
@@ -43,6 +42,8 @@ jobs:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
+      - name: Install linter
+        run: apt install cpplint
       - name: Run linter
         run: |
           cd firmware
