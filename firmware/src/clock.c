@@ -1,23 +1,21 @@
+#include "clock.h"
+
 #include <stdio.h>
 
 #include "hal.h"
-#include "clock.h"
 
 int x = 0;
 
-int timer10Callback(void)
-{
-  if (x < 5000 && hal_ok())
-  {
+int timer10Callback(void) {
+  if (x < 5000 && hal_ok()) {
     return 1;
   }
   return 0;
 }
 
-void runClock(void)
-{
+void runClock(void) {
   x++;
-  x = x%10000;
+  x = x % 10000;
 }
 
 #ifdef NO_PLATFORM

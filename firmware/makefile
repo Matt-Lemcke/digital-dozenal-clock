@@ -11,6 +11,7 @@ PLATFORM := NO_PLATFORM
 
 SRCS := $(shell find $(SRC_DIRS) -name *.c)
 INCS := $(shell find $(INCLUDE_DIRS) -name *.h)
+TESTS := $(shell find $(TEST_DIR) -name *.c)
 OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 DEPS := $(OBJS:.o=.d)
 
@@ -25,7 +26,7 @@ LINTER := cpplint
 TOOLS := $(CC) $(FORMATTER) $(LINTER) $(CPPC)
 
 FORMAT_OPTIONS := -style=google -i
-LINTER_OPTIONS := --filter=-legal/copyright,-build/include_subdir
+LINTER_OPTIONS := --filter=-legal/copyright,-build/include_subdir --exclude=tests/cpputest
 
 # CppUTest variables
 CPPUTEST_DIR 	= $(TEST_DIR)/cpputest
@@ -54,7 +55,7 @@ format: $(SRCS) $(INCS)
 	
 # run linter on source files
 lint:
-	$(LINTER) $(LINTER_OPTIONS) $(SRCS) $(INCS)
+	$(LINTER) $(LINTER_OPTIONS) $(SRCS) $(INCS) $(TESTS)
 
 test:
 	make -f MakeCppuTest.mk all
