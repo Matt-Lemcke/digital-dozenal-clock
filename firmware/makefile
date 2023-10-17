@@ -11,7 +11,8 @@ PLATFORM := NO_PLATFORM
 
 SRCS := $(shell find $(SRC_DIRS) -name *.c)
 INCS := $(shell find $(INCLUDE_DIRS) -name *.h)
-TESTS := $(shell find $(TEST_DIR) -name *.c)
+TESTS := $(shell find $(TEST_DIR) -maxdepth 1 -name *.c )
+TEST_RUNNERS := $(shell find $(TEST_DIR) -maxdepth 1 -name *.cpp)
 OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 DEPS := $(OBJS:.o=.d)
 
@@ -51,11 +52,11 @@ run: $(BUILD_DIR)/$(TARGET_EXEC)
 
 # format source files
 format: $(SRCS) $(INCS)
-	$(FORMATTER) $(FORMAT_OPTIONS) $(SRCS) $(INCS)
+	$(FORMATTER) $(FORMAT_OPTIONS) $(SRCS) $(INCS) $(TESTS) $(TEST_RUNNERS)
 	
 # run linter on source files
 lint:
-	$(LINTER) $(LINTER_OPTIONS) $(SRCS) $(INCS) $(TESTS)
+	$(LINTER) $(LINTER_OPTIONS) $(SRCS) $(INCS) $(TESTS) $(TEST_RUNNERS)
 
 test:
 	make -f MakeCppuTest.mk all

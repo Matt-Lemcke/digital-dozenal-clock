@@ -43,7 +43,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v1
       - run: pip install cpplint
-      - run: cpplint --recursive .
+      - run: cpplint --filter=-legal/copyright,-build/include_subdir --exclude=tests/cpputest --recursive .
       - name: Run linter
         run: |
           cd firmware
