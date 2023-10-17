@@ -2,26 +2,35 @@ TARGET_EXEC ?= clock.out
 
 BUILD_DIR ?= ./build
 SRC_DIRS ?= ./src
-INC_DIRS ?= ./inc
+INCLUDE_DIRS ?= ./inc
+
+PROJECT_DIR 	= $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
+TEST_DIR 		= $(PROJECT_DIR)tests
 
 PLATFORM := NO_PLATFORM
 
 SRCS := $(shell find $(SRC_DIRS) -name *.c)
-INCS := $(shell find $(INC_DIRS) -name *.h)
+INCS := $(shell find $(INCLUDE_DIRS) -name *.h)
 OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 DEPS := $(OBJS:.o=.d)
 
-INC_FLAGS := $(addprefix -I,$(INC_DIRS))
+INC_FLAGS := $(addprefix -I,$(INCLUDE_DIRS))
 DEF_FLAGS := -D$(PLATFORM)
 
 CC := gcc
+CPPC := g++
 FORMATTER := clang-format
 LINTER := cpplint
 
-TOOLS := $(CC) $(FORMATTER) $(LINTER)
+TOOLS := $(CC) $(FORMATTER) $(LINTER) $(CPPC)
 
 FORMAT_OPTIONS := -style=google -i
 LINTER_OPTIONS := --filter=-legal/copyright,-build/include_subdir
+
+# CppUTest variables
+CPPUTEST_DIR 	= $(TEST_DIR)/cpputest
+CPPFLAGS 		+= -I$(CPPUTEST_DIR)/include
+LD_LIBRARIES 	= -L$(CPPUTEST_DIR)/lib -lCppUTest -lCppUTestExt
 
 # build c source files
 $(BUILD_DIR)/%.c.o: %.c
@@ -47,6 +56,9 @@ format: $(SRCS) $(INCS)
 lint:
 	$(LINTER) $(LINTER_OPTIONS) $(SRCS) $(INCS)
 
+test:
+	make -f MakeCppuTest.mk all
+
 # set up development environment
 env-install:
 	sudo apt-get install $(TOOLS)
@@ -58,6 +70,7 @@ env-clean:
 # remove binaries
 clean:
 	$(RM) -r $(BUILD_DIR)
+	make -f MakeCppuTest.mk clean
 
 -include $(DEPS)
 
