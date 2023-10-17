@@ -16,6 +16,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          submodules: recursive
       - name: Build project
         run: |
           cd firmware
@@ -27,6 +29,8 @@ jobs:
     needs: build
     steps:
       - uses: actions/checkout@v3
+        with:
+          submodules: recursive
       - name: Run unit tests
         run: |
           cd firmware
@@ -37,6 +41,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          submodules: recursive
       - name: Run linter
         run: |
           cd firmware
