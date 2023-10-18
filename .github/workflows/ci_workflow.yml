@@ -33,11 +33,11 @@ jobs:
           submodules: recursive
       - name: Make test library
         run: |
-          cd tests/cpputest
+          cd firmware/tests/cpputest
           ./autogen.sh
           ./configure
           make
-          cd ../..
+          cd ../../..
       - name: Run unit tests
         run: |
           cd firmware
