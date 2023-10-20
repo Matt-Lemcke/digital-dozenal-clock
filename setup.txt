@@ -11,14 +11,17 @@ sudo apt -y install make git
 
 # clone repo and add submodules
 git clone https://github.com/Matt-Lemcke/digital-dozenal-clock.git
-git submodule add --name cpputest https://github.com/cpputest/cpputest firmware/tests/cpputest
+git submodule update --init --recursive
+
+# install required packages
+sudo apt-get install automake autoconf libtool make
 
 # configure cpputest (only have to do this once)
-cd tests/cpputest
+cd firmware/tests/cpputest
 ./autogen.sh
 ./configure
 make
 ls lib  # should return "libCppUTest.a  libCppUTestExt.a" if done properly
 
 # if submodules ever stop working, run this
-git submodule update --init
+git submodule update --update --recursive
