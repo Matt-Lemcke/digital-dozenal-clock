@@ -2,8 +2,7 @@
 #include "CppUTest/TestHarness_c.h"
 
 /** Test groups */
-TEST_GROUP_C_WRAPPER(FirstTestGroup) {
-};
+TEST_GROUP_C_WRAPPER(FirstTestGroup){};
 
 TEST_C_WRAPPER(FirstTestGroup, FirstTest);
 
