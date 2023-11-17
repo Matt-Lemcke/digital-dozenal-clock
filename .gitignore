@@ -51,5 +51,8 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
+# CubeIDE settings
+.settings
+
 # Test files
 firmware/project_tests
