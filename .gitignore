@@ -64,3 +64,6 @@ firmware/project_tests
 
 # Build folder
 Build/
+
+# VS Code
+.vscode/
