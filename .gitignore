@@ -52,7 +52,7 @@ Mkfile.old
 dkms.conf
 
 # CubeIDE settings
-.settings
+.settings/
 
 # Test files
 firmware/project_tests
