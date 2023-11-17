@@ -5,25 +5,33 @@
 #include "display.h"
 
 // States
-typedef enum { STATE_INIT, STATE_24H, STATE_DIURNAL } StateCode;
+typedef enum
+{
+    STATE_INIT,
+    STATE_24H,
+    STATE_DIURNAL
+} StateCode;
 
-typedef struct doz_clock_t {
-  void (*getTime)(void);
-  Display *display;
+typedef struct doz_clock_t
+{
+    void (*getTime)(void);
+    Display *display;
 } DozClock;
 
-typedef struct state_t {
-  StateCode state_code;
+typedef struct state_t
+{
+    StateCode state_code;
 
-  void (*entry)(DozClock *ctx);
-  void (*update)(DozClock *ctx);
-  void (*exit)(DozClock *ctx);
-  void (*onBtnPress)(DozClock *ctx);
+    void (*entry)(DozClock *ctx);
+    void (*update)(DozClock *ctx);
+    void (*exit)(DozClock *ctx);
+    void (*onBtnPress)(DozClock *ctx);
 } State;
 
-typedef struct state_machine_t {
-  State *curr_state;
-  DozClock *ctx;
+typedef struct state_machine_t
+{
+    State *curr_state;
+    DozClock *ctx;
 } DozClockFSM;
 
 // FSM Event Functions

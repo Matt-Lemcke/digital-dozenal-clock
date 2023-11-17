@@ -26,8 +26,8 @@ LINTER := cpplint
 
 TOOLS := $(CC) $(FORMATTER) $(LINTER) $(CPPC)
 
-FORMAT_OPTIONS := -style=google -i
-LINTER_OPTIONS := --filter=-legal/copyright,-build/include_subdir,-runtime/printf --exclude=tests/cpputest
+FORMAT_OPTIONS := -style=file:.clang-format -i
+LINTER_OPTIONS := --filter=-legal/copyright,-build/include_subdir,-runtime/printf,-whitespace/braces,-whitespace/newline --exclude=tests
 
 # CppUTest variables
 CPPUTEST_DIR 	= $(TEST_DIR)/cpputest

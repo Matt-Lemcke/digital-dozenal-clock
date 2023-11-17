@@ -5,19 +5,21 @@
 
 #include "clock_types.h"
 
-#define MAX_CHARACTERS 8
+#define MAX_CHARACTERS       8
 #define MILLISECONDS_PER_DAY 86400000
 
-typedef enum timeFormat {
-  DEC24H,
-  DIURNAL,
+typedef enum timeFormat
+{
+    DEC24H,
+    DIURNAL,
 } TimeFormat;
 
-typedef struct display_t {
-  uint8_t brightness;
+typedef struct display_t
+{
+    uint8_t brightness;
 
-  void (*sendString)(char *st);
-  void (*clear)();
+    void (*sendString)(char *st);
+    void (*clear)();
 } Display;
 
 ClockStatus Display_Init(Display *self);
