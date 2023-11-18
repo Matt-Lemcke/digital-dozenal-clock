@@ -51,5 +51,19 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
+# Extra CubeIDE files
+.settings/
+*.launch
+*.cproject
+*.mxproject
+*.project
+Debug/
+
 # Test files
 firmware/project_tests
+
+# Build folder
+Build/
+
+# VS Code
+.vscode/
