@@ -103,8 +103,8 @@ int main(void)
   lcd_init();
 
   Display lcd1602;
-  lcd1602.sendString = lcd_send_string;
-  lcd1602.clear = lcd_clear;
+  lcd1602.sendString  = lcd_send_string;
+  lcd1602.clear       = lcd_clear;
 
   clock.display = &lcd1602;
 
@@ -112,14 +112,14 @@ int main(void)
   DS3231_Init(&hi2c3);
 
   Rtc ds3231;
-  ds3231.setRtcTime = DS3231_SetTime;
+  ds3231.setRtcTime   = DS3231_SetTime;
   ds3231.getDayOfWeek = DS3231_GetDayOfWeek;
-	ds3231.getDate = DS3231_GetDate;
-	ds3231.getMonth = DS3231_GetMonth;
-	ds3231.getYear = DS3231_GetYear;
-	ds3231.getHour = DS3231_GetHour;
-	ds3231.getMinute = DS3231_GetMinute;
-	ds3231.getSecond = DS3231_GetSecond;
+  ds3231.getDate      = DS3231_GetDate;
+  ds3231.getMonth     = DS3231_GetMonth;
+  ds3231.getYear      = DS3231_GetYear;
+  ds3231.getHour      = DS3231_GetHour;
+  ds3231.getMinute    = DS3231_GetMinute;
+  ds3231.getSecond    = DS3231_GetSecond;
 
   clock.rtc = &ds3231;
 
@@ -131,8 +131,9 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  DozClock_Update(&clock);
     /* USER CODE END WHILE */
-	DozClock_Update(&clock);
+
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */

@@ -10,9 +10,16 @@ ClockStatus Rtc_Init(Rtc *self)
 
 ClockStatus Rtc_SetTime(Rtc *self, RtcTime *time)
 {
-    if (self->setRtcTime != NULL) 
+    if (self->setRtcTime != NULL)
     {
-        self->setRtcTime(time->hr, time->min, time->sec, time->date, time->month, time->dow, time->year);
+        self->setRtcTime(
+            time->hr,
+            time->min,
+            time->sec,
+            time->date,
+            time->month,
+            time->dow,
+            time->year);
     }
     return CLOCK_OK;
 }
