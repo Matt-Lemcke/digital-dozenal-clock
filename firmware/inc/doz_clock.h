@@ -3,6 +3,7 @@
 
 #include "clock_types.h"
 #include "display.h"
+#include "rtc.h"
 
 // States
 typedef enum
@@ -16,6 +17,7 @@ typedef struct doz_clock_t
 {
     void (*getTime)(void);
     Display *display;
+    Rtc *rtc;
 } DozClock;
 
 typedef struct state_t
