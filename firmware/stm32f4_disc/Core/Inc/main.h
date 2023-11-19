@@ -229,6 +229,9 @@ void Error_Handler(void);
 #define LD4_GPIO_Port GPIOG
 #define SDNCAS_Pin GPIO_PIN_15
 #define SDNCAS_GPIO_Port GPIOG
+#define RTC_SQW_Pin GPIO_PIN_3
+#define RTC_SQW_GPIO_Port GPIOB
+#define RTC_SQW_EXTI_IRQn EXTI3_IRQn
 #define SDCKE1_Pin GPIO_PIN_5
 #define SDCKE1_GPIO_Port GPIOB
 #define SDNE1_Pin GPIO_PIN_6
