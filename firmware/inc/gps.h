@@ -1,15 +1,11 @@
-/*
- * gps.h
- *
- *  Created on: Nov. 18, 2023
- *      Author: lemck
- */
 
-#ifndef GPS_H_
-#define GPS_H_
+
+#ifndef FIRMWARE_INC_GPS_H_
+#define FIRMWARE_INC_GPS_H_
+
+#include <stdint.h>
 
 #include "clock_types.h"
-#include "main.h"
 
 typedef struct gps_time_t
 {
@@ -23,7 +19,8 @@ typedef struct gps_t
 	// function pointers to driver functions
 }Gps;
 
+ClockStatus Gps_Init(Gps *self);
 ClockStatus Gps_Connected(Gps *self);
 GpsTime Gps_GetTime(Gps *self);
 
-#endif /* GPS_H_ */
+#endif  // FIRMWARE_INC_GPS_H_

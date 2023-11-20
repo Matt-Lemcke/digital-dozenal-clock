@@ -5,25 +5,25 @@
  *      Author: lemck
  */
 
-#ifndef TIME_TRACK_H_
-#define TIME_TRACK_H_
+#ifndef FIRMWARE_INC_TIME_TRACK_H_
+#define FIRMWARE_INC_TIME_TRACK_H_
 
 #include <stdint.h>
 
 #include "clock_types.h"
-#include "main.h"
 #include "rtc.h"
 #include "gps.h"
 
-typedef struct time_track_t
+typedef struct time_sources_t
 {
 	Rtc *rtc;
 	Gps *gps;
-}TimeTrack;
+}TimeSources;
 
-ClockStatus TimeTrack_Init(TimeTrack *self);
-ClockStatus TimeTrack_Update(TimeTrack *self);
-ClockStatus TimeTrack_PeriodicCallback(TimeTrack *self, uint32_t period_ms);
+ClockStatus TimeTrack_Init(TimeSources *sources);
+ClockStatus TimeTrack_Update();
+ClockStatus TimeTrack_PeriodicCallback(uint32_t period_ms);
+ClockStatus TimeTrack_GetTimeMs(uint32_t *output_ms);
 
 
-#endif /* TIME_TRACK_H_ */
+#endif /* FIRMWARE_INC_TIME_TRACK_H_ */
