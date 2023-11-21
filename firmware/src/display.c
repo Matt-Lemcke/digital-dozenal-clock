@@ -6,8 +6,8 @@
 const char DOZ_NUMERALS[] = {'0', '1', '2', '3', '4', '5',
                              '6', '7', '8', '9', 'X', 'E'};
 
-char output[20] = "";
-char temp[4]    = "";
+char output[10];
+char temp[4];
 uint8_t digits[5];
 
 ClockStatus Display_Init(Display *self)
@@ -21,8 +21,8 @@ ClockStatus Display_UpdateTime(Display *self, uint32_t time_ms,
 {
     UNUSED(self);
 
-    strcpy(output, "");
-    strcpy(temp, "");
+    memset(output, 0, sizeof(output));
+    memset(temp, 0, sizeof(temp));
 
     if (time_ms > MILLISECONDS_PER_DAY - 1)
     {
