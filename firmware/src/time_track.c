@@ -141,12 +141,12 @@ uint32_t gpsTimeToMs(GpsTime *time)
             + (uint32_t) time->hr * 3600000;
 }
 
-void msToRtcTime(uint32_t time_ms, RtcTime *time)
+void msToRtcTime(uint32_t milliseconds, RtcTime *time)
 {
-    time_ms = time_ms / 1000;
-    time->sec = time_ms % 60;
-    time_ms = time_ms / 60;
-    time->min = time_ms % 60;
-    time_ms = time_ms / 60;
-    time->hr = time_ms % 24;
+    milliseconds = milliseconds / 1000;
+    time->sec = milliseconds % 60;
+    milliseconds = milliseconds / 60;
+    time->min = milliseconds % 60;
+    milliseconds = milliseconds / 60;
+    time->hr = milliseconds % 24;
 }
