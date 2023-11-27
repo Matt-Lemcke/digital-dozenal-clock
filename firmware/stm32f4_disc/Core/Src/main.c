@@ -130,7 +130,7 @@ int main(void)
   clock.rtc = &ds3231;
 
   // GPS
-  GPS_Init();
+  GPS_Init(&huart4);
   neo6m.getUtcTime = GPS_get_utc_time;
   neo6m.gpsConnected = GPS_get_gps_connected;
 

@@ -5,7 +5,8 @@
  *      Author: Bulanov Konstantin
  */
 
-#define	GPS_USART	&huart4
+#include <usart.h>
+
 #define GPSBUFSIZE  128       // GPS buffer size
 
 typedef struct{
@@ -47,7 +48,7 @@ typedef struct{
     unsigned gps_connected;
 } GPS_t;
 
-void GPS_Init();
+void GPS_Init(UART_HandleTypeDef *huart);
 void GSP_USBPrint(char *data);
 void GPS_print_val(char *data, int value);
 void GPS_UART_CallBack();

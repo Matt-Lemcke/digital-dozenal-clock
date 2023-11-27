@@ -32,8 +32,9 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <usart.h>
 #include "uart-gps.h"
+
+UART_HandleTypeDef *gps_usart;
 
 uint8_t rx_data = 0;
 uint8_t rx_buffer[GPSBUFSIZE];
@@ -41,9 +42,10 @@ uint8_t rx_index = 0;
 
 static GPS_t GPS;
 
-void GPS_Init()
+void GPS_Init(UART_HandleTypeDef *huart)
 {
-	HAL_UART_Receive_IT(GPS_USART, &rx_data, 1);
+    gps_usart = huart;
+	HAL_UART_Receive_IT(gps_usart, &rx_data, 1);
     GPS.gps_connected = 0;
 }
 
@@ -63,7 +65,7 @@ void GPS_UART_CallBack(){
 		rx_index = 0;
 		memset(rx_buffer, 0, sizeof(rx_buffer));
 	}
-	HAL_UART_Receive_IT(GPS_USART, &rx_data, 1);
+	HAL_UART_Receive_IT(gps_usart, &rx_data, 1);
 }
 
 
