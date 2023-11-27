@@ -11,7 +11,7 @@ static uint32_t gpsTimeToMs(GpsTime time);
 ClockStatus Gps_Init(Gps *self)
 {
     self->timezone_offset = -5;
-    
+
     curr_time_ms = 0;
     prev_time_ms = 0;
     gps_connected_flag = 0;
@@ -23,7 +23,7 @@ uint8_t Gps_Connected(Gps *self)
     gps_connected_flag = (uint8_t) self->gpsConnected();
 
     curr_time_ms = gpsTimeToMs(Gps_GetTime(self));
-    
+
     // Check if connected flag is not set OR gps time has not changed
     if (!gps_connected_flag || (curr_time_ms == prev_time_ms)) {
         return 0;
@@ -38,7 +38,7 @@ GpsTime Gps_GetTime(Gps *self)
     float utc_time = self->getUtcTime();
     GpsTime t;
     t.hr = (uint8_t) utc_time / 10000;
-    t.min = (uint8_t) (utc_time % 10000) / 100;
+    t.min = (uint8_t) ((uint8_t) utc_time % 10000) / 100;
     t.sec = (uint8_t) utc_time % 100;
 
     // Apply timezone offset
@@ -47,7 +47,7 @@ GpsTime Gps_GetTime(Gps *self)
     return t;
 }
 
-ClockStatus Gps_SetTimezone(Gps *self, int8_t timezone) 
+ClockStatus Gps_SetTimezone(Gps *self, int8_t timezone)
 {
     self->timezone_offset = timezone;
     return CLOCK_OK;
