@@ -20,6 +20,7 @@
 #include "main.h"
 #include "i2c.h"
 #include "tim.h"
+#include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -30,6 +31,7 @@
 #include "i2c-lcd.h"
 #include "i2c-rtc.h"
 #include "rtc.h"
+#include "uart-gps.h"
 
 /* USER CODE END Includes */
 
@@ -53,6 +55,7 @@
 DozClock clock;
 Display lcd1602;
 Rtc ds3231;
+Gps neo6m;
 
 volatile uint8_t debounce_flag = 0;
 
@@ -103,6 +106,7 @@ int main(void)
   MX_GPIO_Init();
   MX_I2C3_Init();
   MX_TIM6_Init();
+  MX_UART4_Init();
   /* USER CODE BEGIN 2 */
 
   // Display
@@ -124,6 +128,13 @@ int main(void)
   ds3231.getSecond    = DS3231_GetSecond;
 
   clock.rtc = &ds3231;
+
+  // GPS
+  GPS_Init();
+  neo6m.getUtcTime = GPS_get_utc_time;
+  neo6m.gpsConnected = GPS_get_gps_connected;
+
+  clock.gps = &neo6m;
 
   DozClock_Init(&clock);
 
@@ -215,6 +226,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		DozClock_TimerCallback();
 		debounce_flag = 0;
 	}
+}
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+	if(huart == &huart4) GPS_UART_CallBack();
 }
 
 /* USER CODE END 4 */
