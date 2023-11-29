@@ -44,14 +44,8 @@ GpsTime Gps_GetTime(Gps *self)
     utc_time = self->getUtcTime();
 
     // Calculate gps hour, min and sec from UTC time and user inputted timezone
-    int8_t hr = ((uint8_t) utc_time / 10000) + self->timezone_offset;
-    if (hr < 0) {
-        gps_time.hr = (uint8_t) 24 + hr;
-    } else if (hr > 23) {
-        gps_time.hr = (uint8_t) hr % 24;
-    } else {
-        gps_time.hr = (uint8_t) hr;
-    }
+    uint8_t utc_hr = (uint8_t) utc_time / 10000;
+    gps_time.hr = (24 + utc_hr - self->timezone_offset) % 24;
     gps_time.min = (uint8_t) ((uint8_t) utc_time % 10000) / 100;
     gps_time.sec = (uint8_t) utc_time % 100;
 
