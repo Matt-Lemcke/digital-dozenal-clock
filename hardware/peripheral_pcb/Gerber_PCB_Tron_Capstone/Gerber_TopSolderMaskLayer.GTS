@@ -1,5 +1,5 @@
 G04 Layer: TopSolderMaskLayer*
-G04 EasyEDA v6.5.38, 2023-12-05 17:42:35*
+G04 EasyEDA v6.5.38, 2023-12-05 17:56:17*
 G04 681b97978217455484aa44bc4d5c6028,9f3f2715377c499da2f37e4e16011465,10*
 G04 Gerber Generator version 0.2*
 G04 Scale: 100 percent, Rotated: No, Reflected: No *
