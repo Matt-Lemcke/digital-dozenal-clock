@@ -115,10 +115,6 @@ int main(void)
   // RTC
   DS3231_Init(&hi2c3);
   ds3231.setRtcTime   = DS3231_SetTime;
-  ds3231.getDayOfWeek = DS3231_GetDayOfWeek;
-  ds3231.getDate      = DS3231_GetDate;
-  ds3231.getMonth     = DS3231_GetMonth;
-  ds3231.getYear      = DS3231_GetYear;
   ds3231.getHour      = DS3231_GetHour;
   ds3231.getMinute    = DS3231_GetMinute;
   ds3231.getSecond    = DS3231_GetSecond;
