@@ -45,8 +45,7 @@ static DozClockFSM g_clock_fsm = { 0 };
 static TimeSources g_time_sources = { 0 };
 uint32_t curr_time = 0, prev_time = 0;
 
-static RtcTime reset_time = { .date = 20, .dow = 1, .month = 11, .year = 2023,
-        .hr = 14, .min = 30, .sec = 0 };
+static RtcTime reset_time = { .hr = 14, .min = 30, .sec = 0 };
 
 // State definitions
 State clock_init =
