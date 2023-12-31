@@ -7,7 +7,14 @@
 #define SMALL_DIGIT_ROWS  7
 #define LARGE_DIGIT_ROWS  12
 
-static char large_numbers[][LARGE_DIGIT_ROWS] = {
+#define LARGE_NUMS_LENGTH 14
+#define SMALL_NUMS_LENGTH 14
+#define SMALL_SYMB_LENGTH 9
+
+/*
+ *  All digits are bottom-right aligned
+*/ 
+static char large_numbers[LARGE_NUMS_LENGTH][LARGE_DIGIT_ROWS] = {
     {
         // 0
         0b00111100,
@@ -220,8 +227,10 @@ static char large_numbers[][LARGE_DIGIT_ROWS] = {
     },
 };
 
-// digits need to be stored as 8 col wide so leave the first 2 cols as 0s
-static char small_numbers[][SMALL_DIGIT_ROWS] = {
+/*
+ *  All digits are bottom-right aligned
+*/ 
+static char small_numbers[SMALL_NUMS_LENGTH][SMALL_DIGIT_ROWS] = {
     {
         // 0
         0b0001110,
@@ -364,9 +373,10 @@ static char small_numbers[][SMALL_DIGIT_ROWS] = {
     },
 };
 
-// digits need to be stored as 8 col wide so right align the symbols like with the small numbers
-// all digits bottom-right aligned
-static char small_symbols[][SMALL_DIGIT_ROWS] = {
+/*
+ *  All digits are bottom-right aligned
+*/ 
+static char small_symbols[SMALL_SYMB_LENGTH][SMALL_DIGIT_ROWS] = {
     {
         // D
         0b00000000,
@@ -459,4 +469,4 @@ static char small_symbols[][SMALL_DIGIT_ROWS] = {
     },
 };
 
-#endif  // FIRMWARE_INC_CLOCK_TYPES_H_
+#endif  // FIRMWARE_INC_BITMAPS_H_

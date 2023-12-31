@@ -193,8 +193,8 @@ static void transition(State *next)
 }
 
 #ifdef NO_PLATFORM
-// int main(void)
-// {
-//     return 0;
-// }
+int main(void)
+{
+    return 0;
+}
 #endif
