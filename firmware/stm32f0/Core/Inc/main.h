@@ -80,6 +80,8 @@ void Error_Handler(void);
 #define PHOTO_IN_GPIO_Port GPIOA
 #define BUZZER_PWM_Pin GPIO_PIN_6
 #define BUZZER_PWM_GPIO_Port GPIOA
+#define J3_PA7_Pin GPIO_PIN_7
+#define J3_PA7_GPIO_Port GPIOA
 #define DSPL_A_Pin GPIO_PIN_4
 #define DSPL_A_GPIO_Port GPIOC
 #define DSPL_B_Pin GPIO_PIN_5

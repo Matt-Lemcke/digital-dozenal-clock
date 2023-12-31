@@ -26,7 +26,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "i2c-rtc.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -46,6 +46,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+uint8_t h=0, m=0, s=0;
 
 /* USER CODE END PV */
 
@@ -94,12 +95,22 @@ int main(void)
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 
+  DS3231_Init(&hi2c1);
+  DS3231_SetHour(3);
+  DS3231_SetMinute(0);
+  DS3231_SetSecond(0);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+        h = DS3231_GetHour();
+        m = DS3231_GetMinute();
+        s = DS3231_GetSecond();
+        HAL_GPIO_TogglePin(J3_PA7_GPIO_Port, J3_PA7_Pin);
+        HAL_Delay(1000);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -165,6 +176,7 @@ void Error_Handler(void)
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
   __disable_irq();
+  HAL_GPIO_WritePin(J3_PA7_GPIO_Port, J3_PA7_Pin, GPIO_PIN_SET);
   while (1)
   {
   }
