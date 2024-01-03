@@ -29,6 +29,8 @@
 #include "display.h"
 #include "i2c-lcd.h"
 #include "i2c-rtc.h"
+#include "gpio-display.h"
+#include "sample-bitmap.h"
 #include "rtc.h"
 
 /* USER CODE END Includes */
@@ -105,37 +107,38 @@ int main(void)
   MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
 
-  // Display
-  lcd_init();
-  lcd1602.sendString  = lcd_send_string;
-  lcd1602.clear       = lcd_clear_workaround;
+    // Display
+    HUB75E_Init();
+    HUB75E_setDisplayBuffer(test_map);
+    HUB75E_setDisplayBrightness(BrightnessLevel3);
+    HUB75E_setDisplayColor(Blue);
 
-  clock.display = &lcd1602;
+    // RTC
+    //DS3231_Init(&hi2c3);
+    ds3231.setRtcTime   = DS3231_SetTime;
+    ds3231.getDayOfWeek = DS3231_GetDayOfWeek;
+    ds3231.getDate      = DS3231_GetDate;
+    ds3231.getMonth     = DS3231_GetMonth;
+    ds3231.getYear      = DS3231_GetYear;
+    ds3231.getHour      = DS3231_GetHour;
+    ds3231.getMinute    = DS3231_GetMinute;
+    ds3231.getSecond    = DS3231_GetSecond;
 
-  // RTC
-  DS3231_Init(&hi2c3);
-  ds3231.setRtcTime   = DS3231_SetTime;
-  ds3231.getDayOfWeek = DS3231_GetDayOfWeek;
-  ds3231.getDate      = DS3231_GetDate;
-  ds3231.getMonth     = DS3231_GetMonth;
-  ds3231.getYear      = DS3231_GetYear;
-  ds3231.getHour      = DS3231_GetHour;
-  ds3231.getMinute    = DS3231_GetMinute;
-  ds3231.getSecond    = DS3231_GetSecond;
+    clock.rtc = &ds3231;
 
-  clock.rtc = &ds3231;
+  //DozClock_Init(&clock);
 
-  DozClock_Init(&clock);
-
-  HAL_TIM_Base_Start_IT(&htim6);
+  //HAL_TIM_Base_Start_IT(&htim6);
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
   while (1)
   {
-	  DozClock_Update(&clock);
+      HUB75E_displayBufferPixels();
+	  //DozClock_Update(&clock);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
