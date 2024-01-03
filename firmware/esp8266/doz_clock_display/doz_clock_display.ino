@@ -1,5 +1,6 @@
 #include "rgb_matrix.h"
 #include "test_bitmap.h"
+<<<<<<< HEAD
 #include "chrono_uart.h"
 
 
@@ -148,9 +149,24 @@ void setup() {
   memcpy(bot_region.pixel_buffer, bars_map, bot_region.pixel_buffer_size);
 
   displayOff();
+=======
+
+void setup() {
+
+
+  RgbMatrix_Init();
+  
+>>>>>>> 96ed25f (Display working with ESP8266)
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
+<<<<<<< HEAD
   Chrono_Update();
+=======
+  RgbMatrix_RegionWritePixels(&region1, bars_map);
+  delay(500);
+  RgbMatrix_RegionWritePixels(&region1, bars_map_inv);
+  delay(500);
+>>>>>>> 96ed25f (Display working with ESP8266)
 }

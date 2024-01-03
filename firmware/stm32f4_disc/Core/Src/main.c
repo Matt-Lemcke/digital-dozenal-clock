@@ -30,6 +30,8 @@
 #include "display.h"
 #include "i2c-lcd.h"
 #include "i2c-rtc.h"
+#include "gpio-display.h"
+#include "sample-bitmap.h"
 #include "rtc.h"
 #include "uart-display.h"
 

@@ -110,6 +110,37 @@ void Error_Handler(void);
 #define OTG_FS_PSO_GPIO_Port GPIOC
 #define OTG_FS_OC_Pin GPIO_PIN_5
 #define OTG_FS_OC_GPIO_Port GPIOC
+<<<<<<< HEAD
+=======
+#define DISP_R1_Pin GPIO_PIN_0
+#define DISP_R1_GPIO_Port GPIOB
+#define DISP_G1_Pin GPIO_PIN_1
+#define DISP_G1_GPIO_Port GPIOB
+#define DISP_B1_Pin GPIO_PIN_2
+#define DISP_B1_GPIO_Port GPIOB
+#define DISP_R2_Pin GPIO_PIN_11
+#define DISP_R2_GPIO_Port GPIOF
+#define DISP_G2_Pin GPIO_PIN_12
+#define DISP_G2_GPIO_Port GPIOF
+#define DISP_B2_Pin GPIO_PIN_13
+#define DISP_B2_GPIO_Port GPIOF
+#define DISP_E_Pin GPIO_PIN_14
+#define DISP_E_GPIO_Port GPIOF
+#define DISP_A_Pin GPIO_PIN_15
+#define DISP_A_GPIO_Port GPIOF
+#define DISP_B_Pin GPIO_PIN_0
+#define DISP_B_GPIO_Port GPIOG
+#define DISP_C_Pin GPIO_PIN_1
+#define DISP_C_GPIO_Port GPIOG
+#define DISP_D_Pin GPIO_PIN_7
+#define DISP_D_GPIO_Port GPIOE
+#define DISP_CLK_Pin GPIO_PIN_8
+#define DISP_CLK_GPIO_Port GPIOE
+#define DISP_LAT_Pin GPIO_PIN_9
+#define DISP_LAT_GPIO_Port GPIOE
+#define DISP_OE_Pin GPIO_PIN_10
+#define DISP_OE_GPIO_Port GPIOE
+>>>>>>> 96ed25f (Display working with ESP8266)
 #define D8_Pin GPIO_PIN_11
 #define D8_GPIO_Port GPIOE
 #define D9_Pin GPIO_PIN_12
