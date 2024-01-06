@@ -7,7 +7,7 @@
   ******************************************************************************
   * @attention
   *
-  * Copyright (c) 2023 STMicroelectronics.
+  * Copyright (c) 2024 STMicroelectronics.
   * All rights reserved.
   *
   * This software is licensed under terms that can be found in the LICENSE file
@@ -85,7 +85,7 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef* i2cHandle)
     PF0-OSC_IN     ------> I2C1_SDA
     PF1-OSC_OUT     ------> I2C1_SCL
     */
-    GPIO_InitStruct.Pin = I2C_SDA_Pin|I2C_SCL_Pin;
+    GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
@@ -115,9 +115,9 @@ void HAL_I2C_MspDeInit(I2C_HandleTypeDef* i2cHandle)
     PF0-OSC_IN     ------> I2C1_SDA
     PF1-OSC_OUT     ------> I2C1_SCL
     */
-    HAL_GPIO_DeInit(I2C_SDA_GPIO_Port, I2C_SDA_Pin);
+    HAL_GPIO_DeInit(GPIOF, GPIO_PIN_0);
 
-    HAL_GPIO_DeInit(I2C_SCL_GPIO_Port, I2C_SCL_Pin);
+    HAL_GPIO_DeInit(GPIOF, GPIO_PIN_1);
 
   /* USER CODE BEGIN I2C1_MspDeInit 1 */
 

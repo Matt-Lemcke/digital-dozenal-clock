@@ -6,7 +6,7 @@
   ******************************************************************************
   * @attention
   *
-  * Copyright (c) 2023 STMicroelectronics.
+  * Copyright (c) 2024 STMicroelectronics.
   * All rights reserved.
   *
   * This software is licensed under terms that can be found in the LICENSE file
@@ -54,8 +54,6 @@ void SysTick_Handler(void);
 void EXTI0_1_IRQHandler(void);
 void EXTI2_3_IRQHandler(void);
 void EXTI4_15_IRQHandler(void);
-void ADC1_IRQHandler(void);
-void TIM3_IRQHandler(void);
 /* USER CODE BEGIN EFP */
 
 /* USER CODE END EFP */

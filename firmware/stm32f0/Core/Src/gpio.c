@@ -7,7 +7,7 @@
   ******************************************************************************
   * @attention
   *
-  * Copyright (c) 2023 STMicroelectronics.
+  * Copyright (c) 2024 STMicroelectronics.
   * All rights reserved.
   *
   * This software is licensed under terms that can be found in the LICENSE file
@@ -51,51 +51,22 @@ void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(J3_PA7_GPIO_Port, J3_PA7_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, DSPL_A_Pin|DSPL_B_Pin|DSPL_G1_Pin|DSPL_R2_Pin
-                          |DSPL_R1_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, DSPL_C_Pin|DSPL_D_Pin|DSPL_E_Pin|DSPL_CLK_Pin
-                          |DSPL_LAT_Pin|DSPL_OE_Pin|DSPL_B2_Pin|DSPL_B1_Pin
-                          |DSPL_G2_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(PA7_GPIO_Port, PA7_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pins : PCPin PCPin PCPin PCPin
-                           PCPin PCPin PCPin PCPin */
+                           PCPin PCPin PCPin */
   GPIO_InitStruct.Pin = BTN12_IN_Pin|BTN1_IN_Pin|BTN2_IN_Pin|BTN3_IN_Pin
-                          |BTN4_IN_Pin|RTC_SQW_Pin|BTN6_IN_Pin|BTN5_IN_Pin;
+                          |BTN4_IN_Pin|BTN5_IN_Pin|BTN6_IN_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PtPin */
-  GPIO_InitStruct.Pin = J3_PA7_Pin;
+  GPIO_InitStruct.Pin = PA7_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(J3_PA7_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : PCPin PCPin PCPin PCPin
-                           PCPin */
-  GPIO_InitStruct.Pin = DSPL_A_Pin|DSPL_B_Pin|DSPL_G1_Pin|DSPL_R2_Pin
-                          |DSPL_R1_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : PBPin PBPin PBPin PBPin
-                           PBPin PBPin PBPin PBPin
-                           PBPin */
-  GPIO_InitStruct.Pin = DSPL_C_Pin|DSPL_D_Pin|DSPL_E_Pin|DSPL_CLK_Pin
-                          |DSPL_LAT_Pin|DSPL_OE_Pin|DSPL_B2_Pin|DSPL_B1_Pin
-                          |DSPL_G2_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  HAL_GPIO_Init(PA7_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PBPin PBPin PBPin PBPin
                            PBPin */

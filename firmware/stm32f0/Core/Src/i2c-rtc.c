@@ -487,4 +487,3 @@ void DS3231_SetTime(uint8_t  hour_24mode, uint8_t minute, uint8_t second, uint8_
 }
 #endif
 
-
