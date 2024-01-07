@@ -134,6 +134,54 @@ void setRegionStatus(uint8_t id, uint8_t val)
   }
 }
 
+void setRegionStatus(uint8_t id, uint8_t val)
+{
+  PixelRegion *region;
+  bool all_regions = 0;
+  switch(id)
+  {
+    case TOP_REGION_ID:
+      region = &top_region;
+      break;
+    case MID_REGION_ID:
+      region = &mid_region;
+      break;
+    case BOT_REGION_ID:
+      region = &bot_region;
+      break;
+    case ALL_REGION_ID:
+      all_regions = 1;
+      break;
+  }
+  switch(val)
+  {
+    case DISPLAY_OFF_ID:
+      if(all_regions)
+      {
+        RgbMatrix_RegionOff(&top_region);
+        RgbMatrix_RegionOff(&mid_region);
+        RgbMatrix_RegionOff(&bot_region);
+      }
+      else 
+      {
+        RgbMatrix_RegionOff(region);
+      }
+      break;
+    case DISPLAY_ON_ID:
+      if(all_regions)
+      {
+        RgbMatrix_RegionOn(&top_region);
+        RgbMatrix_RegionOn(&mid_region);
+        RgbMatrix_RegionOn(&bot_region);
+      }
+      else 
+      {
+        RgbMatrix_RegionOn(region);
+      }
+      break;
+  }
+}
+
 void setup() {
   chrono_ctx.display_off = displayOff;
   chrono_ctx.display_on = displayOn;
@@ -141,32 +189,19 @@ void setup() {
   chrono_ctx.setMatrixBrightness = setMatrixBrightness;
   chrono_ctx.setBitmap = setBitmap;
   chrono_ctx.setRegionStatus = setRegionStatus;
+  chrono_ctx.setRegionStatus = setRegionStatus;
   Chrono_Init(&chrono_ctx, 9600);
   
   RgbMatrix_Init();
   memcpy(top_region.pixel_buffer, bars_map, top_region.pixel_buffer_size);
   memcpy(mid_region.pixel_buffer, bars_map, mid_region.pixel_buffer_size);
+  memcpy(mid_region.pixel_buffer, bars_map, mid_region.pixel_buffer_size);
   memcpy(bot_region.pixel_buffer, bars_map, bot_region.pixel_buffer_size);
 
   displayOff();
-=======
-
-void setup() {
-
-
-  RgbMatrix_Init();
-  
->>>>>>> 96ed25f (Display working with ESP8266)
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-<<<<<<< HEAD
   Chrono_Update();
-=======
-  RgbMatrix_RegionWritePixels(&region1, bars_map);
-  delay(500);
-  RgbMatrix_RegionWritePixels(&region1, bars_map_inv);
-  delay(500);
->>>>>>> 96ed25f (Display working with ESP8266)
 }

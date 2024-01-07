@@ -59,6 +59,8 @@ Rtc ds3231;
 
 volatile uint8_t debounce_flag = 0;
 
+uint8_t tx_buff[5];
+
 static void lcd_clear_workaround(void);
 
 /* USER CODE END PV */
