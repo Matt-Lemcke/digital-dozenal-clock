@@ -201,6 +201,7 @@ static void transition(State *next)
 int main(void)
 {
     #if DEBUG
+    printf("Running EventQueue tests...\n\n");
     test_EQ();
     #endif
     return 0;
@@ -210,10 +211,11 @@ int main(void)
 #if DEBUG
 void printEvent(Event event) {
     printf("\n--------------- CURRENT EVENT START\n\n");
-    printf("Event Type: %d\nBtn Event: %d %d\nLight Event: %d\nAlarm Event: %d\n", 
+    printf("Event Type: %d\nBtn Event: %d %d\n",
             event.e_event_type,
             event.s_btn_event.e_btn_id,
-            event.s_btn_event.e_btn_press_type,
+            event.s_btn_event.e_btn_press_type);
+    printf("Light Event: %d\nAlarm Event: %d\n",
             event.e_light_event,
             event.e_alarm_event);
     printf("\n--------------- CURRENT EVENT END\n\n");

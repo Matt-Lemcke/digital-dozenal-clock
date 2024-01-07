@@ -127,9 +127,8 @@ static bool bufferEmpty()
 
 
 #if DEBUG
-void printEventQ() 
+void printEventQ()
 {
-
     printf("--------------- EQ PRINT START\n\n");
     if (head == NULL) {
         printf("Buffer is Empty\n");
@@ -141,16 +140,17 @@ void printEventQ()
     unsigned i = 1;
     do {
         printf("\nEvent %u -----------\n", i++);
-        printf("Event Type: %d\nBtn Event: %d %d\nLight Event: %d\nAlarm Event: %d\n", 
+        printf("Event Type: %d\nBtn Event: %d %d\n",
                 temp->s_event.e_event_type,
                 temp->s_event.s_btn_event.e_btn_id,
-                temp->s_event.s_btn_event.e_btn_press_type,
+                temp->s_event.s_btn_event.e_btn_press_type);
+        printf("Light Event: %d\nAlarm Event: %d\n",
                 temp->s_event.e_light_event,
                 temp->s_event.e_alarm_event);
+
         temp = temp->next;
     } while (temp != NULL);
 
     printf("\n--------------- EQ PRINT END\n\n");
-
 }
 #endif
