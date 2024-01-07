@@ -18,7 +18,7 @@ typedef struct buzzer_t
 
     void (*startPwm)(void);
     void (*stopPwm)(void);
-    void (*setDutyCycle)(uint8_t dc);
+    void (*setDutyCycle)(uint32_t dc);
 }Buzzer;
 
 ClockStatus Buzzer_Init(Buzzer *self);

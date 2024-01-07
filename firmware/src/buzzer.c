@@ -10,7 +10,7 @@ ClockStatus Buzzer_Init(Buzzer *self)
         || self->setDutyCycle == NULL) {
         return CLOCK_FAIL;
     }
-
+    Buzzer_SetVolumeMin(self);
     return CLOCK_OK;
 }
 
@@ -37,9 +37,9 @@ ClockStatus Buzzer_SetVolume(Buzzer *self, uint8_t vol)
     if (vol < MIN_VOLUME || vol > MAX_VOLUME) {
         return CLOCK_FAIL;
     }
-
+    self->volume = vol;
     (self->is_active) ? self->stopPwm() : 0;
-    self->setDutyCycle(vol*DC_COEFF);
+    self->setDutyCycle(self->volume*DC_COEFF);
     (self->is_active) ? self->startPwm() : 0;
 
     return CLOCK_OK;
