@@ -16,6 +16,8 @@ extern "C"{
 
 I2C_HandleTypeDef *_ds3231_ui2c;
 
+static uint8_t Alarm2Seconds = 0;
+
 /**
  * @brief Initializes the DS3231 module. Set clock halt bit to 0 to start timing.
  * @param hi2c User I2C handle pointer.
@@ -153,11 +155,11 @@ void DS3231_SetAlarm2Day(uint8_t day){
  */
 void DS3231_SetAlarm2Mode(DS3231_Alarm2Mode alarmMode){
 	uint8_t temp;
-	temp = DS3231_GetRegByte(DS3231_A1_MINUTE) & 0x7f;
+	temp = DS3231_GetRegByte(DS3231_A2_MINUTE) & 0x7f;
 	DS3231_SetRegByte(DS3231_A2_MINUTE, temp | (((alarmMode >> 0) & 0x01) << DS3231_AXMY));
-	temp = DS3231_GetRegByte(DS3231_A1_HOUR) & 0x7f;
+	temp = DS3231_GetRegByte(DS3231_A2_HOUR) & 0x7f;
 	DS3231_SetRegByte(DS3231_A2_HOUR, temp | (((alarmMode >> 1) & 0x01) << DS3231_AXMY));
-	temp = DS3231_GetRegByte(DS3231_A1_DATE) & 0x7f;
+	temp = DS3231_GetRegByte(DS3231_A2_DATE) & 0x7f;
 	DS3231_SetRegByte(DS3231_A2_DATE, temp | (((alarmMode >> 2) & 0x01) << DS3231_AXMY) | (alarmMode & 0x80));
 }
 
@@ -506,7 +508,7 @@ void DS3231_SetAlarm(uint8_t alarm_id, uint8_t hour_24mode, uint8_t minute, uint
 		DS3231_SetAlarm1Hour(hour_24mode);
 		DS3231_ClearAlarm1Flag();
 	} else if (alarm_id == TIMER_ID) {
-		DS3231_SetAlarm2Second(second);
+		Alarm2Seconds = second;
 		DS3231_SetAlarm2Minute(minute);
 		DS3231_SetAlarm2Hour(hour_24mode);
 		DS3231_ClearAlarm2Flag();
@@ -520,9 +522,9 @@ void DS3231_SetAlarm(uint8_t alarm_id, uint8_t hour_24mode, uint8_t minute, uint
  */
 uint8_t DS3231_GetAlarmHour(uint8_t alarm_id) {
 	if (alarm_id == ALARM_ID) {
-		return DS3231_GetRegByte(DS3231_A1_HOUR); // **Read datasheet and extract correct bits
+		return DS3231_DecodeBCD(DS3231_GetRegByte(DS3231_A1_HOUR) & 0x3f);
 	} else if (alarm_id == TIMER_ID) {
-		return DS3231_GetRegByte(DS3231_A2_HOUR); // **Read datasheet and extract correct bits
+		return DS3231_DecodeBCD(DS3231_GetRegByte(DS3231_A2_HOUR) & 0x3f);
 	}
 	return 0;
 }
@@ -534,9 +536,9 @@ uint8_t DS3231_GetAlarmHour(uint8_t alarm_id) {
  */
 uint8_t DS3231_GetAlarmMinute(uint8_t alarm_id) {
 	if (alarm_id == ALARM_ID) {
-		return DS3231_GetRegByte(DS3231_A1_MINUTE); // **Read datasheet and extract correct bits
+		return DS3231_DecodeBCD(DS3231_GetRegByte(DS3231_A1_MINUTE) & 0x7f);
 	} else if (alarm_id == TIMER_ID) {
-		return DS3231_GetRegByte(DS3231_A2_MINUTE); // **Read datasheet and extract correct bits
+		return DS3231_DecodeBCD(DS3231_GetRegByte(DS3231_A2_MINUTE) & 0x7f);
 	}
 	return 0;
 }
@@ -548,9 +550,9 @@ uint8_t DS3231_GetAlarmMinute(uint8_t alarm_id) {
  */
 uint8_t DS3231_GetAlarmSecond(uint8_t alarm_id) {
 	if (alarm_id == ALARM_ID) {
-		return DS3231_GetRegByte(DS3231_A1_SECOND); // **Read datasheet and extract correct bits
+		return DS3231_DecodeBCD(DS3231_GetRegByte(DS3231_A1_SECOND) & 0x7f);
 	} else if (alarm_id == TIMER_ID) {
-		return DS3231_GetRegByte(DS3231_A2_SECOND); // **Read datasheet and extract correct bits
+		return Alarm2Seconds;
 	}
 	return 0;
 }
