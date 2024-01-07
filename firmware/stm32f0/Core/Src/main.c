@@ -19,11 +19,13 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "i2c.h"
+#include "tim.h"
+#include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "i2c-rtc.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -44,7 +46,6 @@
 
 /* USER CODE BEGIN PV */
 
-volatile uint8_t flag = 0;
 
 /* USER CODE END PV */
 
@@ -88,14 +89,10 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_I2C1_Init();
+  MX_USART1_UART_Init();
+  MX_USART2_UART_Init();
+  MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
-
-  DS3231_Init(&hi2c1);
-  uint8_t h = 0, m = 0, s = 0;
-
-  DS3231_SetHour(10);
-  DS3231_SetMinute(5);
-  DS3231_SetSecond(0);
 
   /* USER CODE END 2 */
 
@@ -103,13 +100,6 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-      if(flag)
-      {
-          flag = 0;
-          h = DS3231_GetHour();
-          m = DS3231_GetMinute();
-          s = DS3231_GetSecond();
-      }
 
     /* USER CODE END WHILE */
 
@@ -152,7 +142,8 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_I2C1;
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART1|RCC_PERIPHCLK_I2C1;
+  PeriphClkInit.Usart1ClockSelection = RCC_USART1CLKSOURCE_PCLK1;
   PeriphClkInit.I2c1ClockSelection = RCC_I2C1CLKSOURCE_HSI;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
@@ -164,7 +155,7 @@ void SystemClock_Config(void)
 
 void HAL_GPIO_EXTI_Callback(uint16_t pin)
 {
-    flag = 1;
+
 }
 
 /* USER CODE END 4 */
