@@ -4,6 +4,7 @@
 
 static uint8_t uart_buffer[UART_BUFFER_SIZE];
 static uint8_t buffer_index = 0;
+static uint8_t read_success = 0;
 
 typedef enum
 {
@@ -11,7 +12,8 @@ typedef enum
   Ready,
   ReadBitmap,
   ReadColour,
-  ReadBrightness
+  ReadBrightness,
+  ReadDisplayStatus,
 }StateCode;
 
 typedef struct
@@ -39,6 +41,7 @@ static void Read_Process(void);
 static void ReadBitmap_Out(void);
 static void ReadColour_Out(void);
 static void ReadBrightness_Out(void);
+static void ReadDisplayStatus_Out(void);
 
 static void transition(State *next_state);
 static void clearBuffer(void);
@@ -83,6 +86,14 @@ State s_read_brightness =
   .in = Default_In,
   .process = Read_Process,
   .out = ReadBrightness_Out
+};
+
+State s_read_display_status = 
+{
+  .state_code = ReadDisplayStatus,
+  .in = Default_In,
+  .process = Read_Process,
+  .out = ReadDisplayStatus_Out
 };
 
 void Chrono_Init(Chrono *ctx, uint32_t br)
@@ -132,12 +143,15 @@ void Ready_Process(void)
   case BRIGHTNESS_CODE:
     transition(&s_read_brightness);
     break;
-  case OFF_CODE:
-    g_chrono.ctx->display_off();
-    transition(&s_idle);
+  case STATUS_CODE:
+    transition(&s_read_display_status);
     break;
   case ON_CODE:
     g_chrono.ctx->display_on();
+    transition(&s_idle);
+    break;
+  case OFF_CODE:
+    g_chrono.ctx->display_off();
     transition(&s_idle);
     break;
   case START_CODE:
@@ -152,9 +166,14 @@ void Ready_Process(void)
 void Read_Process(void)
 {
   uint8_t c = Serial.read();
-  if(c == END_CODE || c == START_CODE)
+  if(c == END_CODE)
   {
+    read_success = 1;
     transition(&s_idle);
+  }
+  else if(c == START_CODE)
+  {
+    read_success = 0;
   }
   else
   {
@@ -169,15 +188,31 @@ void Read_Process(void)
 
 void ReadBitmap_Out(void)
 {
-  g_chrono.ctx->setBitmap(uart_buffer[0], uart_buffer+1);
+  if(read_success)
+  {
+    g_chrono.ctx->setBitmap(uart_buffer[0], uart_buffer+1);
+  }
 }
 void ReadColour_Out(void)
 {
-  g_chrono.ctx->setColour(uart_buffer[0], uart_buffer[1]);
+  if(read_success)
+  {
+    g_chrono.ctx->setColour(uart_buffer[0], uart_buffer[1]);
+  } 
 }
 void ReadBrightness_Out(void)
 {
-  g_chrono.ctx->setMatrixBrightness(uart_buffer[0]);
+  if(read_success)
+  {
+    g_chrono.ctx->setMatrixBrightness(uart_buffer[0]);
+  }
+}
+void ReadDisplayStatus_Out(void)
+{
+  if(read_success)
+  {
+    g_chrono.ctx->setRegionStatus(uart_buffer[0], uart_buffer[1]);
+  }
 }
 
 void Default_In(void)
