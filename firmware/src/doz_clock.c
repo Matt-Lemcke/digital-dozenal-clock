@@ -3,8 +3,13 @@
 #include <stdio.h>
 
 #include "time_track.h"
+#include "event_queue.h"
 
 #define TIMER_PERIOD_MS 167
+
+#if DEBUG
+void test_EQ();
+#endif
 
 typedef enum {
     STATE_INIT, STATE_24H, STATE_DIURNAL
@@ -195,6 +200,60 @@ static void transition(State *next)
 #ifdef NO_PLATFORM
 int main(void)
 {
+    #if DEBUG
+    test_EQ();
+    #endif
     return 0;
+}
+#endif
+
+#if DEBUG
+void printEvent(Event event) {
+    printf("\n--------------- CURRENT EVENT START\n\n");
+    printf("Event Type: %d\nBtn Event: %d %d\nLight Event: %d\nAlarm Event: %d\n", 
+            event.e_event_type,
+            event.s_btn_event.e_btn_id,
+            event.s_btn_event.e_btn_press_type,
+            event.e_light_event,
+            event.e_alarm_event);
+    printf("\n--------------- CURRENT EVENT END\n\n");
+}
+
+void test_EQ() {
+    EQ_Init();
+    printEventQ();
+    EQ_TriggerButtonEvent(DOZ, SHORT);
+    EQ_TriggerButtonEvent(VOLDOWN, LONG);
+    EQ_TriggerLightEvent(DARK_ROOM);
+    EQ_TriggerAlarmEvent(ALARM_TRIG);
+    EQ_TriggerButtonEvent(ALARM, SHORT);
+    printEventQ();
+    EQ_TriggerButtonEvent(TIMER, SHORT);
+    EQ_TriggerLightEvent(DARK_ROOM);
+    printEventQ();
+
+    Event event;
+    EQ_GetEvent(&event);
+    printEvent(event);
+    EQ_GetEvent(&event);
+    printEvent(event);
+    EQ_GetEvent(&event);
+    printEvent(event);
+    EQ_GetEvent(&event);
+    printEvent(event);
+    EQ_GetEvent(&event);
+    printEvent(event);
+    printEventQ();
+
+    EQ_TriggerButtonEvent(TRAD, LONG);
+    EQ_TriggerAlarmEvent(TIMER_TRIG);
+    printEventQ();
+    EQ_GetEvent(&event);
+    printEvent(event);
+    EQ_GetEvent(&event);
+    printEvent(event);
+    EQ_GetEvent(&event);
+    printEvent(event);
+    printEventQ();
 }
 #endif

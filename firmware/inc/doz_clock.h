@@ -6,6 +6,8 @@
 #include "gps.h"
 #include "rtc.h"
 
+#define DEBUG   1
+
 typedef struct doz_clock_t
 {
     Display *display;
