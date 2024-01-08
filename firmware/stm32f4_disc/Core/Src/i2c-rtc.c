@@ -473,7 +473,7 @@ uint8_t DS3231_GetTemperatureFraction(){
  * @param minute  Minute, 0 to 59.
  * @param second Second, 0 to 59.
  */
-void DS3231_SetTime(uint8_t  hour_24mode, uint8_t minute, uint8_t second, uint8_t date, uint8_t month, uint8_t dow, uint16_t year){
+void DS3231_SetTime(uint8_t  hour_24mode, uint8_t minute, uint8_t second){
 	DS3231_SetHour(hour_24mode);
 	DS3231_SetMinute(minute);
 	DS3231_SetSecond(second);
