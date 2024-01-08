@@ -59,9 +59,9 @@ ClockStatus Rtc_IsValid(Rtc *self)
     return CLOCK_OK;
 }
 
-ClockStatus Rtc_SetAlarm(Rtc *self, RtcTime *time, ALARM_ID id)
+ClockStatus Rtc_SetAlarm(Rtc *self, RtcTime *time, AlarmId id)
 {
-    if ((id != ALARM && id != TIMER) || self->setAlarm == NULL) {
+    if (self->setAlarm == NULL) {
         return CLOCK_FAIL;
     }
 
@@ -70,12 +70,11 @@ ClockStatus Rtc_SetAlarm(Rtc *self, RtcTime *time, ALARM_ID id)
     return CLOCK_OK;
 }
 
-ClockStatus Rtc_GetAlarm(Rtc *self, RtcTime *time, ALARM_ID id)
+ClockStatus Rtc_GetAlarm(Rtc *self, RtcTime *time, AlarmId id)
 {
-    if ((id != ALARM && id != TIMER)
-            || self->getAlarmHour == NULL
-            || self->getAlarmMinute == NULL
-            || self->getAlarmSecond == NULL) {
+    if (self->getAlarmHour == NULL
+        || self->getAlarmMinute == NULL
+        || self->getAlarmSecond == NULL) {
         return CLOCK_FAIL;
     }
 
@@ -86,9 +85,9 @@ ClockStatus Rtc_GetAlarm(Rtc *self, RtcTime *time, ALARM_ID id)
     return CLOCK_OK;
 }
 
-ClockStatus Rtc_EnableAlarm(Rtc *self, ALARM_ID id, ALARM_STATUS enable)
+ClockStatus Rtc_EnableAlarm(Rtc *self, AlarmId id, AlarmStatus enable)
 {
-    if ((id != ALARM && id != TIMER) || self->enableAlarm == NULL) {
+    if (self->enableAlarm == NULL) {
         return CLOCK_FAIL;
     }
 
