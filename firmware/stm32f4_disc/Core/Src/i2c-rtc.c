@@ -30,7 +30,7 @@ void DS3231_Init(I2C_HandleTypeDef *hi2c) {
 	DS3231_ClearAlarm2Flag();
 	DS3231_SetInterruptMode(DS3231_ALARM_INTERRUPT);
 	DS3231_SetAlarm1Mode(DS3231_A1_MATCH_S_M_H);
-	DS3231_SetAlarm2Mode(DS3231_A1_MATCH_S_M_H);
+	DS3231_SetAlarm2Mode(DS3231_A2_MATCH_M_H);
 }
 
 /**
@@ -115,7 +115,7 @@ void DS3231_ClearAlarm2Flag(){
  */
 void DS3231_SetAlarm2Minute(uint8_t minute){
 	uint8_t temp = DS3231_GetRegByte(DS3231_A2_MINUTE) & 0x80;
-	uint8_t a2m2 = temp | (DS3231_EncodeBCD(minute) & 0x3f);
+	uint8_t a2m2 = temp | (DS3231_EncodeBCD(minute) & 0x7f);
 	DS3231_SetRegByte(DS3231_A2_MINUTE, a2m2);
 }
 
@@ -187,7 +187,7 @@ void DS3231_ClearAlarm1Flag(){
  */
 void DS3231_SetAlarm1Second(uint8_t second){
 	uint8_t temp = DS3231_GetRegByte(DS3231_A1_SECOND) & 0x80;
-	uint8_t a1m1 = temp | (DS3231_EncodeBCD(second) & 0x3f);
+	uint8_t a1m1 = temp | (DS3231_EncodeBCD(second) & 0x7f);
 	DS3231_SetRegByte(DS3231_A1_SECOND, a1m1);
 }
 
@@ -197,7 +197,7 @@ void DS3231_SetAlarm1Second(uint8_t second){
  */
 void DS3231_SetAlarm1Minute(uint8_t minute){
 	uint8_t temp = DS3231_GetRegByte(DS3231_A1_MINUTE) & 0x80;
-	uint8_t a1m2 = temp | (DS3231_EncodeBCD(minute) & 0x3f);
+	uint8_t a1m2 = temp | (DS3231_EncodeBCD(minute) & 0x7f);
 	DS3231_SetRegByte(DS3231_A1_MINUTE, a1m2);
 }
 
