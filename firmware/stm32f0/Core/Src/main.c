@@ -25,7 +25,9 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "buzzer.h"
+#include "clock_types.h"
+#include "pwm-buzzer.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -45,7 +47,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+Buzzer buzzer;
 
 /* USER CODE END PV */
 
@@ -94,13 +96,22 @@ int main(void)
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
 
+  // Buzzer
+  PKM22E_Init(&htim3, TIM_CHANNEL_1);
+  buzzer.setDutyCycle = PKM22E_SetDutyCyle;
+  buzzer.startPwm = PKM22E_StartPwm;
+  buzzer.stopPwm = PKM22E_StopPwm;
+  if (Buzzer_Init(&buzzer) != CLOCK_OK)
+  {
+      Error_Handler();
+  }
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
