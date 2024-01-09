@@ -106,12 +106,7 @@ void Chrono_Init(Chrono *ctx, uint32_t br)
 
 void Chrono_Update()
 {
-  if(!(Serial.available()>0)){return;}
-  
-  if(Serial.peek() == '\n'){          // Remove later
-    Serial.read();
-    return;
-  }  
+  if(!(Serial.available()>0)){return;} 
   g_chrono.curr_state->process();
 }
 
@@ -230,7 +225,7 @@ void transition(State *next_state)
   g_chrono.curr_state->out();
   g_chrono.curr_state = next_state;
   g_chrono.curr_state->in();
-  Serial.printf("\nState entry: %d", g_chrono.curr_state->state_code);
+  Serial.printf("\nState: %d", g_chrono.curr_state->state_code);
 }
 
 void clearBuffer(void)

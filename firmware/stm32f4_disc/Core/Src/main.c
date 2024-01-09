@@ -30,10 +30,8 @@
 #include "display.h"
 #include "i2c-lcd.h"
 #include "i2c-rtc.h"
-#include "gpio-display.h"
-#include "sample-bitmap.h"
 #include "rtc.h"
-#include "chrono_protocol.h"
+#include "uart-display.h"
 
 /* USER CODE END Includes */
 
@@ -55,12 +53,9 @@
 
 /* USER CODE BEGIN PV */
 DozClock clock;
-Display lcd1602;
 Rtc ds3231;
 
 volatile uint8_t debounce_flag = 0;
-
-uint8_t tx_buff[5];
 
 static void lcd_clear_workaround(void);
 
@@ -113,39 +108,38 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
     // Display
-//    HUB75E_Init();
-//    HUB75E_setDisplayBuffer(test_map);
-//    HUB75E_setDisplayBrightness(BrightnessLevel3);
-//    HUB75E_setDisplayColor(Blue);
+    Esp8266Driver_Init(&huart5);
+    Esp8266Driver_DisplayOn();
+    HAL_Delay(1);
+    Esp8266Driver_Show(TOP_REGION_ID);
+    HAL_Delay(1);
+    Esp8266Driver_SetColour(TOP_REGION_ID, MAGENTA_ID);
+    HAL_Delay(1);
+    Esp8266Driver_SetColour(MID_REGION_ID, CYAN_ID);
+    HAL_Delay(1);
+    Esp8266Driver_SetColour(BOT_REGION_ID, YELLOW_ID);
+    HAL_Delay(1);
+
+
 
     // RTC
     //DS3231_Init(&hi2c3);
-    ds3231.setRtcTime   = DS3231_SetTime;
-    ds3231.getDayOfWeek = DS3231_GetDayOfWeek;
-    ds3231.getDate      = DS3231_GetDate;
-    ds3231.getMonth     = DS3231_GetMonth;
-    ds3231.getYear      = DS3231_GetYear;
-    ds3231.getHour      = DS3231_GetHour;
-    ds3231.getMinute    = DS3231_GetMinute;
-    ds3231.getSecond    = DS3231_GetSecond;
-
-    clock.rtc = &ds3231;
+//    ds3231.setRtcTime   = DS3231_SetTime;
+//    ds3231.getDayOfWeek = DS3231_GetDayOfWeek;
+//    ds3231.getDate      = DS3231_GetDate;
+//    ds3231.getMonth     = DS3231_GetMonth;
+//    ds3231.getYear      = DS3231_GetYear;
+//    ds3231.getHour      = DS3231_GetHour;
+//    ds3231.getMinute    = DS3231_GetMinute;
+//    ds3231.getSecond    = DS3231_GetSecond;
+//
+//    clock.rtc = &ds3231;
 
   //DozClock_Init(&clock);
 
   //HAL_TIM_Base_Start_IT(&htim6);
 
-    tx_buff[0] = START_CODE;
-    tx_buff[1] = ON_CODE;
-    tx_buff[2] = END_CODE;
-    HAL_UART_Transmit(&huart5, tx_buff, 3, 1000);
 
-    tx_buff[0] = START_CODE;
-    tx_buff[1] = COLOUR_CODE;
-    tx_buff[2] = TOP_REGION_ID;
-    tx_buff[3] = MAGENTA_ID;
-    tx_buff[4] = END_CODE;
-    HAL_UART_Transmit(&huart5, tx_buff, 5, 1000);
 
   /* USER CODE END 2 */
 
@@ -154,7 +148,10 @@ int main(void)
 
   while (1)
   {
-//      HUB75E_displayBufferPixels();
+      Esp8266Driver_Show(TOP_REGION_ID);
+      HAL_Delay(1000);
+      Esp8266Driver_Hide(TOP_REGION_ID);
+      HAL_Delay(1000);
 	  //DozClock_Update(&clock);
     /* USER CODE END WHILE */
 

@@ -27,4 +27,9 @@
 #define YELLOW_ID   0x86
 #define MAGENTA_ID  0x87
 
+#define MAX_BRIGHTNESS  255
+
+#define LARGE_BITMAP_SIZE 96
+#define SMALL_BITMAP_SIZE 56
+
 #endif /*CHRONO_PROTOCOL_H*/
