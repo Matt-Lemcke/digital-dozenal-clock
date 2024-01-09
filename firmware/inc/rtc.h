@@ -1,8 +1,6 @@
 #ifndef FIRMWARE_INC_RTC_H_
 #define FIRMWARE_INC_RTC_H_
 
-#include <stdint.h>
-
 #include "clock_types.h"
 
 typedef struct rtc_time_t
