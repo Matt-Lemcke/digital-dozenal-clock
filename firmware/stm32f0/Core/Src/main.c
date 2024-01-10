@@ -25,7 +25,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "uart-display.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -93,6 +93,11 @@ int main(void)
   MX_USART2_UART_Init();
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
+
+  // Display
+  Esp8266Driver_Init(&huart2);
+  Esp8266Driver_DisplayOn();
+  Esp8266Driver_SetColour(TOP_REGION_ID, CYAN_ID);
 
   /* USER CODE END 2 */
 
