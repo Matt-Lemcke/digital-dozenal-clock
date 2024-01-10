@@ -38,9 +38,9 @@ ClockStatus Buzzer_SetVolume(Buzzer *self, uint8_t vol)
         return CLOCK_FAIL;
     }
     self->volume = vol;
-    (self->is_active) ? self->stopPwm() : 0;
+    if (self->is_active) {self->stopPwm();}
     self->setDutyCycle(self->volume*DC_COEFF);
-    (self->is_active) ? self->startPwm() : 0;
+    if (self->is_active) {self->startPwm();}
 
     return CLOCK_OK;
 }
