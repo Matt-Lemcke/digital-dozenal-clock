@@ -25,12 +25,17 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "clock_types.h"
+
+#include "buzzer.h"
 #include "display.h"
 #include "gps.h"
 #include "rtc.h"
 
 #include "i2c-rtc.h"
+#include "pwm-buzzer.h"
 #include "uart-display.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -53,6 +58,7 @@
 Display rgb_matrix;
 ExternVars display_vars;
 Rtc ds3231;
+Buzzer buzzer;
 
 /* USER CODE END PV */
 
@@ -115,6 +121,16 @@ int main(void)
   rgb_matrix.show = Esp8266Driver_Show;
   rgb_matrix.hide = Esp8266Driver_Hide;
   if(Display_Init(&rgb_matrix, &display_vars) != CLOCK_OK)
+  {
+      Error_Handler();
+  }
+  
+  // Buzzer
+  PKM22E_Init(&htim3, TIM_CHANNEL_1);
+  buzzer.setDutyCycle = PKM22E_SetDutyCyle;
+  buzzer.startPwm = PKM22E_StartPwm;
+  buzzer.stopPwm = PKM22E_StopPwm;
+  if (Buzzer_Init(&buzzer) != CLOCK_OK)
   {
       Error_Handler();
   }
