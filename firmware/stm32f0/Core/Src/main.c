@@ -26,6 +26,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "uart-display.h"
+#include "i2c-rtc.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -95,9 +96,15 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   // Display
-  Esp8266Driver_Init(&huart2);
+  if(!Esp8266Driver_Init(&huart2, 2000))
+  {
+      Error_Handler();
+  }
   Esp8266Driver_DisplayOn();
   Esp8266Driver_SetColour(TOP_REGION_ID, CYAN_ID);
+
+  // RTC
+  DS3231_Init(&hi2c1);
 
   /* USER CODE END 2 */
 
@@ -105,6 +112,10 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+      Esp8266Driver_Show(BOT_REGION_ID);
+      HAL_Delay(1000);
+      Esp8266Driver_Hide(BOT_REGION_ID);
+      HAL_Delay(1000);
 
     /* USER CODE END WHILE */
 

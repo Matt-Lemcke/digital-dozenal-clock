@@ -9,9 +9,30 @@
 #include "display.h"
 #include "bitmaps.h"
 
+#include <stdio.h>
+
 #define NUM_SHOWTIME_STATES 4
 
-typedef enum 
+#define DEFAULT_FORMAT      TRAD_24H
+#define DEFAULT_BRIGHTNESS  255
+
+#define LARGE_BITMAP_SIZE 96
+#define SMALL_BITMAP_SIZE 56
+
+typedef enum row_number_t
+{
+    ROW_1,
+    ROW_2,
+    ROW_3
+} RowNumber;
+
+typedef struct bitmap{
+    RowNumber   num;
+    uint8_t     *p_bitmap;
+    uint8_t     bitmap_size;
+} Bitmap;
+
+typedef enum state_code_t
 {
     STATE_OFF, 
     STATE_SHOWTIME123, 
@@ -40,6 +61,7 @@ typedef struct state_machine_t {
 /*
     Private function definitions
 */
+// State machine functions
 static void Default_Entry(Display *ctx);
 static void Default_Update(Display *ctx);
 static void Default_Exit(Display *ctx);
@@ -59,6 +81,10 @@ static void SetAlarm_Update(Display *ctx);
 
 static void transition(State *next);
 
+// Bitmap creation functions
+static void displayChar(Bitmap *row_bitmap, uint8_t char_index, uint8_t digit[]);
+static void displayTime(Bitmap *row_bitmap, uint32_t time_ms);
+static void blinkDigit(Bitmap *row_bitmap, uint8_t char_index);
 /*
     State definitions
 */
@@ -127,6 +153,30 @@ State s_set_alarm =
 };
 
 /*
+    Bitmap definitions
+*/
+static uint8_t row1_pixels[SMALL_BITMAP_SIZE];
+Bitmap row1_bitmap = {
+    .num = ROW_1,
+    .p_bitmap = row1_pixels,
+    .bitmap_size = SMALL_BITMAP_SIZE
+};
+
+static uint8_t row2_pixels[LARGE_BITMAP_SIZE];
+Bitmap row2_bitmap = {
+    .num = ROW_2,
+    .p_bitmap = row2_pixels,
+    .bitmap_size = LARGE_BITMAP_SIZE
+};
+
+static uint8_t row3_pixels[SMALL_BITMAP_SIZE];
+Bitmap row3_bitmap = {
+    .num = ROW_3,
+    .p_bitmap = row3_pixels,
+    .bitmap_size = SMALL_BITMAP_SIZE,
+};
+
+/*
     Private variables
 */
 static DisplayFSM g_fsm = {0};
@@ -138,6 +188,7 @@ static State *show_time_states[NUM_SHOWTIME_STATES] =
     &s_show_time2
 };
 static uint8_t show_time_index = 0;
+volatile uint8_t blink_state = 0;
 
 /*
     Public functions
@@ -145,6 +196,8 @@ static uint8_t show_time_index = 0;
 void Display_Init(Display *self, ExternVars *vars)
 {
     self->clock_vars = vars;
+    self->time_format = DEFAULT_FORMAT;
+    self->brightness = DEFAULT_BRIGHTNESS;
     g_fsm.ctx = self;
     g_fsm.curr_state = &s_off;
     show_time_index = 0;
@@ -158,7 +211,7 @@ void Display_Update(void)
 
 void Display_PeriodicCallback(void)
 {
-
+    blink_state = !blink_state;
 }
 
 void Display_Off(void)
@@ -233,6 +286,11 @@ void Display_ShowTime(void)
     }
 }
 
+void Display_SetFormat(TimeFormats format)
+{
+    g_fsm.ctx->time_format = format;
+}
+
 /*
     Private functions
 */
@@ -303,14 +361,25 @@ static void SetAlarm_Update(Display *ctx)
 
 void transition(State *next)
 {
+    printf("\nExit state: %d", g_fsm.curr_state->state_code);
     g_fsm.curr_state->exit(g_fsm.ctx);
     g_fsm.curr_state = next;
     g_fsm.curr_state->entry(g_fsm.ctx);
+    printf("\nEnter state: %d", g_fsm.curr_state->state_code);
 }
 
 #ifdef NO_PLATFORM
 int main(void)
 {
+    Display test;
+    ExternVars test_vars;
+    Display_Init(&test, &test_vars);
+    Display_On();
+    Display_ToggleMode();
+    Display_ToggleMode();
+    Display_SetTime();
+     Display_SetTimer();
+    Display_ShowTime();
     return 0;
 }
 #endif

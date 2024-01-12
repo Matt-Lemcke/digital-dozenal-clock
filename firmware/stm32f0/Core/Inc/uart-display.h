@@ -11,7 +11,7 @@
 #include "main.h"
 #include "chrono_protocol.h"
 
-void Esp8266Driver_Init(UART_HandleTypeDef *huart);
+bool Esp8266Driver_Init(UART_HandleTypeDef *huart, uint32_t timeout_ms);
 void Esp8266Driver_DisplayOff(void);
 void Esp8266Driver_DisplayOn(void);
 void Esp8266Driver_SetDisplayBrightness(uint8_t brightness);

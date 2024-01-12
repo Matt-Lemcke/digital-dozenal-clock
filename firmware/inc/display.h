@@ -11,6 +11,15 @@
 
 #include "clock_types.h"
 
+typedef enum time_formats_t
+{
+    TRAD_24H,
+    TRAD_12H,
+    DOZ_DIR4,
+    DOZ_DIR5,
+    DOZ_SEMI,
+} TimeFormats;
+
 typedef struct extern_vars_t
 {
     uint32_t    *time_ms;
@@ -30,6 +39,8 @@ typedef struct extern_vars_t
 typedef struct display_t
 {
     ExternVars  *clock_vars;
+    TimeFormats time_format;
+    uint8_t     brightness;
 } Display;
 
 void Display_Init(Display *self, ExternVars *vars);
@@ -42,4 +53,5 @@ void Display_SetTime(void);
 void Display_SetTimer(void);
 void Display_SetAlarm(void);
 void Display_ShowTime(void);
+void Display_SetFormat(TimeFormats format);
 #endif  // FIRMWARE_INC_DISPLAY_H_

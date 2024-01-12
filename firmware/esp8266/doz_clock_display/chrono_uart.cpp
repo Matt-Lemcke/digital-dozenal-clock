@@ -2,12 +2,15 @@
 
 #define UART_BUFFER_SIZE  100
 
+//#define DEBUG
+
 static uint8_t uart_buffer[UART_BUFFER_SIZE];
 static uint8_t buffer_index = 0;
 static uint8_t read_success = 0;
 
 typedef enum
 {
+  Waiting,
   Idle,
   Ready,
   ReadBitmap,
@@ -34,6 +37,8 @@ typedef struct
 static void Default_In(void);
 static void Default_Process(void);
 static void Default_Out(void);
+static void Waiting_Process(void);
+static void Waiting_Out(void);
 static void Idle_In(void);
 static void Idle_Process(void);
 static void Ready_Process(void);
@@ -47,6 +52,14 @@ static void transition(State *next_state);
 static void clearBuffer(void);
 
 static StateMachine g_chrono;
+
+State s_waiting = 
+{
+  .state_code = Waiting,
+  .in = Idle_In,
+  .process = Waiting_Process,
+  .out = Waiting_Out
+};
 
 State s_idle = 
 {
@@ -100,14 +113,41 @@ void Chrono_Init(Chrono *ctx, uint32_t br)
 {
   Serial.begin(br);
   g_chrono.ctx = ctx;
-  g_chrono.curr_state = &s_idle;
+  g_chrono.curr_state = &s_waiting;
   g_chrono.curr_state->in();
 }
 
 void Chrono_Update()
 {
+  if(g_chrono.curr_state->state_code == Waiting)
+  {
+    Serial.write(END_CODE);
+  }
+  else if(g_chrono.curr_state->state_code == Idle)
+  {
+    Serial.write(START_CODE);
+  }
   if(!(Serial.available()>0)){return;} 
   g_chrono.curr_state->process();
+}
+
+void Waiting_Process(void)
+{
+  uint8_t c = Serial.read();
+#ifdef DEBUG
+  Serial.write(c);
+#endif
+  if(c == START_CODE)
+  {
+    transition(&s_idle);
+  }
+}
+
+void Waiting_Out(void)
+{
+  Serial.write(START_CODE);
+  Serial.write(START_CODE);
+  Serial.write(START_CODE);
 }
 
 void Idle_In(void)
@@ -118,6 +158,9 @@ void Idle_In(void)
 void Idle_Process(void)
 {
   uint8_t c = Serial.read();
+#ifdef DEBUG
+  Serial.write(c);
+#endif
   if(c == START_CODE)
   {
   transition(&s_ready);
@@ -127,6 +170,9 @@ void Idle_Process(void)
 void Ready_Process(void)
 {
   uint8_t c = Serial.read();
+#ifdef DEBUG
+  Serial.write(c);
+#endif
   switch(c)
   {
   case BITMAP_CODE:
@@ -161,6 +207,9 @@ void Ready_Process(void)
 void Read_Process(void)
 {
   uint8_t c = Serial.read();
+#ifdef DEBUG
+  Serial.write(c);
+#endif
   if(c == END_CODE)
   {
     read_success = 1;
@@ -222,10 +271,15 @@ void Default_Out(void)
 
 void transition(State *next_state)
 {
+#ifdef DEBUG
+  Serial.printf("\nExit state: %d\n", g_chrono.curr_state->state_code);
+#endif
   g_chrono.curr_state->out();
   g_chrono.curr_state = next_state;
   g_chrono.curr_state->in();
-  Serial.printf("\nState: %d", g_chrono.curr_state->state_code);
+#ifdef DEBUG
+  Serial.printf("\nEnter state: %d\n", g_chrono.curr_state->state_code);
+#endif
 }
 
 void clearBuffer(void)

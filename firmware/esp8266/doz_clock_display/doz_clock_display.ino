@@ -1,6 +1,5 @@
 #include "rgb_matrix.h"
 #include "test_bitmap.h"
-<<<<<<< HEAD
 #include "chrono_uart.h"
 
 
@@ -84,54 +83,6 @@ void setColour(uint8_t id, uint8_t val)
 void setMatrixBrightness(uint8_t val)
 {
   RgbMatrix_SetBrightness(val);
-}
-
-void setRegionStatus(uint8_t id, uint8_t val)
-{
-  PixelRegion *region;
-  bool all_regions = 0;
-  switch(id)
-  {
-    case TOP_REGION_ID:
-      region = &top_region;
-      break;
-    case MID_REGION_ID:
-      region = &mid_region;
-      break;
-    case BOT_REGION_ID:
-      region = &bot_region;
-      break;
-    case ALL_REGION_ID:
-      all_regions = 1;
-      break;
-  }
-  switch(val)
-  {
-    case DISPLAY_OFF_ID:
-      if(all_regions)
-      {
-        RgbMatrix_RegionOff(&top_region);
-        RgbMatrix_RegionOff(&mid_region);
-        RgbMatrix_RegionOff(&bot_region);
-      }
-      else 
-      {
-        RgbMatrix_RegionOff(region);
-      }
-      break;
-    case DISPLAY_ON_ID:
-      if(all_regions)
-      {
-        RgbMatrix_RegionOn(&top_region);
-        RgbMatrix_RegionOn(&mid_region);
-        RgbMatrix_RegionOn(&bot_region);
-      }
-      else 
-      {
-        RgbMatrix_RegionOn(region);
-      }
-      break;
-  }
 }
 
 void setRegionStatus(uint8_t id, uint8_t val)
