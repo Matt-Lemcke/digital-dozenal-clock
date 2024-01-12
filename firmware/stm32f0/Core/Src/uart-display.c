@@ -7,30 +7,27 @@
 
 #include "uart-display.h"
 
-#define UART_TIMEOUT    1000
+#define UART_TIMEOUT    100
 
+static uint8_t start_code       = START_CODE;
+static uint8_t on_code          = ON_CODE;
+static uint8_t off_code         = OFF_CODE;
+static uint8_t brightness_code  = BRIGHTNESS_CODE;
+static uint8_t colour_code      = COLOUR_CODE;
+static uint8_t status_code      = STATUS_CODE;
+static uint8_t bitmap_code      = BITMAP_CODE;
+static uint8_t end_code         = END_CODE;
+static uint8_t status_on        = DISPLAY_ON_ID;
+static uint8_t status_off       = DISPLAY_OFF_ID;
 
 UART_HandleTypeDef *uart;
-
-static uint8_t ready_seq[]      = {START_CODE, START_CODE, START_CODE, END_CODE};
-static uint8_t on_seq[]         = {START_CODE, ON_CODE};
-static uint8_t off_seq[]        = {START_CODE, OFF_CODE};
-static uint8_t brightness_seq[] = {START_CODE, BRIGHTNESS_CODE};
-static uint8_t colour_seq[]     = {START_CODE, COLOUR_CODE};
-static uint8_t status_seq[]     = {START_CODE, STATUS_CODE};
-static uint8_t bitmap_seq[]     = {START_CODE, BITMAP_CODE};
-
-static uint8_t end_code     = END_CODE;
-static uint8_t status_on    = DISPLAY_ON_ID;
-static uint8_t status_off   = DISPLAY_OFF_ID;
-
 uint8_t rx_buff[5];
-uint8_t rx_byte = 0;
 static bool device_ready = 0, device_waiting = 0;
 /*
  * Private function definitions
  */
 static void reset_driver(void);
+static void region_to_chronoId(uint8_t *val);
 
 /*
  * Public functions
@@ -60,10 +57,11 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
             if(rx_buff[i] == END_CODE)
             {
                 device_waiting = 1;
-                HAL_UART_Transmit(uart, ready_seq, 1, UART_TIMEOUT);  // Ready sequence
-                HAL_UART_Transmit(uart, ready_seq+1, 1, UART_TIMEOUT);
-                HAL_UART_Transmit(uart, ready_seq+2, 1, UART_TIMEOUT);
-                HAL_UART_Transmit(uart, ready_seq+3, 1, UART_TIMEOUT);
+
+                // Ready sequence
+                HAL_UART_Transmit(uart, &start_code, 1, UART_TIMEOUT);  // Start
+                HAL_UART_Transmit(uart, &start_code, 1, UART_TIMEOUT);  // Start
+                HAL_UART_Transmit(uart, &end_code, 1, UART_TIMEOUT);    // End transmission
                 break;
             }
             else if(rx_buff[i] == START_CODE && device_waiting)
@@ -80,32 +78,36 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 
 void Esp8266Driver_DisplayOff(void)
 {
-    HAL_UART_Transmit(uart, off_seq, 1, UART_TIMEOUT);  // Start sequence
-    HAL_UART_Transmit(uart, off_seq+1, 1, UART_TIMEOUT);  // Start sequence
-    HAL_UART_Transmit(uart, &end_code, 1, UART_TIMEOUT);              // End transmission
+    // Off sequence
+    HAL_UART_Transmit(uart, &start_code, 1, UART_TIMEOUT);  // Start
+    HAL_UART_Transmit(uart, &off_code, 1, UART_TIMEOUT);    // Off
+    HAL_UART_Transmit(uart, &end_code, 1, UART_TIMEOUT);    // End transmission
 
 }
 
 void Esp8266Driver_DisplayOn(void)
 {
-    HAL_UART_Transmit(uart, on_seq, 1, UART_TIMEOUT);    // Start sequence
-    HAL_UART_Transmit(uart, on_seq+1, 1, UART_TIMEOUT);    // Start sequence
-    HAL_UART_Transmit(uart, &end_code, 1, UART_TIMEOUT);              // End transmission
+    // On sequence
+    HAL_UART_Transmit(uart, &start_code, 1, UART_TIMEOUT);  // Start
+    HAL_UART_Transmit(uart, &on_code, 1, UART_TIMEOUT);     // On
+    HAL_UART_Transmit(uart, &end_code, 1, UART_TIMEOUT);    // End transmission
 }
 
 void Esp8266Driver_SetDisplayBrightness(uint8_t brightness)
 {
     if(brightness <= MAX_BRIGHTNESS)
     {
-        HAL_UART_Transmit(uart, brightness_seq, 1, UART_TIMEOUT);    // Start sequence
-        HAL_UART_Transmit(uart, brightness_seq+1, 1, UART_TIMEOUT);    // Start sequence
-        HAL_UART_Transmit(uart, &brightness, 1, UART_TIMEOUT);                            // Send brightness value
-        HAL_UART_Transmit(uart, &end_code, 1, UART_TIMEOUT);                              // End transmission
+        // Set brightness sequence
+        HAL_UART_Transmit(uart, &start_code, 1, UART_TIMEOUT);          // Start
+        HAL_UART_Transmit(uart, &brightness_code, 1, UART_TIMEOUT);     // Brightness
+        HAL_UART_Transmit(uart, &brightness, 1, UART_TIMEOUT);          // Send brightness value
+        HAL_UART_Transmit(uart, &end_code, 1, UART_TIMEOUT);            // End transmission
     }
 }
 
 void Esp8266Driver_SetBitmap(uint8_t region_id, uint8_t *bitmap)
 {
+    region_to_chronoId(&region_id);
     uint8_t size = 0;
     if(region_id == MID_REGION_ID)
     {
@@ -115,34 +117,44 @@ void Esp8266Driver_SetBitmap(uint8_t region_id, uint8_t *bitmap)
     {
         size = SMALL_BITMAP_SIZE;
     }
-    HAL_UART_Transmit(uart, bitmap_seq, sizeof(bitmap_seq), UART_TIMEOUT);    // Start sequence
-    HAL_UART_Transmit(uart, &region_id, 1, UART_TIMEOUT);                     // Send region id value
-    HAL_UART_Transmit(uart, bitmap, size, UART_TIMEOUT);                      // Send bitmap
-    HAL_UART_Transmit(uart, &end_code, 1, UART_TIMEOUT);                      // End transmission
+
+    // Set bitmap sequence
+    HAL_UART_Transmit(uart, &start_code, 1, UART_TIMEOUT);      // Start
+    HAL_UART_Transmit(uart, &bitmap_code, 1, UART_TIMEOUT);     // Bitmap
+    HAL_UART_Transmit(uart, &region_id, 1, UART_TIMEOUT);       // Send region id value
+    for(int i = 0; i < size; i++)
+    {
+        HAL_UART_Transmit(uart, bitmap+i, 1, UART_TIMEOUT);     // Send bitmap values
+    }
+
+    HAL_UART_Transmit(uart, &end_code, 1, UART_TIMEOUT);        // End transmission
 }
 void Esp8266Driver_SetColour(uint8_t region_id, uint8_t colour_id)
 {
-    HAL_UART_Transmit(uart, colour_seq, 1, UART_TIMEOUT);    // Start sequence
-    HAL_UART_Transmit(uart, colour_seq+1, 1, UART_TIMEOUT);    // Start sequence
-    HAL_UART_Transmit(uart, &region_id, 1, UART_TIMEOUT);                     // Send region id value
-    HAL_UART_Transmit(uart, &colour_id, 1, UART_TIMEOUT);                     // Send colour id value
-    HAL_UART_Transmit(uart, &end_code, 1, UART_TIMEOUT);                      // End transmission
+    region_to_chronoId(&region_id);
+    HAL_UART_Transmit(uart, &start_code, 1, UART_TIMEOUT);      // Start
+    HAL_UART_Transmit(uart, &colour_code, 1, UART_TIMEOUT);     // Colour
+    HAL_UART_Transmit(uart, &region_id, 1, UART_TIMEOUT);       // Send region id value
+    HAL_UART_Transmit(uart, &colour_id, 1, UART_TIMEOUT);       // Send colour id value
+    HAL_UART_Transmit(uart, &end_code, 1, UART_TIMEOUT);        // End transmission
 }
 void Esp8266Driver_Show(uint8_t region_id)
 {
-    HAL_UART_Transmit(uart, status_seq, 1, UART_TIMEOUT);    // Start sequence
-    HAL_UART_Transmit(uart, status_seq+1, 1, UART_TIMEOUT);    // Start sequence
-    HAL_UART_Transmit(uart, &region_id, 1, UART_TIMEOUT);                     // Send region id value
-    HAL_UART_Transmit(uart, &status_on, 1, UART_TIMEOUT);                     // Send ON status
-    HAL_UART_Transmit(uart, &end_code, 1, UART_TIMEOUT);                      // End transmission
+    region_to_chronoId(&region_id);
+    HAL_UART_Transmit(uart, &start_code, 1, UART_TIMEOUT);      // Start
+    HAL_UART_Transmit(uart, &status_code, 1, UART_TIMEOUT);     // Status
+    HAL_UART_Transmit(uart, &region_id, 1, UART_TIMEOUT);       // Send region id value
+    HAL_UART_Transmit(uart, &status_on, 1, UART_TIMEOUT);       // Send ON status
+    HAL_UART_Transmit(uart, &end_code, 1, UART_TIMEOUT);        // End transmission
 }
 void Esp8266Driver_Hide(uint8_t region_id)
 {
-    HAL_UART_Transmit(uart, status_seq, 1, UART_TIMEOUT);    // Start sequence
-    HAL_UART_Transmit(uart, status_seq+1, 1, UART_TIMEOUT);    // Start sequence
-    HAL_UART_Transmit(uart, &region_id, 1, UART_TIMEOUT);                     // Send region id value
-    HAL_UART_Transmit(uart, &status_off, 1, UART_TIMEOUT);                    // Send OFF status
-    HAL_UART_Transmit(uart, &end_code, 1, UART_TIMEOUT);                      // End transmission
+    region_to_chronoId(&region_id);
+    HAL_UART_Transmit(uart, &start_code, 1, UART_TIMEOUT);      // Start
+    HAL_UART_Transmit(uart, &status_code, 1, UART_TIMEOUT);     // Status
+    HAL_UART_Transmit(uart, &region_id, 1, UART_TIMEOUT);       // Send region id value
+    HAL_UART_Transmit(uart, &status_off, 1, UART_TIMEOUT);      // Send OFF status
+    HAL_UART_Transmit(uart, &end_code, 1, UART_TIMEOUT);        // End transmission
 }
 
 /*
@@ -154,4 +166,22 @@ void reset_driver(void)
     HAL_GPIO_WritePin(DISP_RESET_GPIO_Port, DISP_RESET_Pin, GPIO_PIN_RESET);
     HAL_Delay(1);
     HAL_GPIO_WritePin(DISP_RESET_GPIO_Port, DISP_RESET_Pin, GPIO_PIN_SET);
+}
+
+void region_to_chronoId(uint8_t *region_num)
+{
+    switch(*region_num)
+    {
+    case 1:
+        *region_num = TOP_REGION_ID;
+        break;
+    case 2:
+        *region_num = MID_REGION_ID;
+        break;
+    case 3:
+        *region_num = BOT_REGION_ID;
+        break;
+    default:
+        break;
+    }
 }

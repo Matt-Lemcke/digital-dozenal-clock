@@ -9,21 +9,19 @@
 #include "display.h"
 #include "bitmaps.h"
 
-#include <stdio.h>
-
 #define NUM_SHOWTIME_STATES 4
 
 #define DEFAULT_FORMAT      TRAD_24H
-#define DEFAULT_BRIGHTNESS  255
+#define DEFAULT_BRIGHTNESS  HIGH_BRIGHTNESS
 
 #define LARGE_BITMAP_SIZE 96
 #define SMALL_BITMAP_SIZE 56
 
 typedef enum row_number_t
 {
-    ROW_1,
-    ROW_2,
-    ROW_3
+    ROW_1 = 1,
+    ROW_2 = 2,
+    ROW_3 = 3
 } RowNumber;
 
 typedef struct bitmap{
@@ -34,10 +32,10 @@ typedef struct bitmap{
 
 typedef enum state_code_t
 {
-    STATE_OFF, 
-    STATE_SHOWTIME123, 
-    STATE_SHOWTIME23, 
-    STATE_SHOWTIME12, 
+    STATE_OFF,
+    STATE_SHOWTIME123,
+    STATE_SHOWTIME23,
+    STATE_SHOWTIME12,
     STATE_SHOWTIME2,
     STATE_SETTIME,
     STATE_SETTIMER,
@@ -82,13 +80,14 @@ static void SetAlarm_Update(Display *ctx);
 static void transition(State *next);
 
 // Bitmap creation functions
-static void displayChar(Bitmap *row_bitmap, uint8_t char_index, uint8_t digit[]);
+static void displayChar(Bitmap *row_bitmap, uint8_t char_index,
+        uint8_t digit[]);
 static void displayTime(Bitmap *row_bitmap, uint32_t time_ms);
 static void blinkDigit(Bitmap *row_bitmap, uint8_t char_index);
 /*
     State definitions
 */
-State s_off = 
+State s_off =
 {
     .state_code = STATE_OFF,
     .entry = Default_Entry,
@@ -180,9 +179,9 @@ Bitmap row3_bitmap = {
     Private variables
 */
 static DisplayFSM g_fsm = {0};
-static State *show_time_states[NUM_SHOWTIME_STATES] = 
+static State *show_time_states[NUM_SHOWTIME_STATES] =
 {
-    &s_show_time123, 
+    &s_show_time123,
     &s_show_time23,
     &s_show_time12,
     &s_show_time2
@@ -193,15 +192,32 @@ volatile uint8_t blink_state = 0;
 /*
     Public functions
 */
-void Display_Init(Display *self, ExternVars *vars)
+ClockStatus Display_Init(Display *self, ExternVars *vars)
 {
+    // Check for NULL pointers
+    if (self->displayOff == NULL ||
+            self->displayOn == NULL ||
+            self->setBrightness == NULL ||
+            self->setBitmap == NULL ||
+            self->setColour == NULL ||
+            self->show == NULL ||
+            self->hide == NULL)
+    {
+        return CLOCK_FAIL;
+    }
     self->clock_vars = vars;
     self->time_format = DEFAULT_FORMAT;
     self->brightness = DEFAULT_BRIGHTNESS;
     g_fsm.ctx = self;
     g_fsm.curr_state = &s_off;
     show_time_index = 0;
+
+    // Set brightness
+    g_fsm.ctx->setBrightness(g_fsm.ctx->brightness);
+
+    // Start FSM
     g_fsm.curr_state->entry(g_fsm.ctx);
+    return CLOCK_OK;
 }
 
 void Display_Update(void)
@@ -211,13 +227,14 @@ void Display_Update(void)
 
 void Display_PeriodicCallback(void)
 {
+    // Update status of any blinking digits
     blink_state = !blink_state;
 }
 
 void Display_Off(void)
 {
     // Check if currently in a ShowTime state
-    if(g_fsm.curr_state->state_code == 
+    if (g_fsm.curr_state->state_code ==
         show_time_states[show_time_index]->state_code)
     {
         transition(&s_off);
@@ -227,7 +244,7 @@ void Display_Off(void)
 void Display_On(void)
 {
     // Check if currently in Off state
-    if(g_fsm.curr_state->state_code == STATE_OFF)
+    if (g_fsm.curr_state->state_code == STATE_OFF)
     {
         transition(show_time_states[show_time_index]);
     }
@@ -236,7 +253,7 @@ void Display_On(void)
 void Display_ToggleMode(void)
 {
     // Check if currently in a ShowTime state
-    if(g_fsm.curr_state->state_code == 
+    if (g_fsm.curr_state->state_code ==
         show_time_states[show_time_index]->state_code)
     {
         // Transition to the next ShowTime state
@@ -248,7 +265,7 @@ void Display_ToggleMode(void)
 void Display_SetTime(void)
 {
     // Check if currently in a ShowTime state
-    if(g_fsm.curr_state->state_code == 
+    if (g_fsm.curr_state->state_code ==
         show_time_states[show_time_index]->state_code)
     {
         transition(&s_set_time);
@@ -258,7 +275,7 @@ void Display_SetTime(void)
 void Display_SetTimer(void)
 {
     // Check if currently in a ShowTime state
-    if(g_fsm.curr_state->state_code == 
+    if (g_fsm.curr_state->state_code ==
         show_time_states[show_time_index]->state_code)
     {
         transition(&s_set_timer);
@@ -268,7 +285,7 @@ void Display_SetTimer(void)
 void Display_SetAlarm(void)
 {
     // Check if currently in a ShowTime state
-    if(g_fsm.curr_state->state_code == 
+    if (g_fsm.curr_state->state_code ==
         show_time_states[show_time_index]->state_code)
     {
         transition(&s_set_alarm);
@@ -278,7 +295,7 @@ void Display_SetAlarm(void)
 void Display_ShowTime(void)
 {
     // Check if currently in a valid Set state
-    if(g_fsm.curr_state->state_code == STATE_SETALARM
+    if (g_fsm.curr_state->state_code == STATE_SETALARM
         || g_fsm.curr_state->state_code == STATE_SETTIMER
         || g_fsm.curr_state->state_code == STATE_SETTIME)
     {
@@ -289,6 +306,12 @@ void Display_ShowTime(void)
 void Display_SetFormat(TimeFormats format)
 {
     g_fsm.ctx->time_format = format;
+}
+
+void Display_SetBrightness(BrightnessLevels brightness)
+{
+    g_fsm.ctx->brightness = brightness;
+    g_fsm.ctx->setBrightness(g_fsm.ctx->brightness);
 }
 
 /*
@@ -308,7 +331,7 @@ void Default_Exit(Display *ctx)
 }
 static void Off_Entry(Display *ctx)
 {
-    UNUSED(ctx);
+    ctx->displayOff();
 }
 static void Off_Update(Display *ctx)
 {
@@ -316,19 +339,27 @@ static void Off_Update(Display *ctx)
 }
 static void ShowTime123_Entry(Display *ctx)
 {
-    UNUSED(ctx);
+    ctx->show(ROW_1);
+    ctx->show(ROW_2);
+    ctx->show(ROW_3);
 }
 static void ShowTime23_Entry(Display *ctx)
 {
-    UNUSED(ctx);
+    ctx->hide(ROW_1);
+    ctx->show(ROW_2);
+    ctx->show(ROW_3);
 }
 static void ShowTime12_Entry(Display *ctx)
 {
-    UNUSED(ctx);
+    ctx->show(ROW_1);
+    ctx->show(ROW_2);
+    ctx->hide(ROW_3);
 }
 static void ShowTime2_Entry(Display *ctx)
 {
-    UNUSED(ctx);
+    ctx->hide(ROW_1);
+    ctx->show(ROW_2);
+    ctx->hide(ROW_3);
 }
 static void ShowTime_Update(Display *ctx)
 {
@@ -336,7 +367,9 @@ static void ShowTime_Update(Display *ctx)
 }
 static void SetTime_Entry(Display *ctx)
 {
-    UNUSED(ctx);
+    ctx->show(ROW_1);
+    ctx->show(ROW_2);
+    ctx->show(ROW_3);
 }
 static void SetTime_Update(Display *ctx)
 {
@@ -344,7 +377,9 @@ static void SetTime_Update(Display *ctx)
 }
 static void SetTimer_Entry(Display *ctx)
 {
-    UNUSED(ctx);
+    ctx->show(ROW_1);
+    ctx->show(ROW_2);
+    ctx->show(ROW_3);
 }
 static void SetTimer_Update(Display *ctx)
 {
@@ -352,7 +387,9 @@ static void SetTimer_Update(Display *ctx)
 }
 static void SetAlarm_Entry(Display *ctx)
 {
-    UNUSED(ctx);
+    ctx->show(ROW_1);
+    ctx->show(ROW_2);
+    ctx->show(ROW_3);
 }
 static void SetAlarm_Update(Display *ctx)
 {
@@ -361,25 +398,7 @@ static void SetAlarm_Update(Display *ctx)
 
 void transition(State *next)
 {
-    printf("\nExit state: %d", g_fsm.curr_state->state_code);
     g_fsm.curr_state->exit(g_fsm.ctx);
     g_fsm.curr_state = next;
     g_fsm.curr_state->entry(g_fsm.ctx);
-    printf("\nEnter state: %d", g_fsm.curr_state->state_code);
 }
-
-#ifdef NO_PLATFORM
-int main(void)
-{
-    Display test;
-    ExternVars test_vars;
-    Display_Init(&test, &test_vars);
-    Display_On();
-    Display_ToggleMode();
-    Display_ToggleMode();
-    Display_SetTime();
-     Display_SetTimer();
-    Display_ShowTime();
-    return 0;
-}
-#endif

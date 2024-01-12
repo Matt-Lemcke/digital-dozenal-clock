@@ -11,12 +11,19 @@
 
 #include "clock_types.h"
 
+typedef enum brightness_levels_t
+{
+    LOW_BRIGHTNESS = 30,
+    MED_BRIGHTNESS = 130,
+    HIGH_BRIGHTNESS = 255,
+} BrightnessLevels;
+
 typedef enum time_formats_t
 {
     TRAD_24H,
     TRAD_12H,
-    DOZ_DIR4,
-    DOZ_DIR5,
+    DOZ_DRN4,
+    DOZ_DRN5,
     DOZ_SEMI,
 } TimeFormats;
 
@@ -41,9 +48,17 @@ typedef struct display_t
     ExternVars  *clock_vars;
     TimeFormats time_format;
     uint8_t     brightness;
+
+    void (*displayOff)(void);
+    void (*displayOn)(void);
+    void (*setBrightness)(uint8_t brightness);
+    void (*setBitmap)(uint8_t region_id, uint8_t *bitmap);
+    void (*setColour)(uint8_t region_id, uint8_t colour_id);
+    void (*show)(uint8_t region_id);
+    void (*hide)(uint8_t region_id);
 } Display;
 
-void Display_Init(Display *self, ExternVars *vars);
+ClockStatus Display_Init(Display *self, ExternVars *vars);
 void Display_Update(void);
 void Display_PeriodicCallback(void);
 void Display_Off(void);
@@ -54,4 +69,5 @@ void Display_SetTimer(void);
 void Display_SetAlarm(void);
 void Display_ShowTime(void);
 void Display_SetFormat(TimeFormats format);
+void Display_SetBrightness(BrightnessLevels brightness);
 #endif  // FIRMWARE_INC_DISPLAY_H_

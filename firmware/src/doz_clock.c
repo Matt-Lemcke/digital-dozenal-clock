@@ -191,4 +191,10 @@ static void transition(State *next)
     g_clock_fsm.curr_state->entry(g_clock_fsm.ctx);
 }
 
+#ifdef NO_PLATFORM
+int main(void)
+{
+    return 0;
+}
+#endif
 
