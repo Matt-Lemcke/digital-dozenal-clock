@@ -27,6 +27,7 @@
 /* USER CODE BEGIN Includes */
 #include "buzzer.h"
 #include "clock_types.h"
+#include "gpio-buttons.h"
 #include "pwm-buzzer.h"
 /* USER CODE END Includes */
 
@@ -106,6 +107,9 @@ int main(void)
       Error_Handler();
   }
 
+  // Buttons
+  Buttons_Init();
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -166,7 +170,10 @@ void SystemClock_Config(void)
 
 void HAL_GPIO_EXTI_Callback(uint16_t pin)
 {
-
+    if (pin != RTC_SQW_Pin)
+    {
+        Buttons_GpioCallback(pin);
+    }
 }
 
 /* USER CODE END 4 */

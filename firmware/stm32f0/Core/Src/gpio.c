@@ -54,10 +54,10 @@ void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(DISP_RESET_GPIO_Port, DISP_RESET_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pins : PCPin PCPin PCPin PCPin
-                           PCPin PCPin PCPin PCPin */
+                           PCPin PCPin PCPin */
   GPIO_InitStruct.Pin = BTN12_IN_Pin|BTN1_IN_Pin|BTN2_IN_Pin|BTN3_IN_Pin
-                          |BTN4_IN_Pin|RTC_SQW_Pin|BTN5_IN_Pin|BTN6_IN_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+                          |BTN4_IN_Pin|BTN5_IN_Pin|BTN6_IN_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
@@ -68,11 +68,17 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(DISP_RESET_GPIO_Port, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : PtPin */
+  GPIO_InitStruct.Pin = RTC_SQW_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(RTC_SQW_GPIO_Port, &GPIO_InitStruct);
+
   /*Configure GPIO pins : PBPin PBPin PBPin PBPin
                            PBPin */
   GPIO_InitStruct.Pin = BTN7_IN_Pin|BTN8_IN_Pin|BTN9_IN_Pin|BTN10_IN_Pin
                           |BTN11_IN_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
