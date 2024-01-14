@@ -18,6 +18,8 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "adc.h"
+#include "dma.h"
 #include "i2c.h"
 #include "tim.h"
 #include "usart.h"
@@ -25,6 +27,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "adc-light-sens.h"
 #include "buzzer.h"
 #include "clock_types.h"
 #include "pwm-buzzer.h"
@@ -90,10 +93,12 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_I2C1_Init();
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
   MX_TIM3_Init();
+  MX_ADC_Init();
   /* USER CODE BEGIN 2 */
 
   // Buzzer
@@ -105,6 +110,9 @@ int main(void)
   {
       Error_Handler();
   }
+
+  // Light sensor
+  LightSens_Init(&hadc, 2000);
 
   /* USER CODE END 2 */
 
@@ -132,9 +140,11 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_HSI14;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+  RCC_OscInitStruct.HSI14State = RCC_HSI14_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
+  RCC_OscInitStruct.HSI14CalibrationValue = 16;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
@@ -167,6 +177,16 @@ void SystemClock_Config(void)
 void HAL_GPIO_EXTI_Callback(uint16_t pin)
 {
 
+}
+
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
+{
+    /*
+     * !!!!!!
+     * Should move this to a timer callback so it isn't called as often
+     */
+
+    LightSens_AdcSampleCallback();
 }
 
 /* USER CODE END 4 */
