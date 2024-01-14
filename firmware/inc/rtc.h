@@ -1,9 +1,6 @@
 #ifndef FIRMWARE_INC_RTC_H_
 #define FIRMWARE_INC_RTC_H_
 
-#include <stdint.h>
-#include <stdbool.h>
-
 #include "clock_types.h"
 
 #define MAX_NO_DAYS_RESET   5
