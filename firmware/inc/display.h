@@ -1,8 +1,6 @@
 #ifndef FIRMWARE_INC_DISPLAY_H_
 #define FIRMWARE_INC_DISPLAY_H_
 
-#include <stdint.h>
-
 #include "clock_types.h"
 
 #define MAX_CHARACTERS       8

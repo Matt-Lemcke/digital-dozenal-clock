@@ -8,8 +8,6 @@
 #ifndef FIRMWARE_INC_TIME_TRACK_H_
 #define FIRMWARE_INC_TIME_TRACK_H_
 
-#include <stdint.h>
-
 #include "clock_types.h"
 #include "rtc.h"
 #include "gps.h"

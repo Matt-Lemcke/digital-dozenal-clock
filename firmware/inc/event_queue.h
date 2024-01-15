@@ -1,17 +1,9 @@
-#ifndef FIRMWARE_INC_EVENT_QUEUE_H_
-#define FIRMWARE_INC_EVENT_QUEUE_H_
-
-#include <stdint.h>
+#ifndef FIRMWARE_INC_EVENT_QUEUE2_H_
+#define FIRMWARE_INC_EVENT_QUEUE2_H_
 
 #include "clock_types.h"
-#include "doz_clock.h"
-
-////////////////////// Defines
 
 #define BUFFER_SIZE     5
-
-
-////////////////////// Enums
 
 typedef enum btnId
 {
@@ -26,73 +18,74 @@ typedef enum btnId
     TRAD,
     VOLUP,
     VOLDOWN,
-    CANCEL,
-    NUM_BUTTON_ID
+    CANCEL
 } BtnId;
 
 typedef enum btnPressType
 {
     SHORT,
-    LONG,
-    NUM_PRESS_TYPES
+    LONG
 } BtnPressType;
 
 typedef enum lightEventType
 {
     LIGHT_ROOM,
-    DARK_ROOM,
-    NUM_LIGHT_EVENT_TYPES
+    DARK_ROOM
 } LightEventType;
 
 typedef enum alarmEventType
 {
     ALARM_TRIG,
-    TIMER_TRIG,
-    NUM_ALARM_EVENT_TYPES
+    TIMER_TRIG
 } AlarmEventType;
 
-typedef enum EventType
+typedef enum eventIdType
 {
-    NO_EVENT = -1,
-    BTN_EVENT,
-    LIGHT_EVENT,
-    ALARM_EVENT,
-    NUM_EVENT_TYPES
-} EventType;
+    E_NONE,
+
+    // Alarm events
+    E_ALARM_TRIG,
+    E_TIMER_TRIG,
+
+    // Light events
+    E_ROOM_DARK,
+    E_ROOM_LIGHT,
+
+    // Long btn events
+    E_DISPLAY_LONG,
+    E_ALARM_LONG,
+    E_TIMER_LONG,
+    E_LEFT_LONG,
+    E_RIGHT_LONG,
+    E_UP_LONG,
+    E_DOWN_LONG,
+    E_DOZ_LONG,
+    E_TRAD_LONG,
+    E_VOLUP_LONG,
+    E_VOLDOWN_LONG,
+    E_CANCEL_LONG,
+
+    // Short btn events
+    E_DISPLAY_SHORT,
+    E_ALARM_SHORT,
+    E_TIMER_SHORT,
+    E_LEFT_SHORT,
+    E_RIGHT_SHORT,
+    E_UP_SHORT,
+    E_DOWN_SHORT,
+    E_DOZ_SHORT,
+    E_TRAD_SHORT,
+    E_VOLUP_SHORT,
+    E_VOLDOWN_SHORT,
+    E_CANCEL_SHORT,
+} EventId;
+
+ClockStatus EventQ_Init();
+ClockStatus EventQ_GetEvent(EventId *event);
+ClockStatus EventQ_TriggerButtonEvent(BtnId button, BtnPressType type);
+ClockStatus EventQ_TriggerLightEvent(LightEventType type);
+ClockStatus EventQ_TriggerAlarmEvent(AlarmEventType type);
 
 
-////////////////////// Structs
 
-typedef struct btn_event_type_t
-{
-    BtnId e_btn_id;
-    BtnPressType e_btn_press_type;
-} BtnEventType;
-
-typedef struct event_t
-{
-    EventType e_event_type;
-    BtnEventType s_btn_event;
-    LightEventType e_light_event;
-    AlarmEventType e_alarm_event;
-} Event;
-
-typedef struct EventQ
-{
-    Event s_event;
-    struct EventQ *next;
-} EventQ;
-
-////////////////////// Functions
-
-ClockStatus EQ_Init();
-ClockStatus EQ_GetEvent(Event *event);
-ClockStatus EQ_TriggerButtonEvent(BtnId button, BtnPressType type);
-ClockStatus EQ_TriggerLightEvent(LightEventType type);
-ClockStatus EQ_TriggerAlarmEvent(AlarmEventType type);
-
-#if DEBUG
-void printEventQ();
-#endif
-
-#endif  // FIRMWARE_INC_EVENT_QUEUE_H_
+#endif  // FIRMWARE_INC_EVENT_QUEUE2_H_

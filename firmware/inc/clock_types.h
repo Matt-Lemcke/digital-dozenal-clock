@@ -1,6 +1,9 @@
 #ifndef FIRMWARE_INC_CLOCK_TYPES_H_
 #define FIRMWARE_INC_CLOCK_TYPES_H_
 
+#include <stdint.h>
+#include <stdbool.h>
+
 #define UNUSED(x) (void) x
 
 // Generic error code return type
