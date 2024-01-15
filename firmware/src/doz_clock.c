@@ -46,8 +46,7 @@ static DozClockFSM g_clock_fsm = { 0 };
 static TimeSources g_time_sources = { 0 };
 uint32_t curr_time = 0, prev_time = 0;
 
-static RtcTime reset_time = { .date = 20, .dow = 1, .month = 11, .year = 2023,
-        .hr = 14, .min = 30, .sec = 0 };
+static RtcTime reset_time = { .hr = 14, .min = 30, .sec = 0 };
 
 // State definitions
 State clock_init =
@@ -135,7 +134,7 @@ static void Default_TimerCallback(DozClock *ctx)
 // Init State Functions
 static void ClockStateInit_Entry(DozClock *ctx)
 {
-    Display_Init(ctx->display);
+    // Display_Init(ctx->display);
 }
 static void ClockStateInit_Update(DozClock *ctx)
 {
@@ -146,14 +145,14 @@ static void ClockStateInit_Update(DozClock *ctx)
 // 24H State Functions
 static void ClockState24h_Entry(DozClock *ctx)
 {
-    Display_UpdateTime(ctx->display, curr_time, DEC24H);
+    // Display_UpdateTime(ctx->display, curr_time, DEC24H);
 }
 static void ClockState24h_Update(DozClock *ctx)
 {
     TimeTrack_GetTimeMs(&curr_time);
     if (curr_time != prev_time)
     {
-        Display_UpdateTime(ctx->display, curr_time, DEC24H);
+        // Display_UpdateTime(ctx->display, curr_time, DEC24H);
         prev_time = curr_time;
     }
     TimeTrack_Update();
@@ -167,14 +166,14 @@ static void ClockState24h_OnBtnPress(DozClock *ctx)
 // Diurnal Functions
 static void ClockStateDiurnal_Entry(DozClock *ctx)
 {
-    Display_UpdateTime(ctx->display, curr_time, DIURNAL);
+    // Display_UpdateTime(ctx->display, curr_time, DIURNAL);
 }
 static void ClockStateDiurnal_Update(DozClock *ctx)
 {
     TimeTrack_GetTimeMs(&curr_time);
     if (curr_time != prev_time)
     {
-        Display_UpdateTime(ctx->display, curr_time, DIURNAL);
+        // Display_UpdateTime(ctx->display, curr_time, DIURNAL);
         prev_time = curr_time;
     }
     TimeTrack_Update();
@@ -199,3 +198,4 @@ int main(void)
     return 0;
 }
 #endif
+
