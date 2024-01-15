@@ -28,9 +28,17 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "adc-light-sens.h"
-#include "buzzer.h"
 #include "clock_types.h"
+
+#include "buzzer.h"
+#include "display.h"
+#include "gps.h"
+#include "rtc.h"
+
+#include "i2c-rtc.h"
 #include "pwm-buzzer.h"
+#include "uart-display.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -50,6 +58,9 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+Display rgb_matrix;
+ExternVars display_vars;
+Rtc ds3231;
 Buzzer buzzer;
 
 /* USER CODE END PV */
@@ -98,9 +109,27 @@ int main(void)
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
   MX_TIM3_Init();
+  MX_TIM6_Init();
   MX_ADC_Init();
   /* USER CODE BEGIN 2 */
 
+  // Display
+  if(!Esp8266Driver_Init(&huart2, 2000))
+  {
+      Error_Handler();
+  }
+  rgb_matrix.displayOff = Esp8266Driver_DisplayOff;
+  rgb_matrix.displayOn = Esp8266Driver_DisplayOn;
+  rgb_matrix.setBrightness = Esp8266Driver_SetDisplayBrightness;
+  rgb_matrix.setBitmap = Esp8266Driver_SetBitmap;
+  rgb_matrix.setColour = Esp8266Driver_SetColour;
+  rgb_matrix.show = Esp8266Driver_Show;
+  rgb_matrix.hide = Esp8266Driver_Hide;
+  if(Display_Init(&rgb_matrix, &display_vars) != CLOCK_OK)
+  {
+      Error_Handler();
+  }
+  
   // Buzzer
   PKM22E_Init(&htim3, TIM_CHANNEL_1);
   buzzer.setDutyCycle = PKM22E_SetDutyCyle;
@@ -111,6 +140,9 @@ int main(void)
       Error_Handler();
   }
 
+  // RTC
+  DS3231_Init(&hi2c1);
+
   // Light sensor
   LightSens_Init(&hadc, 2000);
 
@@ -120,6 +152,8 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+    Display_Update();
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -177,6 +211,15 @@ void SystemClock_Config(void)
 void HAL_GPIO_EXTI_Callback(uint16_t pin)
 {
 
+}
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+    if(htim == &htim6)
+    {
+        // 2 Hz period
+        Display_PeriodicCallback();
+    }
 }
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
