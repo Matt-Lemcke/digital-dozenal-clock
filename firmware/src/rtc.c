@@ -1,7 +1,5 @@
 #include "rtc.h"
 
-#include <stdio.h>
-#include <string.h>
 
 ClockStatus Rtc_Init(Rtc *self)
 {

@@ -1,10 +1,6 @@
 #ifndef FIRMWARE_INC_BUZZER_H_
 #define FIRMWARE_INC_BUZZER_H_
 
-#include <stdint.h>
-#include <stdbool.h>
-#include <stddef.h>
-
 #include "clock_types.h"
 
 #define MAX_VOLUME  100

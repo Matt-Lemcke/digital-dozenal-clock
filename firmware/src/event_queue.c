@@ -1,13 +1,12 @@
 #include "event_queue.h"
 
-#include <stdio.h>
 
 static struct {
     EventId buffer[BUFFER_SIZE];
     uint8_t head;
     uint8_t tail;
     bool is_empty;
-}ring_buff; // Ring buffer data structure
+}ring_buff;  // Ring buffer data structure
 
 static void bufferPush(EventId event);
 static EventId bufferPop(void);
@@ -40,46 +39,46 @@ ClockStatus EventQ_GetEvent(EventId *event)
 ClockStatus EventQ_TriggerButtonEvent(BtnId button, BtnPressType type)
 {
     EventId btn_event = E_NONE;
-    if (bufferFull()) 
+    if (bufferFull())
     {
         return CLOCK_FAIL;
     }
     switch (button)
     {
-        case DISPLAY:
+        case B_DISPLAY:
             btn_event = (type == LONG) ? E_DISPLAY_LONG : E_DISPLAY_SHORT;
             break;
-        case ALARM:
+        case B_ALARM:
             btn_event = (type == LONG) ? E_ALARM_LONG : E_ALARM_SHORT;
             break;
-        case TIMER:
+        case B_TIMER:
             btn_event = (type == LONG) ? E_TIMER_LONG : E_TIMER_SHORT;
             break;
-        case LEFT:
+        case B_LEFT:
             btn_event = (type == LONG) ? E_LEFT_LONG : E_LEFT_SHORT;
             break;
-        case RIGHT:
+        case B_RIGHT:
             btn_event = (type == LONG) ? E_RIGHT_LONG : E_RIGHT_SHORT;
             break;
-        case UP:
+        case B_UP:
             btn_event = (type == LONG) ? E_UP_LONG : E_UP_SHORT;
             break;
-        case DOWN:
+        case B_DOWN:
             btn_event = (type == LONG) ? E_DOWN_LONG : E_DOWN_SHORT;
             break;
-        case DOZ:
+        case B_DOZ:
             btn_event = (type == LONG) ? E_DOZ_LONG : E_DOZ_SHORT;
             break;
-        case TRAD:
+        case B_TRAD:
             btn_event = (type == LONG) ? E_TRAD_LONG : E_TRAD_SHORT;
             break;
-        case VOLUP:
+        case B_VOLUP:
             btn_event = (type == LONG) ? E_VOLUP_LONG : E_VOLUP_SHORT;
             break;
-        case VOLDOWN:
+        case B_VOLDOWN:
             btn_event = (type == LONG) ? E_VOLDOWN_LONG : E_VOLDOWN_SHORT;
             break;
-        case CANCEL:
+        case B_CANCEL:
             btn_event = (type == LONG) ? E_CANCEL_LONG : E_CANCEL_SHORT;
             break;
         default:
@@ -99,7 +98,7 @@ ClockStatus EventQ_TriggerButtonEvent(BtnId button, BtnPressType type)
 
 ClockStatus EventQ_TriggerLightEvent(LightEventType type)
 {
-    if (bufferFull()) 
+    if (bufferFull())
     {
         return CLOCK_FAIL;
     }
@@ -120,7 +119,7 @@ ClockStatus EventQ_TriggerLightEvent(LightEventType type)
 
 ClockStatus EventQ_TriggerAlarmEvent(AlarmEventType type)
 {
-    if (bufferFull()) 
+    if (bufferFull())
     {
         return CLOCK_FAIL;
     }
@@ -161,7 +160,7 @@ EventId bufferPop(void)
         // Take event from head and increment head
         event = ring_buff.buffer[ring_buff.head];
         ring_buff.head = (ring_buff.head + 1) % BUFFER_SIZE;
-        if(ring_buff.head == ring_buff.tail)
+        if (ring_buff.head == ring_buff.tail)
         {
             ring_buff.is_empty = 1;
         }

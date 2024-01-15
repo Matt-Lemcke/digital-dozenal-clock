@@ -1,5 +1,5 @@
-#ifndef FIRMWARE_INC_EVENT_QUEUE2_H_
-#define FIRMWARE_INC_EVENT_QUEUE2_H_
+#ifndef FIRMWARE_INC_EVENT_QUEUE_H_
+#define FIRMWARE_INC_EVENT_QUEUE_H_
 
 #include "clock_types.h"
 
@@ -7,18 +7,18 @@
 
 typedef enum btnId
 {
-    DISPLAY,
-    ALARM,
-    TIMER,
-    LEFT,
-    RIGHT,
-    UP,
-    DOWN,
-    DOZ,
-    TRAD,
-    VOLUP,
-    VOLDOWN,
-    CANCEL
+    B_DISPLAY,
+    B_ALARM,
+    B_TIMER,
+    B_LEFT,
+    B_RIGHT,
+    B_UP,
+    B_DOWN,
+    B_DOZ,
+    B_TRAD,
+    B_VOLUP,
+    B_VOLDOWN,
+    B_CANCEL
 } BtnId;
 
 typedef enum btnPressType
@@ -88,4 +88,4 @@ ClockStatus EventQ_TriggerAlarmEvent(AlarmEventType type);
 
 
 
-#endif  // FIRMWARE_INC_EVENT_QUEUE2_H_
+#endif  // FIRMWARE_INC_EVENT_QUEUE_H_
