@@ -2,7 +2,9 @@
 
 #include <stdio.h>
 
+#include "event_queue.h"
 #include "time_track.h"
+
 
 #define TIMER_PERIOD_MS 167
 
