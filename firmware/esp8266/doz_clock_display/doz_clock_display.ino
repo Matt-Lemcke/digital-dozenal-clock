@@ -140,12 +140,10 @@ void setup() {
   chrono_ctx.setMatrixBrightness = setMatrixBrightness;
   chrono_ctx.setBitmap = setBitmap;
   chrono_ctx.setRegionStatus = setRegionStatus;
-  chrono_ctx.setRegionStatus = setRegionStatus;
   Chrono_Init(&chrono_ctx, 9600);
   
   RgbMatrix_Init();
   memcpy(top_region.pixel_buffer, bars_map, top_region.pixel_buffer_size);
-  memcpy(mid_region.pixel_buffer, bars_map, mid_region.pixel_buffer_size);
   memcpy(mid_region.pixel_buffer, bars_map, mid_region.pixel_buffer_size);
   memcpy(bot_region.pixel_buffer, bars_map, bot_region.pixel_buffer_size);
 
