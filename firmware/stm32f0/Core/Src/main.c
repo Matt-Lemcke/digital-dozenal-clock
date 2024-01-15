@@ -144,7 +144,11 @@ int main(void)
   DS3231_Init(&hi2c1);
 
   // Light sensor
-  LightSens_Init(&hadc, 2000);
+  LightSens_Init(&hadc, 2800);
+
+
+  // Start 2Hz timer
+  HAL_TIM_Base_Start_IT(&htim6);
 
   /* USER CODE END 2 */
 
@@ -219,17 +223,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     {
         // 2 Hz period
         Display_PeriodicCallback();
+        LightSens_AdcSampleCallback();
     }
-}
-
-void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
-{
-    /*
-     * !!!!!!
-     * Should move this to a timer callback so it isn't called as often
-     */
-
-    LightSens_AdcSampleCallback();
 }
 
 /* USER CODE END 4 */

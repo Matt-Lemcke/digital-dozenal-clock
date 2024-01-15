@@ -8,10 +8,13 @@
 
 #include "adc-light-sens.h"
 
+// !!!! DEMO CODE !!!!
+#include "uart-display.h"
+
 #define ADC_BUF_LENGTH  50
 #define MAX_LIGHT_LEVEL 4095    // Max value on 12-bit ADC
-#define ALPHA           90      // Alpha value for moving avg. (out of 100)
-#define TRANSITION_BUFF 204
+#define ALPHA           70      // Alpha value for moving avg. (out of 100)
+#define TRANSITION_BUFF 100
 
 ADC_HandleTypeDef *adc;
 static uint16_t light_threshold;
@@ -45,9 +48,15 @@ void LightSens_AdcSampleCallback(void)
     if(is_dark_room && moving_avg > (light_threshold + TRANSITION_BUFF))
     {
         is_dark_room = 0;
+
+        // !!!! DEMO CODE !!!!
+        Esp8266Driver_SetDisplayBrightness(255);
     }
     else if(!is_dark_room && moving_avg < (light_threshold - TRANSITION_BUFF))
     {
         is_dark_room = 1;
+
+        // !!!! DEMO CODE !!!!
+        Esp8266Driver_SetDisplayBrightness(20);
     }
 }
