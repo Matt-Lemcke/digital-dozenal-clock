@@ -72,6 +72,8 @@ void Error_Handler(void);
 #define BTN4_IN_Pin GPIO_PIN_3
 #define BTN4_IN_GPIO_Port GPIOC
 #define BTN4_IN_EXTI_IRQn EXTI2_3_IRQn
+#define LIGHT_IN_Pin GPIO_PIN_0
+#define LIGHT_IN_GPIO_Port GPIOA
 #define DISP_TX_Pin GPIO_PIN_2
 #define DISP_TX_GPIO_Port GPIOA
 #define DISP_RX_Pin GPIO_PIN_3
