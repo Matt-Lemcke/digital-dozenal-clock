@@ -70,4 +70,7 @@ void Display_SetAlarm(void);
 void Display_ShowTime(void);
 void Display_SetFormat(TimeFormats format);
 void Display_SetBrightness(BrightnessLevels brightness);
+
+// Testing
+void printDisplay();
 #endif  // FIRMWARE_INC_DISPLAY_H_

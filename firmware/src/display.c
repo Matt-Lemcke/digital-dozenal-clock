@@ -402,3 +402,61 @@ void transition(State *next)
     g_fsm.curr_state = next;
     g_fsm.curr_state->entry(g_fsm.ctx);
 }
+
+void printDisplay() {
+    printf("Printing Rows >>>>>>>>>>>>>>>>>>>\n\n");
+
+    unsigned columnCounter = 0;
+    printf("Row 1\n\n");
+    for (unsigned i = 0; i < SMALL_BITMAP_SIZE; ++i) {
+        for (int b = 7; b >= 0; --b) {
+            if ((row1_bitmap.p_bitmap[i] >> b) & 0x1) {
+                printf("o");
+            } else {
+                printf(".");
+            }
+        }
+        ++columnCounter;
+        if (columnCounter >= 8) {
+            columnCounter = 0;
+            printf("\n");
+        }
+    }
+    printf("\n");
+
+    columnCounter = 0;
+    printf("Row 2\n\n");
+    for (unsigned i = 0; i < LARGE_BITMAP_SIZE; ++i) {
+        for (int b = 7; b >= 0; --b) {
+            if ((row2_bitmap.p_bitmap[i] >> b) & 0x1) {
+                printf("o");
+            } else {
+                printf(".");
+            }
+        }
+        ++columnCounter;
+        if (columnCounter >= 8) {
+            columnCounter = 0;
+            printf("\n");
+        }
+    }
+    printf("\n");
+
+    columnCounter = 0;
+    printf("Row 3\n\n");
+    for (unsigned i = 0; i < SMALL_BITMAP_SIZE; ++i) {
+        for (int b = 7; b >= 0; --b) {
+            if ((row3_bitmap.p_bitmap[i] >> b) & 0x1) {
+                printf("o");
+            } else {
+                printf(".");
+            }
+        }
+        ++columnCounter;
+        if (columnCounter >= 8) {
+            columnCounter = 0;
+            printf("\n");
+        }
+    }
+    printf("\n");
+}

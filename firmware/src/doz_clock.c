@@ -196,6 +196,7 @@ static void transition(State *next)
 #ifdef NO_PLATFORM
 int main(void)
 {
+    printDisplay();
     return 0;
 }
 #endif
