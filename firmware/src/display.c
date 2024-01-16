@@ -17,13 +17,6 @@
 #define LARGE_BITMAP_SIZE 96
 #define SMALL_BITMAP_SIZE 56
 
-typedef enum row_number_t
-{
-    ROW_1 = 1,
-    ROW_2 = 2,
-    ROW_3 = 3
-} RowNumber;
-
 typedef struct bitmap{
     RowNumber   num;
     uint8_t     *p_bitmap;
@@ -403,13 +396,58 @@ void transition(State *next)
     g_fsm.curr_state->entry(g_fsm.ctx);
 }
 
+// Write digit starting from this index
+// Eg. Writing 0 starting at index 5:
+// First pixel of number 0 begins at bitmap[0] bit 3 -->     . . . . o . . .
+// Rest gets filled out going downwards
+// index = 0-63
+
+void updateBitmap(RowNumber rowNum, uint8_t index, uint8_t num) {
+    uint8_t column = index / 8;
+    uint8_t bitIndex = index % 8;
+    uint8_t rhsChanges = bitIndex;
+    uint8_t lhsChanges = 8 - bitIndex;
+    uint8_t numRows = 0;
+    uint8_t *rowBitmap;
+    uint8_t *numBitmap;
+
+
+    if (rowNum == ROW_1) {
+        numRows = SMALL_DIGIT_ROWS;
+        rowBitmap = row1_bitmap.p_bitmap;
+        numBitmap = small_numbers[num];
+    } else if (rowNum == ROW_2) {
+        numRows = LARGE_DIGIT_ROWS;
+        rowBitmap = row2_bitmap.p_bitmap;
+        numBitmap = large_numbers[num];
+    } else if (rowNum == ROW_3) {
+        numRows = SMALL_DIGIT_ROWS;
+        rowBitmap = row3_bitmap.p_bitmap;
+        numBitmap = small_numbers[num];
+    }
+
+    for (uint8_t row = 0; row < numRows; ++row) {
+        uint8_t byte = column + row*8;
+
+        uint8_t lhsCurrent = rowBitmap[byte];
+        lhsCurrent = (lhsCurrent & (0xFF << lhsChanges)) | ((numBitmap[row] >> bitIndex) & (0xFF >> bitIndex));
+        rowBitmap[byte] = lhsCurrent;
+
+        if (column % 8 < 7) {
+            uint8_t rhsCurrent = rowBitmap[byte + 1];
+            rhsCurrent = (rhsCurrent & (0xFF >> rhsChanges)) | (numBitmap[row] << (8 - bitIndex));
+            rowBitmap[byte + 1] = rhsCurrent;
+        }
+    }
+}
+
 void printDisplay() {
     printf("Printing Rows >>>>>>>>>>>>>>>>>>>\n\n");
 
-    unsigned columnCounter = 0;
+    uint8_t columnCounter = 0;
     printf("Row 1\n\n");
-    for (unsigned i = 0; i < SMALL_BITMAP_SIZE; ++i) {
-        for (int b = 7; b >= 0; --b) {
+    for (uint8_t i = 0; i < SMALL_BITMAP_SIZE; ++i) {
+        for (int8_t b = 7; b >= 0; --b) {
             if ((row1_bitmap.p_bitmap[i] >> b) & 0x1) {
                 printf("o");
             } else {
@@ -426,8 +464,8 @@ void printDisplay() {
 
     columnCounter = 0;
     printf("Row 2\n\n");
-    for (unsigned i = 0; i < LARGE_BITMAP_SIZE; ++i) {
-        for (int b = 7; b >= 0; --b) {
+    for (uint8_t i = 0; i < LARGE_BITMAP_SIZE; ++i) {
+        for (int8_t b = 7; b >= 0; --b) {
             if ((row2_bitmap.p_bitmap[i] >> b) & 0x1) {
                 printf("o");
             } else {
@@ -444,8 +482,8 @@ void printDisplay() {
 
     columnCounter = 0;
     printf("Row 3\n\n");
-    for (unsigned i = 0; i < SMALL_BITMAP_SIZE; ++i) {
-        for (int b = 7; b >= 0; --b) {
+    for (uint8_t i = 0; i < SMALL_BITMAP_SIZE; ++i) {
+        for (int8_t b = 7; b >= 0; --b) {
             if ((row3_bitmap.p_bitmap[i] >> b) & 0x1) {
                 printf("o");
             } else {

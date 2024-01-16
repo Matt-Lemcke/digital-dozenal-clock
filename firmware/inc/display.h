@@ -27,6 +27,13 @@ typedef enum time_formats_t
     DOZ_SEMI,
 } TimeFormats;
 
+typedef enum row_number_t
+{
+    ROW_1 = 1,
+    ROW_2 = 2,
+    ROW_3 = 3
+} RowNumber;
+
 typedef struct extern_vars_t
 {
     uint32_t    *time_ms;
@@ -73,4 +80,5 @@ void Display_SetBrightness(BrightnessLevels brightness);
 
 // Testing
 void printDisplay();
+void updateBitmap(RowNumber rowNum, uint8_t index, uint8_t num);
 #endif  // FIRMWARE_INC_DISPLAY_H_

@@ -195,7 +195,9 @@ static void transition(State *next)
 
 #ifdef NO_PLATFORM
 int main(void)
-{
+{   
+    updateBitmap(1, 28, 7);
+    updateBitmap(2, 18, 4);
     printDisplay();
     return 0;
 }
