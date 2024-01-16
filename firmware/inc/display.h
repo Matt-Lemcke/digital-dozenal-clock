@@ -80,5 +80,5 @@ void Display_SetBrightness(BrightnessLevels brightness);
 
 // Testing
 void printDisplay();
-void updateBitmap(RowNumber rowNum, uint8_t index, uint8_t num);
+void testDisplay();
 #endif  // FIRMWARE_INC_DISPLAY_H_

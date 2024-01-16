@@ -196,25 +196,7 @@ static void transition(State *next)
 #ifdef NO_PLATFORM
 int main(void)
 {   
-    // Doz time display test row 2
-    // updateBitmap(ROW_2, 32, 12);
-    // updateBitmap(ROW_2, 6, 1);
-    // updateBitmap(ROW_2, 16, 4);
-    // updateBitmap(ROW_2, 26, 3);
-    // updateBitmap(ROW_2, 40, 2);
-    // updateBitmap(ROW_2, 50, 2);
-
-    // Trad time display test row 2
-    updateBitmap(ROW_2, 16, 13);
-    updateBitmap(ROW_2, 38, 13);
-    updateBitmap(ROW_2, 1, 0);
-    updateBitmap(ROW_2, 11, 8);
-    updateBitmap(ROW_2, 23, 3);
-    updateBitmap(ROW_2, 33, 4);
-    updateBitmap(ROW_2, 45, 0);
-    updateBitmap(ROW_2, 55, 6);
-
-    printDisplay();
+    testDisplay();
     return 0;
 }
 #endif

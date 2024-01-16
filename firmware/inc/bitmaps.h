@@ -11,6 +11,19 @@
 #define SMALL_NUMS_LENGTH 14
 #define SMALL_SYMB_LENGTH 9
 
+#define RADIX_INDEX         12
+#define SEMICOLON_INDEX     13
+
+#define D_INDEX             0
+#define S_INDEX             1
+#define SUN_INDEX           2
+#define MOON_INDEX          3
+#define A_INDEX             4
+#define T_INDEX             5
+#define AM_INDEX            6
+#define PM_INDEX            7
+#define EXCLAMATION_INDEX   8
+
 /*
  *  All digits are bottom-right aligned
 */ 

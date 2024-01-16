@@ -74,9 +74,10 @@ static void transition(State *next);
 
 // Bitmap creation functions
 static void displayChar(Bitmap *row_bitmap, uint8_t char_index,
-        uint8_t digit[]);
+        uint8_t digit[], uint8_t digitSize);
 static void displayTime(Bitmap *row_bitmap, uint32_t time_ms);
 static void blinkDigit(Bitmap *row_bitmap, uint8_t char_index);
+static void updateBitmap(Bitmap *row_bitmap, uint8_t index, uint8_t digit[], uint8_t digitSize);
 /*
     State definitions
 */
@@ -396,49 +397,72 @@ void transition(State *next)
     g_fsm.curr_state->entry(g_fsm.ctx);
 }
 
-// Write digit starting from this index
-// Eg. Writing 0 starting at index 5:
-// First pixel of number 0 begins at bitmap[0] bit 3 -->     . . . . o . . .
-// Rest gets filled out going downwards
-// index = 0-63
+#define SEMICOLON1_ROW3_DISPLAY_INDEX    16
+#define SEMICOLON2_ROW3_DISPLAY_INDEX    38
+#define RADIX_DRN4_ROW3_DISPLAY_INDEX    37
+#define RADIX_DRN5_ROW3_DISPLAY_INDEX    32
+static const uint8_t TRAD_ROW3_CHAR_DISPLAY_INDEX[6] = {1,11,23,33,45,55};
+static const uint8_t DRN4_ROW3_CHAR_DISPLAY_INDEX[4] = {11,21,31,45};
+static const uint8_t DRN5_ROW3_CHAR_DISPLAY_INDEX[5] = {6,16,26,40,50};
 
-void updateBitmap(RowNumber rowNum, uint8_t index, uint8_t num) {
+static void displayChar(Bitmap *row_bitmap, uint8_t char_index, uint8_t digit[], uint8_t digitSize)
+{
+    switch (g_fsm.ctx->time_format) {
+        case TRAD_24H:
+        case TRAD_12H:
+            updateBitmap(row_bitmap, TRAD_ROW3_CHAR_DISPLAY_INDEX[char_index], digit, digitSize);
+            break;
+        case DOZ_DRN4:
+            updateBitmap(row_bitmap, DRN4_ROW3_CHAR_DISPLAY_INDEX[char_index], digit, digitSize);
+            break;
+        case DOZ_DRN5:
+            case DOZ_SEMI:
+            updateBitmap(row_bitmap, DRN5_ROW3_CHAR_DISPLAY_INDEX[char_index], digit, digitSize);
+            break;
+        default:
+            break;
+    }
+}
+
+// Writes digit to row_bitmap starting at display index 'index'
+void updateBitmap(Bitmap *rowBitmap, uint8_t index, uint8_t digit[], uint8_t digitSize) {
     uint8_t column = index / 8;
     uint8_t bitIndex = index % 8;
     uint8_t rhsChanges = bitIndex;
     uint8_t lhsChanges = 8 - bitIndex;
-    uint8_t numRows = 0;
-    uint8_t *rowBitmap;
-    uint8_t *numBitmap;
 
-
-    if (rowNum == ROW_1) {
-        numRows = SMALL_DIGIT_ROWS;
-        rowBitmap = row1_bitmap.p_bitmap;
-        numBitmap = small_numbers[num];
-    } else if (rowNum == ROW_2) {
-        numRows = LARGE_DIGIT_ROWS;
-        rowBitmap = row2_bitmap.p_bitmap;
-        numBitmap = large_numbers[num];
-    } else if (rowNum == ROW_3) {
-        numRows = SMALL_DIGIT_ROWS;
-        rowBitmap = row3_bitmap.p_bitmap;
-        numBitmap = small_numbers[num];
-    }
-
-    for (uint8_t row = 0; row < numRows; ++row) {
+    for (uint8_t row = 0; row < digitSize; ++row) {
         uint8_t byte = column + row*8;
 
-        uint8_t lhsCurrent = rowBitmap[byte];
-        lhsCurrent = (lhsCurrent & (0xFF << lhsChanges)) | ((numBitmap[row] >> bitIndex) & (0xFF >> bitIndex));
-        rowBitmap[byte] = lhsCurrent;
+        uint8_t lhsCurrent = rowBitmap->p_bitmap[byte];
+        lhsCurrent = (lhsCurrent & (0xFF << lhsChanges)) | ((digit[row] >> bitIndex) & (0xFF >> bitIndex));
+        rowBitmap->p_bitmap[byte] = lhsCurrent;
 
         if (column % 8 < 7) {
-            uint8_t rhsCurrent = rowBitmap[byte + 1];
-            rhsCurrent = (rhsCurrent & (0xFF >> rhsChanges)) | (numBitmap[row] << (8 - bitIndex));
-            rowBitmap[byte + 1] = rhsCurrent;
+            uint8_t rhsCurrent = rowBitmap->p_bitmap[byte + 1];
+            rhsCurrent = (rhsCurrent & (0xFF >> rhsChanges)) | (digit[row] << (8 - bitIndex));
+            rowBitmap->p_bitmap[byte + 1] = rhsCurrent;
         }
     }
+}
+
+// Debugging
+static Display testDis;
+void testDisplay() {
+    g_fsm.ctx = &testDis;
+    g_fsm.ctx->time_format = TRAD_12H;
+
+    updateBitmap(&row2_bitmap, SEMICOLON1_ROW3_DISPLAY_INDEX, large_numbers[SEMICOLON_INDEX], LARGE_DIGIT_ROWS); // Semicolon1
+    updateBitmap(&row2_bitmap, SEMICOLON2_ROW3_DISPLAY_INDEX, large_numbers[SEMICOLON_INDEX], LARGE_DIGIT_ROWS); // Semicolon2
+
+    displayChar(&row2_bitmap, 0, large_numbers[0], LARGE_DIGIT_ROWS);
+    displayChar(&row2_bitmap, 1, large_numbers[8], LARGE_DIGIT_ROWS);
+    displayChar(&row2_bitmap, 2, large_numbers[3], LARGE_DIGIT_ROWS);
+    displayChar(&row2_bitmap, 3, large_numbers[4], LARGE_DIGIT_ROWS);
+    displayChar(&row2_bitmap, 4, large_numbers[0], LARGE_DIGIT_ROWS);
+    displayChar(&row2_bitmap, 5, large_numbers[6], LARGE_DIGIT_ROWS);
+    
+    printDisplay();
 }
 
 void printDisplay() {

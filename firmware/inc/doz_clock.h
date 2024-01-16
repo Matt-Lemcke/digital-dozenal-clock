@@ -5,6 +5,7 @@
 #include "display.h"
 #include "gps.h"
 #include "rtc.h"
+#include "bitmaps.h"
 
 
 typedef struct doz_clock_t
