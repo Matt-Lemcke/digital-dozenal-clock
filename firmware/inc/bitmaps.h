@@ -27,7 +27,7 @@
 /*
  *  All digits are bottom-right aligned
 */ 
-static char large_numbers[LARGE_NUMS_LENGTH][LARGE_DIGIT_ROWS] = {
+static unsigned char large_numbers[LARGE_NUMS_LENGTH][LARGE_DIGIT_ROWS] = {
     {
         // 0
         0b00111100,
@@ -243,7 +243,7 @@ static char large_numbers[LARGE_NUMS_LENGTH][LARGE_DIGIT_ROWS] = {
 /*
  *  All digits are bottom-right aligned
 */ 
-static char small_numbers[SMALL_NUMS_LENGTH][SMALL_DIGIT_ROWS] = {
+static unsigned char small_numbers[SMALL_NUMS_LENGTH][SMALL_DIGIT_ROWS] = {
     {
         // 0
         0b01110000,
@@ -389,7 +389,7 @@ static char small_numbers[SMALL_NUMS_LENGTH][SMALL_DIGIT_ROWS] = {
 /*
  *  All digits are bottom-right aligned
 */ 
-static char small_symbols[SMALL_SYMB_LENGTH][SMALL_DIGIT_ROWS] = {
+static unsigned char small_symbols[SMALL_SYMB_LENGTH][SMALL_DIGIT_ROWS] = {
     {
         // D
         0b00000000,
