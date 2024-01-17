@@ -6,26 +6,10 @@
  */
 
 #include "gpio-buttons.h"
-//#include "event_queue.h"
+#include "event_queue.h"
 
 #define BTN_LONG_HOLD_MS    1000
 #define BTN_SHORT_PRESS_MS  100
-
-typedef enum btnId
-{
-    DISPLAY,
-    ALARM,
-    TIMER,
-    LEFT,
-    RIGHT,
-    UP,
-    DOWN,
-    DOZ,
-    TRAD,
-    VOLUP,
-    VOLDOWN,
-    CANCEL
-} BtnId;    // Remove later, imports from event_queue.h
 
 typedef struct button_t
 {
@@ -36,18 +20,18 @@ typedef struct button_t
 
 static Button buttons[NUM_BUTTONS] =
 {
-        {.id = DISPLAY, .pin = BTN1_IN_Pin,     .port = BTN1_IN_GPIO_Port},
-        {.id = ALARM,   .pin = BTN2_IN_Pin,     .port = BTN2_IN_GPIO_Port},
-        {.id = TIMER,   .pin = BTN3_IN_Pin,     .port = BTN3_IN_GPIO_Port},
-        {.id = LEFT,    .pin = BTN4_IN_Pin,     .port = BTN4_IN_GPIO_Port},
-        {.id = RIGHT,   .pin = BTN5_IN_Pin,     .port = BTN5_IN_GPIO_Port},
-        {.id = UP,      .pin = BTN6_IN_Pin,     .port = BTN6_IN_GPIO_Port},
-        {.id = DOWN,    .pin = BTN7_IN_Pin,     .port = BTN7_IN_GPIO_Port},
-        {.id = DOZ,     .pin = BTN8_IN_Pin,     .port = BTN8_IN_GPIO_Port},
-        {.id = TRAD,    .pin = BTN9_IN_Pin,     .port = BTN9_IN_GPIO_Port},
-        {.id = VOLUP,   .pin = BTN10_IN_Pin,    .port = BTN10_IN_GPIO_Port},
-        {.id = VOLDOWN, .pin = BTN11_IN_Pin,    .port = BTN11_IN_GPIO_Port},
-        {.id = CANCEL,  .pin = BTN12_IN_Pin,    .port = BTN12_IN_GPIO_Port},
+        {.id = B_DISPLAY, .pin = BTN1_IN_Pin,     .port = BTN1_IN_GPIO_Port},
+        {.id = B_ALARM,   .pin = BTN2_IN_Pin,     .port = BTN2_IN_GPIO_Port},
+        {.id = B_TIMER,   .pin = BTN3_IN_Pin,     .port = BTN3_IN_GPIO_Port},
+        {.id = B_LEFT,    .pin = BTN4_IN_Pin,     .port = BTN4_IN_GPIO_Port},
+        {.id = B_RIGHT,   .pin = BTN5_IN_Pin,     .port = BTN5_IN_GPIO_Port},
+        {.id = B_UP,      .pin = BTN6_IN_Pin,     .port = BTN6_IN_GPIO_Port},
+        {.id = B_DOWN,    .pin = BTN7_IN_Pin,     .port = BTN7_IN_GPIO_Port},
+        {.id = B_DOZ,     .pin = BTN8_IN_Pin,     .port = BTN8_IN_GPIO_Port},
+        {.id = B_TRAD,    .pin = BTN9_IN_Pin,     .port = BTN9_IN_GPIO_Port},
+        {.id = B_VOLUP,   .pin = BTN10_IN_Pin,    .port = BTN10_IN_GPIO_Port},
+        {.id = B_VOLDOWN, .pin = BTN11_IN_Pin,    .port = BTN11_IN_GPIO_Port},
+        {.id = B_CANCEL,  .pin = BTN12_IN_Pin,    .port = BTN12_IN_GPIO_Port},
 };
 static Button *active_btn;
 static uint32_t hold_time_ms = 0;
@@ -106,7 +90,7 @@ void Buttons_TimerCallback(uint32_t period_ms)
             if(hold_time_ms < BTN_LONG_HOLD_MS)
             {
                 // Short press trigger
-                hold_time_ms++; // Placeholder
+                EventQ_TriggerButtonEvent(active_btn->id, SHORT);
             }
             active_btn = NULL;
             hold_time_ms = 0;
@@ -119,7 +103,7 @@ void Buttons_TimerCallback(uint32_t period_ms)
             if (hold_time_ms >= BTN_LONG_HOLD_MS)
             {
                 // long press trigger
-                hold_time_ms++; // Placeholder
+                EventQ_TriggerButtonEvent(active_btn->id, LONG);
             }
         }
     }

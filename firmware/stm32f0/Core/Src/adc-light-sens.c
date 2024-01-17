@@ -48,15 +48,9 @@ void LightSens_AdcSampleCallback(void)
     if(is_dark_room && moving_avg > (light_threshold + TRANSITION_BUFF))
     {
         is_dark_room = 0;
-
-        // !!!! DEMO CODE !!!!
-        Esp8266Driver_SetDisplayBrightness(255);
     }
     else if(!is_dark_room && moving_avg < (light_threshold - TRANSITION_BUFF))
     {
         is_dark_room = 1;
-
-        // !!!! DEMO CODE !!!!
-        Esp8266Driver_SetDisplayBrightness(20);
     }
 }

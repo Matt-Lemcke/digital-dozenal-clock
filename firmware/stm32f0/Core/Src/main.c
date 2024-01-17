@@ -40,6 +40,8 @@
 #include "pwm-buzzer.h"
 #include "uart-display.h"
 
+#include "event_queue.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -150,9 +152,18 @@ int main(void)
   // Light sensor
   LightSens_Init(&hadc, 2800);
 
-
   // Start 2Hz timer
   HAL_TIM_Base_Start_IT(&htim6);
+
+  // Start 6Hz timer
+  HAL_TIM_Base_Start_IT(&htim3);
+
+  // Test code
+  EventQ_Init();
+  EventId event = E_NONE;
+  Display_On();
+  uint8_t test_bitmap[100];
+  memset(test_bitmap, 0xFF, 100);
 
   /* USER CODE END 2 */
 
@@ -161,6 +172,35 @@ int main(void)
   while (1)
   {
     Display_Update();
+
+    // Test code
+    if (EventQ_GetEvent(&event) == CLOCK_OK)
+    {
+        switch (event)
+        {
+        case E_DISPLAY_SHORT:
+            Display_ToggleMode();
+            break;
+        case E_DISPLAY_LONG:
+            Display_Off();
+            break;
+        case E_CANCEL_SHORT:
+            Esp8266Driver_SetColour(TOP_REGION_ID, WHITE_ID);
+            Esp8266Driver_SetColour(MID_REGION_ID, WHITE_ID);
+            Esp8266Driver_SetColour(BOT_REGION_ID, WHITE_ID);
+            Esp8266Driver_SetBitmap(TOP_REGION_ID, test_bitmap);
+            Esp8266Driver_SetBitmap(MID_REGION_ID, test_bitmap);
+            Esp8266Driver_SetBitmap(BOT_REGION_ID, test_bitmap);
+            break;
+        case E_VOLUP_SHORT:
+            Display_SetBrightness(HIGH_BRIGHTNESS);
+            break;
+        case E_VOLDOWN_SHORT:
+            Display_SetBrightness(LOW_BRIGHTNESS);
+            break;
+        }
+        event = E_NONE;
+    }
 
     /* USER CODE END WHILE */
 
@@ -226,9 +266,14 @@ void HAL_GPIO_EXTI_Callback(uint16_t pin)
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-    if(htim == &htim6)
+    if(htim == &htim3)
     {
-        // 2 Hz period
+        // 6 Hz freq
+        Buttons_TimerCallback(167);
+    }
+    else if(htim == &htim6)
+    {
+        // 2 Hz freq
         Display_PeriodicCallback();
         LightSens_AdcSampleCallback();
     }
