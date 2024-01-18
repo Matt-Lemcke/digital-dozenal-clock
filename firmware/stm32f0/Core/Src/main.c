@@ -38,6 +38,7 @@
 #include "i2c-rtc.h"
 #include "pwm-buzzer.h"
 #include "uart-display.h"
+#include "uart-gps.h"
 
 /* USER CODE END Includes */
 
@@ -114,21 +115,21 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   // Display
-  if(!Esp8266Driver_Init(&huart2, 2000))
-  {
-      Error_Handler();
-  }
-  rgb_matrix.displayOff = Esp8266Driver_DisplayOff;
-  rgb_matrix.displayOn = Esp8266Driver_DisplayOn;
-  rgb_matrix.setBrightness = Esp8266Driver_SetDisplayBrightness;
-  rgb_matrix.setBitmap = Esp8266Driver_SetBitmap;
-  rgb_matrix.setColour = Esp8266Driver_SetColour;
-  rgb_matrix.show = Esp8266Driver_Show;
-  rgb_matrix.hide = Esp8266Driver_Hide;
-  if(Display_Init(&rgb_matrix, &display_vars) != CLOCK_OK)
-  {
-      Error_Handler();
-  }
+//  if(!Esp8266Driver_Init(&huart2, 2000))
+//  {
+//      Error_Handler();
+//  }
+//  rgb_matrix.displayOff = Esp8266Driver_DisplayOff;
+//  rgb_matrix.displayOn = Esp8266Driver_DisplayOn;
+//  rgb_matrix.setBrightness = Esp8266Driver_SetDisplayBrightness;
+//  rgb_matrix.setBitmap = Esp8266Driver_SetBitmap;
+//  rgb_matrix.setColour = Esp8266Driver_SetColour;
+//  rgb_matrix.show = Esp8266Driver_Show;
+//  rgb_matrix.hide = Esp8266Driver_Hide;
+//  if(Display_Init(&rgb_matrix, &display_vars) != CLOCK_OK)
+//  {
+//      Error_Handler();
+//  }
   
   // Buzzer
   PKM22E_Init(&htim3, TIM_CHANNEL_1);
@@ -143,12 +144,18 @@ int main(void)
   // RTC
   DS3231_Init(&hi2c1);
 
+  // GPS
+  GPS_Init(&huart1);
+
   // Light sensor
-  LightSens_Init(&hadc, 2800);
+//  LightSens_Init(&hadc, 2800);
 
 
   // Start 2Hz timer
-  HAL_TIM_Base_Start_IT(&htim6);
+//  HAL_TIM_Base_Start_IT(&htim6);
+
+  float utc = 0;
+  unsigned status = 0;
 
   /* USER CODE END 2 */
 
@@ -156,9 +163,13 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    Display_Update();
+//    Display_Update();
 
+      utc = GPS_get_utc_time();
+      status = GPS_get_gps_connected();
+      HAL_Delay(500);
     /* USER CODE END WHILE */
+
 
     /* USER CODE BEGIN 3 */
   }

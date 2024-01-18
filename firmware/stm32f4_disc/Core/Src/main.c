@@ -32,7 +32,6 @@
 #include "i2c-rtc.h"
 #include "rtc.h"
 #include "uart-display.h"
-#include "uart-display.h"
 
 /* USER CODE END Includes */
 
@@ -55,6 +54,7 @@
 /* USER CODE BEGIN PV */
 DozClock clock;
 Rtc ds3231;
+Gps neo6m;
 
 volatile uint8_t debounce_flag = 0;
 
@@ -120,20 +120,6 @@ int main(void)
     HAL_Delay(1);
     Esp8266Driver_SetColour(BOT_REGION_ID, YELLOW_ID);
     HAL_Delay(1);
-
-
-    Esp8266Driver_Init(&huart5);
-    Esp8266Driver_DisplayOn();
-    HAL_Delay(1);
-    Esp8266Driver_Show(TOP_REGION_ID);
-    HAL_Delay(1);
-    Esp8266Driver_SetColour(TOP_REGION_ID, MAGENTA_ID);
-    HAL_Delay(1);
-    Esp8266Driver_SetColour(MID_REGION_ID, CYAN_ID);
-    HAL_Delay(1);
-    Esp8266Driver_SetColour(BOT_REGION_ID, YELLOW_ID);
-    HAL_Delay(1);
-
 
 
     // RTC
@@ -251,6 +237,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		DozClock_TimerCallback();
 		debounce_flag = 0;
 	}
+}
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+	if(huart == &huart4) GPS_UART_CallBack();
 }
 
 /* USER CODE END 4 */
