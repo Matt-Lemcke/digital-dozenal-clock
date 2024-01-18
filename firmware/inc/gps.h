@@ -2,8 +2,6 @@
 #ifndef FIRMWARE_INC_GPS_H_
 #define FIRMWARE_INC_GPS_H_
 
-#include <stdint.h>
-
 #include "clock_types.h"
 
 typedef struct gps_time_t {

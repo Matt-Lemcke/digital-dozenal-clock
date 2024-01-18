@@ -31,7 +31,7 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <stdbool.h>
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -110,34 +110,6 @@ void Error_Handler(void);
 #define OTG_FS_PSO_GPIO_Port GPIOC
 #define OTG_FS_OC_Pin GPIO_PIN_5
 #define OTG_FS_OC_GPIO_Port GPIOC
-#define R3_Pin GPIO_PIN_0
-#define R3_GPIO_Port GPIOB
-#define R6_Pin GPIO_PIN_1
-#define R6_GPIO_Port GPIOB
-#define BOOT1_Pin GPIO_PIN_2
-#define BOOT1_GPIO_Port GPIOB
-#define SDNRAS_Pin GPIO_PIN_11
-#define SDNRAS_GPIO_Port GPIOF
-#define A6_Pin GPIO_PIN_12
-#define A6_GPIO_Port GPIOF
-#define A7_Pin GPIO_PIN_13
-#define A7_GPIO_Port GPIOF
-#define A8_Pin GPIO_PIN_14
-#define A8_GPIO_Port GPIOF
-#define A9_Pin GPIO_PIN_15
-#define A9_GPIO_Port GPIOF
-#define A10_Pin GPIO_PIN_0
-#define A10_GPIO_Port GPIOG
-#define A11_Pin GPIO_PIN_1
-#define A11_GPIO_Port GPIOG
-#define D4_Pin GPIO_PIN_7
-#define D4_GPIO_Port GPIOE
-#define D5_Pin GPIO_PIN_8
-#define D5_GPIO_Port GPIOE
-#define D6_Pin GPIO_PIN_9
-#define D6_GPIO_Port GPIOE
-#define D7_Pin GPIO_PIN_10
-#define D7_GPIO_Port GPIOE
 #define D8_Pin GPIO_PIN_11
 #define D8_GPIO_Port GPIOE
 #define D9_Pin GPIO_PIN_12
@@ -208,6 +180,12 @@ void Error_Handler(void);
 #define SWCLK_GPIO_Port GPIOA
 #define TP_INT1_Pin GPIO_PIN_15
 #define TP_INT1_GPIO_Port GPIOA
+#define R2_Pin GPIO_PIN_10
+#define R2_GPIO_Port GPIOC
+#define DISP_RESET_Pin GPIO_PIN_11
+#define DISP_RESET_GPIO_Port GPIOC
+#define DISP_RESET_Pin GPIO_PIN_11
+#define DISP_RESET_GPIO_Port GPIOC
 #define D2_Pin GPIO_PIN_0
 #define D2_GPIO_Port GPIOD
 #define D3_Pin GPIO_PIN_1

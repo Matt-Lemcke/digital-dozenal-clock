@@ -31,7 +31,8 @@
 #include "i2c-lcd.h"
 #include "i2c-rtc.h"
 #include "rtc.h"
-#include "uart-gps.h"
+#include "uart-display.h"
+#include "uart-display.h"
 
 /* USER CODE END Includes */
 
@@ -53,7 +54,6 @@
 
 /* USER CODE BEGIN PV */
 DozClock clock;
-Display lcd1602;
 Rtc ds3231;
 Gps neo6m;
 
@@ -106,47 +106,73 @@ int main(void)
   MX_GPIO_Init();
   MX_I2C3_Init();
   MX_TIM6_Init();
-  MX_UART4_Init();
+  MX_UART5_Init();
   /* USER CODE BEGIN 2 */
 
-  // Display
-  lcd_init();
-  lcd1602.sendString  = lcd_send_string;
-  lcd1602.clear       = lcd_clear_workaround;
+    // Display
+    Esp8266Driver_Init(&huart5);
+    Esp8266Driver_DisplayOn();
+    HAL_Delay(1);
+    Esp8266Driver_Show(TOP_REGION_ID);
+    HAL_Delay(1);
+    Esp8266Driver_SetColour(TOP_REGION_ID, MAGENTA_ID);
+    HAL_Delay(1);
+    Esp8266Driver_SetColour(MID_REGION_ID, CYAN_ID);
+    HAL_Delay(1);
+    Esp8266Driver_SetColour(BOT_REGION_ID, YELLOW_ID);
+    HAL_Delay(1);
 
-  clock.display = &lcd1602;
 
-  // RTC
-  DS3231_Init(&hi2c3);
-  ds3231.setRtcTime   = DS3231_SetTime;
-  ds3231.getDayOfWeek = DS3231_GetDayOfWeek;
-  ds3231.getDate      = DS3231_GetDate;
-  ds3231.getMonth     = DS3231_GetMonth;
-  ds3231.getYear      = DS3231_GetYear;
-  ds3231.getHour      = DS3231_GetHour;
-  ds3231.getMinute    = DS3231_GetMinute;
-  ds3231.getSecond    = DS3231_GetSecond;
+    Esp8266Driver_Init(&huart5);
+    Esp8266Driver_DisplayOn();
+    HAL_Delay(1);
+    Esp8266Driver_Show(TOP_REGION_ID);
+    HAL_Delay(1);
+    Esp8266Driver_SetColour(TOP_REGION_ID, MAGENTA_ID);
+    HAL_Delay(1);
+    Esp8266Driver_SetColour(MID_REGION_ID, CYAN_ID);
+    HAL_Delay(1);
+    Esp8266Driver_SetColour(BOT_REGION_ID, YELLOW_ID);
+    HAL_Delay(1);
 
-  clock.rtc = &ds3231;
 
-  // GPS
-  GPS_Init(&huart4);
-  neo6m.getUtcTime = GPS_get_utc_time;
-  neo6m.gpsConnected = GPS_get_gps_connected;
 
-  clock.gps = &neo6m;
+    // RTC
+    //DS3231_Init(&hi2c3);
+//    ds3231.setRtcTime   = DS3231_SetTime;
+//    ds3231.getDayOfWeek = DS3231_GetDayOfWeek;
+//    ds3231.getDate      = DS3231_GetDate;
+//    ds3231.getMonth     = DS3231_GetMonth;
+//    ds3231.getYear      = DS3231_GetYear;
+//    ds3231.getHour      = DS3231_GetHour;
+//    ds3231.getMinute    = DS3231_GetMinute;
+//    ds3231.getSecond    = DS3231_GetSecond;
+//
+//    clock.rtc = &ds3231;
 
-  DozClock_Init(&clock);
+  //DozClock_Init(&clock);
 
-  HAL_TIM_Base_Start_IT(&htim6);
+  //HAL_TIM_Base_Start_IT(&htim6);
+
+
+
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
   while (1)
   {
-	  DozClock_Update(&clock);
+      Esp8266Driver_Show(TOP_REGION_ID);
+      HAL_Delay(1000);
+      Esp8266Driver_Hide(TOP_REGION_ID);
+      HAL_Delay(1000);
+      Esp8266Driver_Show(TOP_REGION_ID);
+      HAL_Delay(1000);
+      Esp8266Driver_Hide(TOP_REGION_ID);
+      HAL_Delay(1000);
+	  //DozClock_Update(&clock);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
