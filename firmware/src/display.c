@@ -439,8 +439,8 @@ static void displayChar(Bitmap *row_bitmap, uint8_t char_index, uint8_t digit[],
 
 static void displayTime(Bitmap *row_bitmap, uint32_t time_ms)
 {
-    if (g_fsm.ctx->time_format == TRAD_24H || g_fsm.ctx->time_format == TRAD_12H) {
-
+    if (g_fsm.ctx->time_format == TRAD_24H || g_fsm.ctx->time_format == TRAD_12H)
+    {
         displayChar(row_bitmap, SEMICOLON1_ROW2_DISPLAY_INDEX, large_numbers[SEMICOLON_INDEX], LARGE_DIGIT_ROWS);
         displayChar(row_bitmap, SEMICOLON2_ROW2_DISPLAY_INDEX, large_numbers[SEMICOLON_INDEX], LARGE_DIGIT_ROWS);
 
@@ -454,15 +454,18 @@ static void displayTime(Bitmap *row_bitmap, uint32_t time_ms)
         displayChar(row_bitmap, TRAD_DIGIT_4_ROW2_DISPLAY_INDEX, large_numbers[min % 10], LARGE_DIGIT_ROWS);
         displayChar(row_bitmap, TRAD_DIGIT_5_ROW2_DISPLAY_INDEX, large_numbers[sec / 10], LARGE_DIGIT_ROWS);
         displayChar(row_bitmap, TRAD_DIGIT_6_ROW2_DISPLAY_INDEX, large_numbers[sec % 10], LARGE_DIGIT_ROWS);
-        
-    } else if (g_fsm.ctx->time_format == DOZ_DRN5 || g_fsm.ctx->time_format == DOZ_SEMI) {
-
+    }
+    else if (g_fsm.ctx->time_format == DOZ_DRN5 || g_fsm.ctx->time_format == DOZ_SEMI)
+    {
         displayChar(row_bitmap, RADIX_DRN5_ROW2_DISPLAY_INDEX, large_numbers[RADIX_INDEX], LARGE_DIGIT_ROWS);
 
         uint8_t digit1, digit2, digit3, digit4, digit5;
-        if (g_fsm.ctx->time_format == DOZ_DRN5) {
+        if (g_fsm.ctx->time_format == DOZ_DRN5)
+        {
             msToDiurn(time_ms, &digit1, &digit2, &digit3, &digit4, &digit5);
-        } else if (g_fsm.ctx->time_format == DOZ_SEMI) {
+        }
+        else if (g_fsm.ctx->time_format == DOZ_SEMI)
+        {
             msToSemiDiurn(time_ms, &digit1, &digit2, &digit3, &digit4, &digit5);
         }
 
@@ -471,9 +474,9 @@ static void displayTime(Bitmap *row_bitmap, uint32_t time_ms)
         displayChar(row_bitmap, DRN5_DIGIT_3_ROW2_DISPLAY_INDEX, large_numbers[digit3], LARGE_DIGIT_ROWS);
         displayChar(row_bitmap, DRN5_DIGIT_4_ROW2_DISPLAY_INDEX, large_numbers[digit4], LARGE_DIGIT_ROWS);
         displayChar(row_bitmap, DRN5_DIGIT_5_ROW2_DISPLAY_INDEX, large_numbers[digit5], LARGE_DIGIT_ROWS);
-
-    } else if (g_fsm.ctx->time_format == DOZ_DRN4) {
-
+    }
+    else if (g_fsm.ctx->time_format == DOZ_DRN4)
+    {
         displayChar(row_bitmap, RADIX_DRN4_ROW2_DISPLAY_INDEX, large_numbers[RADIX_INDEX], LARGE_DIGIT_ROWS);
 
         uint8_t digit1, digit2, digit3, digit4, digit5;
@@ -483,22 +486,30 @@ static void displayTime(Bitmap *row_bitmap, uint32_t time_ms)
         displayChar(row_bitmap, DRN4_DIGIT_2_ROW2_DISPLAY_INDEX, large_numbers[digit2], LARGE_DIGIT_ROWS);
         displayChar(row_bitmap, DRN4_DIGIT_3_ROW2_DISPLAY_INDEX, large_numbers[digit3], LARGE_DIGIT_ROWS);
         displayChar(row_bitmap, DRN4_DIGIT_4_ROW2_DISPLAY_INDEX, large_numbers[digit4], LARGE_DIGIT_ROWS);
-        
     }
 }
 
 static void blinkDigit(Bitmap *row_bitmap, uint8_t char_index)
 {
-    if (row_bitmap->num == ROW_2) {
-        if (blink_state) {
+    if (row_bitmap->num == ROW_2)
+    {
+        if (blink_state)
+        {
             updateBitmap(row_bitmap, char_index, large_numbers[BLANK_INDEX], LARGE_DIGIT_ROWS, true);
-        } else {
+        }
+        else
+        {
             updateBitmap(row_bitmap, char_index, large_numbers[*(g_fsm.ctx->clock_vars->digit_val)], LARGE_DIGIT_ROWS, false);
         }
-    } else if (row_bitmap->num == ROW_3) {
-        if (blink_state) {
+    }
+    else if (row_bitmap->num == ROW_3)
+    {
+        if (blink_state)
+        {
             updateBitmap(row_bitmap, char_index, small_numbers[BLANK_INDEX], SMALL_DIGIT_ROWS, true);
-        } else {
+        }
+        else
+        {
             updateBitmap(row_bitmap, char_index, small_numbers[*(g_fsm.ctx->clock_vars->digit_val)], SMALL_DIGIT_ROWS, false);
         }
     }
@@ -515,30 +526,40 @@ static void updateBitmap(Bitmap *rowBitmap, uint8_t index, uint8_t digit[], uint
     uint8_t byte;
     uint8_t offset;
     bool set;
-    for (uint8_t row = 0; row < digitSize; ++row) {
+    for (uint8_t row = 0; row < digitSize; ++row)
+    {
         byte = column + row*8;
 
         uint8_t lhs = rowBitmap->p_bitmap[byte];
         offset = 7 - bitIndex;
-        for (uint8_t i = 0; i < lhsChanges; ++i) {
+        for (uint8_t i = 0; i < lhsChanges; ++i)
+        {
             set = (digit[row] >> (7-i)) & 0x1;
-            if (set) {
+            if (set)
+            {
                 lhs = lhs | (0x1 << offset);
-            } else {
+            }
+            else
+            {
                 lhs = lhs & ~(0x1 << offset);
             }
             --offset;
         }
         rowBitmap->p_bitmap[byte] = lhs;
 
-        if ((column % 8 < 7) && (rhsChanges > 0)) {
+        if ((column % 8 < 7) && (rhsChanges > 0))
+        {
             uint8_t rhs = rowBitmap->p_bitmap[byte + 1];
             offset = 7;
-            for (uint8_t i = 0; i < rhsChanges; ++i) {
+            for (uint8_t i = 0; i < rhsChanges; ++i)
+            {
                 set = (digit[row] >> (7-lhsChanges-i)) & 0x1;
-                if (set) {
+                if (set)
+                {
                     rhs = rhs | (0x1 << offset);
-                } else {
+                }
+                else
+                {
                     rhs = rhs & ~(0x1 << offset);
                 }
                 --offset;
@@ -550,9 +571,12 @@ static void updateBitmap(Bitmap *rowBitmap, uint8_t index, uint8_t digit[], uint
 
 static uint8_t checkDeadZones(uint8_t digit[], uint8_t digitSize) {
     uint8_t numDeadZones = 0;
-    for (unsigned offset = 0; offset < 8; ++ offset) {
-        for (unsigned row = 0; row < digitSize; ++row) {
-            if (((digit[row] >> offset) & 0x1)) {
+    for (unsigned offset = 0; offset < 8; ++offset)
+    {
+        for (unsigned row = 0; row < digitSize; ++row)
+        {
+            if (((digit[row] >> offset) & 0x1))
+            {
                 return numDeadZones;
             }
         }

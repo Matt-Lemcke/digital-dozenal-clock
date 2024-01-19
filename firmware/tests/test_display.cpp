@@ -39,9 +39,8 @@ TEST_GROUP(Display24hTestGroup)
 {
     void setup()
     {
-
     }
-    
+
     void teardown()
     {
         mock().clear();

@@ -27,7 +27,7 @@ LINTER := cpplint
 TOOLS := $(CC) $(FORMATTER) $(LINTER) $(CPPC)
 
 FORMAT_OPTIONS := -style=file:.clang-format -i
-LINTER_OPTIONS := --filter=-legal/copyright,-build/include_subdir,-runtime/printf,-whitespace/braces,-whitespace/newline, --exclude=tests
+LINTER_OPTIONS := --filter=-legal/copyright,-build/include_subdir,-runtime/printf,-whitespace/braces,-whitespace/newline, --exclude=tests, --linelength=130
 
 # CppUTest variables
 CPPUTEST_DIR 	= $(TEST_DIR)/cpputest
