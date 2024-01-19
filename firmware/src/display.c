@@ -58,6 +58,7 @@ static void Default_Update(Display *ctx);
 static void Default_Exit(Display *ctx);
 static void Off_Entry(Display *ctx);
 static void Off_Update(Display *ctx);
+static void Off_Exit(Display *ctx);
 static void ShowTime123_Entry(Display *ctx);
 static void ShowTime23_Entry(Display *ctx);
 static void ShowTime12_Entry(Display *ctx);
@@ -88,9 +89,9 @@ static void msToSemiDiurn(uint32_t time_ms, uint8_t *digit1, uint8_t *digit2, ui
 State s_off =
 {
     .state_code = STATE_OFF,
-    .entry = Default_Entry,
-    .update = Default_Update,
-    .exit = Default_Exit,
+    .entry = Off_Entry,
+    .update = Off_Update,
+    .exit = Off_Exit,
 };
 
 State s_show_time123 =
@@ -334,6 +335,10 @@ static void Off_Entry(Display *ctx)
 static void Off_Update(Display *ctx)
 {
     UNUSED(ctx);
+}
+static void Off_Exit(Display *ctx)
+{
+    ctx->displayOn();
 }
 static void ShowTime123_Entry(Display *ctx)
 {

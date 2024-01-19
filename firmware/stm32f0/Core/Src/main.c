@@ -36,8 +36,11 @@
 #include "rtc.h"
 
 #include "i2c-rtc.h"
+#include "gpio-buttons.h"
 #include "pwm-buzzer.h"
 #include "uart-display.h"
+
+#include "event_queue.h"
 
 /* USER CODE END Includes */
 
@@ -113,6 +116,9 @@ int main(void)
   MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
 
+  // Event Queue
+  EventQ_Init();
+
   // Display
   if(!Esp8266Driver_Init(&huart2, 2000))
   {
@@ -143,12 +149,17 @@ int main(void)
   // RTC
   DS3231_Init(&hi2c1);
 
-  // Light sensor
-  LightSens_Init(&hadc, 2800);
+  // Buttons
+  Buttons_Init();
 
+  // Light sensor
+  LightSens_Init(&hadc, 1600);
 
   // Start 2Hz timer
   HAL_TIM_Base_Start_IT(&htim6);
+
+  // Start 6Hz timer
+  HAL_TIM_Base_Start_IT(&htim3);
 
   /* USER CODE END 2 */
 
@@ -214,17 +225,30 @@ void SystemClock_Config(void)
 
 void HAL_GPIO_EXTI_Callback(uint16_t pin)
 {
-
+    if (pin != RTC_SQW_Pin)
+    {
+        Buttons_GpioCallback(pin);
+    }
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-    if(htim == &htim6)
+    if(htim == &htim3)
     {
-        // 2 Hz period
-        Display_PeriodicCallback();
-        LightSens_AdcSampleCallback();
+        // 6 Hz freq
+        Buttons_TimerCallback(167);
     }
+    else if(htim == &htim6)
+    {
+        // 2 Hz freq
+        Display_PeriodicCallback();
+        LightSens_AdcStartConversion();
+    }
+}
+
+void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc)
+{
+    LightSens_AdcConversionCallback();
 }
 
 /* USER CODE END 4 */
