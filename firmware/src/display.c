@@ -213,6 +213,15 @@ ClockStatus Display_Init(Display *self, ExternVars *vars)
     // Set brightness
     g_fsm.ctx->setBrightness(g_fsm.ctx->brightness);
 
+    // Clear Display
+    memset(row1_bitmap.p_bitmap, 0, row1_bitmap.bitmap_size);
+    memset(row2_bitmap.p_bitmap, 0, row2_bitmap.bitmap_size);
+    memset(row3_bitmap.p_bitmap, 0, row3_bitmap.bitmap_size);
+
+    g_fsm.ctx->setBitmap(row1_bitmap.num, row1_bitmap.p_bitmap);
+    g_fsm.ctx->setBitmap(row2_bitmap.num, row2_bitmap.p_bitmap);
+    g_fsm.ctx->setBitmap(row3_bitmap.num, row3_bitmap.p_bitmap);
+
     // Start FSM
     g_fsm.curr_state->entry(g_fsm.ctx);
     return CLOCK_OK;
@@ -304,6 +313,8 @@ void Display_ShowTime(void)
 void Display_SetFormat(TimeFormats format)
 {
     g_fsm.ctx->time_format = format;
+    memset(row2_bitmap.p_bitmap, 0, row2_bitmap.bitmap_size);
+    memset(row3_bitmap.p_bitmap, 0, row3_bitmap.bitmap_size);
 }
 
 void Display_SetBrightness(BrightnessLevels brightness)
@@ -365,7 +376,23 @@ static void ShowTime2_Entry(Display *ctx)
 }
 static void ShowTime_Update(Display *ctx)
 {
-    UNUSED(ctx);
+    if (*ctx->clock_vars->alarm_set)
+    {
+        displayChar(&row1_bitmap, A_ROW1_DISPLAY_INDEX, small_symbols[A_INDEX], SMALL_DIGIT_ROWS);
+    }
+    if (*ctx->clock_vars->timer_set)
+    {
+        displayChar(&row1_bitmap, T_ROW1_DISPLAY_INDEX, small_symbols[T_INDEX], SMALL_DIGIT_ROWS);
+    }
+    if (*ctx->clock_vars->show_error && *ctx->clock_vars->error_code)
+    {
+        displayChar(&row1_bitmap, EXCLAMATION_ROW1_DISPLAY_INDEX, small_symbols[EXCLAMATION_INDEX], SMALL_DIGIT_ROWS);
+    }
+    displayTime(&row2_bitmap, *ctx->clock_vars->time_ms);
+
+    ctx->setBitmap(row1_bitmap.num, row1_bitmap.p_bitmap);
+    ctx->setBitmap(row2_bitmap.num, row2_bitmap.p_bitmap);
+    ctx->setBitmap(row3_bitmap.num, row3_bitmap.p_bitmap);
 }
 static void SetTime_Entry(Display *ctx)
 {
