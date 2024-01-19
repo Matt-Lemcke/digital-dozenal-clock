@@ -18,7 +18,7 @@
 #define D_ROW1_DISPLAY_INDEX            60
 #define S_ROW1_DISPLAY_INDEX            60
 #define MOON_ROW1_DISPLAY_INDEX         58
-#define SUN_ROW1_DISPLAY_INDEX          57    
+#define SUN_ROW1_DISPLAY_INDEX          57
 
 // Row 2 Display Indeces
 #define SEMICOLON1_ROW2_DISPLAY_INDEX    20
@@ -45,7 +45,7 @@
 #define DRN5_DIGIT_5_ROW2_DISPLAY_INDEX     50
 
 // Row 3 Display Indeces
-#define SEMICOLON1_ROW3_DISPLAY_INDEX   21    
+#define SEMICOLON1_ROW3_DISPLAY_INDEX   21
 #define SEMICOLON2_ROW3_DISPLAY_INDEX   35
 #define RADIX_DRN4_ROW3_DISPLAY_INDEX   37
 #define RADIX_DRN5_ROW3_DISPLAY_INDEX   34
@@ -136,8 +136,4 @@ void Display_SetAlarm(void);
 void Display_ShowTime(void);
 void Display_SetFormat(TimeFormats format);
 void Display_SetBrightness(BrightnessLevels brightness);
-
-// Testing
-void printDisplay();
-void testDisplay();
 #endif  // FIRMWARE_INC_DISPLAY_H_

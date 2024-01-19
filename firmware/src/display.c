@@ -74,11 +74,10 @@ static void SetAlarm_Update(Display *ctx);
 static void transition(State *next);
 
 // Bitmap creation functions
-static void displayChar(Bitmap *row_bitmap, uint8_t char_index,
-        uint8_t digit[], uint8_t digitSize);
+static void displayChar(Bitmap *row_bitmap, uint8_t char_index, uint8_t digit[], uint8_t digitSize);
 static void displayTime(Bitmap *row_bitmap, uint32_t time_ms);
 static void blinkDigit(Bitmap *row_bitmap, uint8_t char_index);
-static void updateBitmap(Bitmap *row_bitmap, uint8_t index, uint8_t digit[], uint8_t digitSize);
+static void updateBitmap(Bitmap *row_bitmap, uint8_t index, uint8_t digit[], uint8_t digitSize, bool blank);
 static uint8_t checkDeadZones(uint8_t digit[], uint8_t digitSize);
 static void msToTrad(uint32_t time_ms, uint8_t *hr_24, uint8_t *min, uint8_t *sec);
 static void msToDiurn(uint32_t time_ms, uint8_t *digit1, uint8_t *digit2, uint8_t *digit3, uint8_t *digit4, uint8_t *digit5);
@@ -408,7 +407,7 @@ void transition(State *next)
 
 static void displayChar(Bitmap *row_bitmap, uint8_t char_index, uint8_t digit[], uint8_t digitSize)
 {
-    updateBitmap(row_bitmap, char_index, digit, digitSize);
+    updateBitmap(row_bitmap, char_index, digit, digitSize, false);
 }
 
 static void displayTime(Bitmap *row_bitmap, uint32_t time_ms)
@@ -461,11 +460,26 @@ static void displayTime(Bitmap *row_bitmap, uint32_t time_ms)
     }
 }
 
-// static void blinkDigit(Bitmap *row_bitmap, uint8_t char_index);
+static void blinkDigit(Bitmap *row_bitmap, uint8_t char_index)
+{
+    if (row_bitmap->num == ROW_2) {
+        if (blink_state) {
+            updateBitmap(row_bitmap, char_index, large_numbers[BLANK_INDEX], LARGE_DIGIT_ROWS, true);
+        } else {
+            updateBitmap(row_bitmap, char_index, large_numbers[*(g_fsm.ctx->clock_vars->digit_val)], LARGE_DIGIT_ROWS, false);
+        }
+    } else if (row_bitmap->num == ROW_3) {
+        if (blink_state) {
+            updateBitmap(row_bitmap, char_index, small_numbers[BLANK_INDEX], SMALL_DIGIT_ROWS, true);
+        } else {
+            updateBitmap(row_bitmap, char_index, small_numbers[*(g_fsm.ctx->clock_vars->digit_val)], SMALL_DIGIT_ROWS, false);
+        }
+    }
+}
 
 // Writes digit to row_bitmap starting at display index 'index'
-static void updateBitmap(Bitmap *rowBitmap, uint8_t index, uint8_t digit[], uint8_t digitSize) {
-    uint8_t deadZoneColumns = checkDeadZones(digit, digitSize);
+static void updateBitmap(Bitmap *rowBitmap, uint8_t index, uint8_t digit[], uint8_t digitSize, bool blank) {
+    uint8_t deadZoneColumns = (blank) ? ((rowBitmap->num != ROW_2) ? 3 : 0) : checkDeadZones(digit, digitSize);
     uint8_t column = index / 8;
     uint8_t bitIndex = index % 8;
     uint8_t lhsChanges = (deadZoneColumns > bitIndex) ? (8-deadZoneColumns) : (8-bitIndex);
@@ -556,98 +570,4 @@ static void msToSemiDiurn(uint32_t time_ms, uint8_t *digit1, uint8_t *digit2, ui
     *digit3 = (min_total / 5) % 12;
     *digit4 = (sec_total / 25) % 12;
     *digit5 = (time_ms / 2083) % 12;
-}
-
-// Debugging
-Display td;
-void testDisplay() {
-
-    g_fsm.ctx = &td;
-
-    unsigned testn = 4;
-
-    if (testn == 0) {
-        g_fsm.ctx->time_format = TRAD_24H;
-        displayTime(&row2_bitmap, 57998233);
-    }
-
-    if (testn == 1) {
-        g_fsm.ctx->time_format = TRAD_12H;
-        displayTime(&row2_bitmap, 57998233);
-    }
-
-    if (testn == 2) {
-        g_fsm.ctx->time_format = DOZ_DRN5;
-        displayTime(&row2_bitmap, 57998233);
-    }
-
-    if (testn == 3) {
-        g_fsm.ctx->time_format = DOZ_DRN4;
-        displayTime(&row2_bitmap, 57998233);
-    }
-
-    if (testn == 4) {
-        g_fsm.ctx->time_format = DOZ_SEMI;
-        displayTime(&row2_bitmap, 37998233);
-    }
-
-    printDisplay();
-}
-
-void printDisplay() {
-    printf("Printing Rows >>>>>>>>>>>>>>>>>>>\n\n");
-
-    uint8_t columnCounter = 0;
-    printf("Row 1\n\n");
-    for (uint8_t i = 0; i < SMALL_BITMAP_SIZE; ++i) {
-        for (int8_t b = 7; b >= 0; --b) {
-            if ((row1_bitmap.p_bitmap[i] >> b) & 0x1) {
-                printf("o");
-            } else {
-                printf(".");
-            }
-        }
-        ++columnCounter;
-        if (columnCounter >= 8) {
-            columnCounter = 0;
-            printf("\n");
-        }
-    }
-    printf("\n");
-
-    columnCounter = 0;
-    printf("Row 2\n\n");
-    for (uint8_t i = 0; i < LARGE_BITMAP_SIZE; ++i) {
-        for (int8_t b = 7; b >= 0; --b) {
-            if ((row2_bitmap.p_bitmap[i] >> b) & 0x1) {
-                printf("o");
-            } else {
-                printf(".");
-            }
-        }
-        ++columnCounter;
-        if (columnCounter >= 8) {
-            columnCounter = 0;
-            printf("\n");
-        }
-    }
-    printf("\n");
-
-    columnCounter = 0;
-    printf("Row 3\n\n");
-    for (uint8_t i = 0; i < SMALL_BITMAP_SIZE; ++i) {
-        for (int8_t b = 7; b >= 0; --b) {
-            if ((row3_bitmap.p_bitmap[i] >> b) & 0x1) {
-                printf("o");
-            } else {
-                printf(".");
-            }
-        }
-        ++columnCounter;
-        if (columnCounter >= 8) {
-            columnCounter = 0;
-            printf("\n");
-        }
-    }
-    printf("\n");
 }

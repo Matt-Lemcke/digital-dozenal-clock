@@ -7,12 +7,13 @@
 #define SMALL_DIGIT_ROWS  7
 #define LARGE_DIGIT_ROWS  12
 
-#define LARGE_NUMS_LENGTH 14
-#define SMALL_NUMS_LENGTH 14
+#define LARGE_NUMS_LENGTH 15
+#define SMALL_NUMS_LENGTH 15
 #define SMALL_SYMB_LENGTH 9
 
 #define RADIX_INDEX         12
 #define SEMICOLON_INDEX     13
+#define BLANK_INDEX         14
 
 #define D_INDEX             0
 #define S_INDEX             1
@@ -238,6 +239,21 @@ static unsigned char large_numbers[LARGE_NUMS_LENGTH][LARGE_DIGIT_ROWS] = {
         0b00000000,
         0b00000000
     },
+    {
+        // blank
+        0b00000000,
+        0b00000000,
+        0b00000000,
+        0b00000000,
+        0b00000000,
+        0b00000000,
+        0b00000000,
+        0b00000000,
+        0b00000000,
+        0b00000000,
+        0b00000000,
+        0b00000000
+    },
 };
 
 /*
@@ -381,6 +397,16 @@ static unsigned char small_numbers[SMALL_NUMS_LENGTH][SMALL_DIGIT_ROWS] = {
         0b10000000,
         0b00000000,
         0b10000000,
+        0b00000000,
+        0b00000000
+    },
+    {
+        // Blank
+        0b00000000,
+        0b00000000,
+        0b00000000,
+        0b00000000,
+        0b00000000,
         0b00000000,
         0b00000000
     },
