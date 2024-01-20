@@ -1,95 +1,98 @@
 #include "rtc.h"
 
+Rtc *g_rtc;
 
 ClockStatus Rtc_Init(Rtc *self)
 {
-    if (self->getHour != NULL && self->getHour()) {
-        return CLOCK_OK;
+    g_rtc = self;
+    if (self->getHour == NULL)
+    {
+        return CLOCK_FAIL;
     }
-    return CLOCK_FAIL;
+    return CLOCK_OK;
 }
 
-ClockStatus Rtc_SetTime(Rtc *self, RtcTime *time)
+ClockStatus Rtc_SetTime(RtcTime *time)
 {
-    if (self->setRtcTime == NULL) {
+    if (g_rtc->setRtcTime == NULL) {
         return CLOCK_FAIL;
     }
 
-    self->setRtcTime(
+    g_rtc->setRtcTime(
             time->hr,
             time->min,
             time->sec);
 
-    if (self->setDay == NULL || self->setMonth == NULL) {
+    if (g_rtc->setDay == NULL || g_rtc->setMonth == NULL) {
         return CLOCK_FAIL;
     }
 
-    self->setDay(1);
-    self->setMonth(1);
+    g_rtc->setDay(1);
+    g_rtc->setMonth(1);
 
     return CLOCK_OK;
 }
 
-ClockStatus Rtc_GetTime(Rtc *self, RtcTime *time)
+ClockStatus Rtc_GetTime(RtcTime *time)
 {
-    if (self->getHour == NULL
-        || self->getMinute == NULL
-        || self->getSecond == NULL) {
+    if (g_rtc->getHour == NULL
+        || g_rtc->getMinute == NULL
+        || g_rtc->getSecond == NULL) {
         return CLOCK_FAIL;
     }
 
-    time->hr = self->getHour();
-    time->min = self->getMinute();
-    time->sec = self->getSecond();
+    time->hr = g_rtc->getHour();
+    time->min = g_rtc->getMinute();
+    time->sec = g_rtc->getSecond();
 
     return CLOCK_OK;
 }
 
-ClockStatus Rtc_IsValid(Rtc *self)
+ClockStatus Rtc_IsValid()
 {
-    if (self->getDay == NULL || self->getMonth == NULL) {
+    if (g_rtc->getDay == NULL || g_rtc->getMonth == NULL) {
         return CLOCK_FAIL;
     }
 
-    if (self->getDay() > MAX_NO_DAYS_RESET || self->getMonth() > 1) {
+    if (g_rtc->getDay() > MAX_NO_DAYS_RESET || g_rtc->getMonth() > 1) {
         return CLOCK_FAIL;
     }
     return CLOCK_OK;
 }
 
-ClockStatus Rtc_SetAlarm(Rtc *self, RtcTime *time, AlarmId id)
+ClockStatus Rtc_SetAlarm(RtcTime *time, AlarmId id)
 {
-    if (self->setAlarm == NULL) {
+    if (g_rtc->setAlarm == NULL) {
         return CLOCK_FAIL;
     }
 
-    self->setAlarm(id, time->hr, time->min, time->sec);
+    g_rtc->setAlarm(id, time->hr, time->min, time->sec);
 
     return CLOCK_OK;
 }
 
-ClockStatus Rtc_GetAlarm(Rtc *self, RtcTime *time, AlarmId id)
+ClockStatus Rtc_GetAlarm(RtcTime *time, AlarmId id)
 {
-    if (self->getAlarmHour == NULL
-        || self->getAlarmMinute == NULL
-        || self->getAlarmSecond == NULL) {
+    if (g_rtc->getAlarmHour == NULL
+        || g_rtc->getAlarmMinute == NULL
+        || g_rtc->getAlarmSecond == NULL) {
         return CLOCK_FAIL;
     }
 
-    time->hr = self->getAlarmHour(id);
-    time->min = self->getAlarmMinute(id);
-    time->sec = self->getAlarmSecond(id);
+    time->hr = g_rtc->getAlarmHour(id);
+    time->min = g_rtc->getAlarmMinute(id);
+    time->sec = g_rtc->getAlarmSecond(id);
 
     return CLOCK_OK;
 }
 
-ClockStatus Rtc_EnableAlarm(Rtc *self, AlarmId id, AlarmStatus enable)
+ClockStatus Rtc_EnableAlarm(AlarmId id, AlarmStatus enable)
 {
-    if (self->enableAlarm == NULL) {
+    if (g_rtc->enableAlarm == NULL) {
         return CLOCK_FAIL;
     }
 
-    self->enableAlarm(id, enable);
+    g_rtc->enableAlarm(id, enable);
 
     return CLOCK_OK;
 }

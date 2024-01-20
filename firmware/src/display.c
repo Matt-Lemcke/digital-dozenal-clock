@@ -85,7 +85,7 @@ static void msToSemiDiurn(uint32_t time_ms, uint8_t *digit1, uint8_t *digit2, ui
 /*
     State definitions
 */
-State s_off =
+static State s_off =
 {
     .state_code = STATE_OFF,
     .entry = Off_Entry,
@@ -93,7 +93,7 @@ State s_off =
     .exit = Off_Exit,
 };
 
-State s_show_time123 =
+static State s_show_time123 =
 {
     .state_code = STATE_SHOWTIME123,
     .entry = ShowTime123_Entry,
@@ -101,7 +101,7 @@ State s_show_time123 =
     .exit = Default_Exit,
 };
 
-State s_show_time23 =
+static State s_show_time23 =
 {
     .state_code = STATE_SHOWTIME23,
     .entry = ShowTime23_Entry,
@@ -109,7 +109,7 @@ State s_show_time23 =
     .exit = Default_Exit,
 };
 
-State s_show_time12 =
+static State s_show_time12 =
 {
     .state_code = STATE_SHOWTIME12,
     .entry = ShowTime12_Entry,
@@ -117,7 +117,7 @@ State s_show_time12 =
     .exit = Default_Exit,
 };
 
-State s_show_time2 =
+static State s_show_time2 =
 {
     .state_code = STATE_SHOWTIME2,
     .entry = ShowTime2_Entry,
@@ -125,7 +125,7 @@ State s_show_time2 =
     .exit = Default_Exit,
 };
 
-State s_set_time =
+static State s_set_time =
 {
     .state_code = STATE_SETTIME,
     .entry = SetTime_Entry,
@@ -133,7 +133,7 @@ State s_set_time =
     .exit = Default_Exit,
 };
 
-State s_set_timer =
+static State s_set_timer =
 {
     .state_code = STATE_SETTIMER,
     .entry = SetTimer_Entry,
@@ -141,7 +141,7 @@ State s_set_timer =
     .exit = Default_Exit,
 };
 
-State s_set_alarm =
+static State s_set_alarm =
 {
     .state_code = STATE_SETALARM,
     .entry = SetAlarm_Entry,
@@ -217,6 +217,10 @@ ClockStatus Display_Init(Display *self, ExternVars *vars)
     memset(row1_bitmap.p_bitmap, 0, row1_bitmap.bitmap_size);
     memset(row2_bitmap.p_bitmap, 0, row2_bitmap.bitmap_size);
     memset(row3_bitmap.p_bitmap, 0, row3_bitmap.bitmap_size);
+
+    g_fsm.ctx->setColour(row1_bitmap.num, 0x81);    // Row1 Red
+    g_fsm.ctx->setColour(row2_bitmap.num, 0x85);    // Row2 Cyan
+    g_fsm.ctx->setColour(row3_bitmap.num, 0x82);    // Row3 Blue
 
     g_fsm.ctx->setBitmap(row1_bitmap.num, row1_bitmap.p_bitmap);
     g_fsm.ctx->setBitmap(row2_bitmap.num, row2_bitmap.p_bitmap);

@@ -18,10 +18,10 @@ typedef struct buzzer_t
 }Buzzer;
 
 ClockStatus Buzzer_Init(Buzzer *self);
-ClockStatus Buzzer_Start(Buzzer *self);
-ClockStatus Buzzer_Stop(Buzzer *self);
-ClockStatus Buzzer_SetVolume(Buzzer *self, uint8_t vol);
-ClockStatus Buzzer_SetVolumeMax(Buzzer *self);
-ClockStatus Buzzer_SetVolumeMin(Buzzer *self);
+ClockStatus Buzzer_Start();
+ClockStatus Buzzer_Stop();
+ClockStatus Buzzer_SetVolume(uint8_t vol);
+ClockStatus Buzzer_SetVolumeMax();
+ClockStatus Buzzer_SetVolumeMin();
 
 #endif  // FIRMWARE_INC_BUZZER_H_

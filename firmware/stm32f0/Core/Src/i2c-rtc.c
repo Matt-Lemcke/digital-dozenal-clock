@@ -464,23 +464,28 @@ uint8_t DS3231_GetTemperatureFraction(){
 
 
 /**
- * @brief Set the current hour, minute, second, date, month, day of week and year.
+ * @brief Set the current hour, minute, second
  * @param hour_24mode Hour in 24h format, 0 to 23.
  * @param minute  Minute, 0 to 59.
  * @param second Second, 0 to 59.
- * @param date Date, 0 to 31.
- * @param month Month, 1 to 12.
- * @param dow Days since last Sunday, 1 to 7.
- * @param year Year, 2000 to 2199.
  */
-void DS3231_SetTime(uint8_t  hour_24mode, uint8_t minute, uint8_t second, uint8_t date, uint8_t month, uint8_t dow, uint16_t year){
+void DS3231_SetTime(uint8_t hour_24mode, uint8_t minute, uint8_t second)
+{
     DS3231_SetHour(hour_24mode);
     DS3231_SetMinute(minute);
     DS3231_SetSecond(second);
-    DS3231_SetDate(date);
-    DS3231_SetMonth(month);
-    DS3231_SetDayOfWeek(dow);
-    DS3231_SetYear(year);
+}
+
+void DS3231_EnableAlarm(uint8_t id, bool enable)
+{
+    if (id == 1)
+    {
+        DS3231_EnableAlarm1((enable) ? DS3231_ENABLED : DS3231_DISABLED);
+    }
+    else if (id == 2)
+    {
+        DS3231_EnableAlarm2((enable) ? DS3231_ENABLED : DS3231_DISABLED);
+    }
 }
 
 #ifdef __cplusplus
