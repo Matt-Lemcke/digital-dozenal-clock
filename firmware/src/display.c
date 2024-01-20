@@ -17,13 +17,6 @@
 #define LARGE_BITMAP_SIZE 96
 #define SMALL_BITMAP_SIZE 56
 
-typedef enum row_number_t
-{
-    ROW_1 = 1,
-    ROW_2 = 2,
-    ROW_3 = 3
-} RowNumber;
-
 typedef struct bitmap{
     RowNumber   num;
     uint8_t     *p_bitmap;
@@ -81,10 +74,14 @@ static void SetAlarm_Update(Display *ctx);
 static void transition(State *next);
 
 // Bitmap creation functions
-static void displayChar(Bitmap *row_bitmap, uint8_t char_index,
-        uint8_t digit[]);
+static void displayChar(Bitmap *row_bitmap, uint8_t char_index, uint8_t digit[], uint8_t digitSize);
 static void displayTime(Bitmap *row_bitmap, uint32_t time_ms);
 static void blinkDigit(Bitmap *row_bitmap, uint8_t char_index);
+static void updateBitmap(Bitmap *row_bitmap, uint8_t index, uint8_t digit[], uint8_t digitSize, bool blank);
+static uint8_t checkDeadZones(uint8_t digit[], uint8_t digitSize);
+static void msToTrad(uint32_t time_ms, uint8_t *hr_24, uint8_t *min, uint8_t *sec);
+static void msToDiurn(uint32_t time_ms, uint8_t *digit1, uint8_t *digit2, uint8_t *digit3, uint8_t *digit4, uint8_t *digit5);
+static void msToSemiDiurn(uint32_t time_ms, uint8_t *digit1, uint8_t *digit2, uint8_t *digit3, uint8_t *digit4, uint8_t *digit5);
 /*
     State definitions
 */
@@ -216,6 +213,15 @@ ClockStatus Display_Init(Display *self, ExternVars *vars)
     // Set brightness
     g_fsm.ctx->setBrightness(g_fsm.ctx->brightness);
 
+    // Clear Display
+    memset(row1_bitmap.p_bitmap, 0, row1_bitmap.bitmap_size);
+    memset(row2_bitmap.p_bitmap, 0, row2_bitmap.bitmap_size);
+    memset(row3_bitmap.p_bitmap, 0, row3_bitmap.bitmap_size);
+
+    g_fsm.ctx->setBitmap(row1_bitmap.num, row1_bitmap.p_bitmap);
+    g_fsm.ctx->setBitmap(row2_bitmap.num, row2_bitmap.p_bitmap);
+    g_fsm.ctx->setBitmap(row3_bitmap.num, row3_bitmap.p_bitmap);
+
     // Start FSM
     g_fsm.curr_state->entry(g_fsm.ctx);
     return CLOCK_OK;
@@ -307,6 +313,8 @@ void Display_ShowTime(void)
 void Display_SetFormat(TimeFormats format)
 {
     g_fsm.ctx->time_format = format;
+    memset(row2_bitmap.p_bitmap, 0, row2_bitmap.bitmap_size);
+    memset(row3_bitmap.p_bitmap, 0, row3_bitmap.bitmap_size);
 }
 
 void Display_SetBrightness(BrightnessLevels brightness)
@@ -368,7 +376,23 @@ static void ShowTime2_Entry(Display *ctx)
 }
 static void ShowTime_Update(Display *ctx)
 {
-    UNUSED(ctx);
+    if (*ctx->clock_vars->alarm_set)
+    {
+        displayChar(&row1_bitmap, A_ROW1_DISPLAY_INDEX, small_symbols[A_INDEX], SMALL_DIGIT_ROWS);
+    }
+    if (*ctx->clock_vars->timer_set)
+    {
+        displayChar(&row1_bitmap, T_ROW1_DISPLAY_INDEX, small_symbols[T_INDEX], SMALL_DIGIT_ROWS);
+    }
+    if (*ctx->clock_vars->show_error && *ctx->clock_vars->error_code)
+    {
+        displayChar(&row1_bitmap, EXCLAMATION_ROW1_DISPLAY_INDEX, small_symbols[EXCLAMATION_INDEX], SMALL_DIGIT_ROWS);
+    }
+    displayTime(&row2_bitmap, *ctx->clock_vars->time_ms);
+
+    ctx->setBitmap(row1_bitmap.num, row1_bitmap.p_bitmap);
+    ctx->setBitmap(row2_bitmap.num, row2_bitmap.p_bitmap);
+    ctx->setBitmap(row3_bitmap.num, row3_bitmap.p_bitmap);
 }
 static void SetTime_Entry(Display *ctx)
 {
@@ -406,4 +430,195 @@ void transition(State *next)
     g_fsm.curr_state->exit(g_fsm.ctx);
     g_fsm.curr_state = next;
     g_fsm.curr_state->entry(g_fsm.ctx);
+}
+
+static void displayChar(Bitmap *row_bitmap, uint8_t char_index, uint8_t digit[], uint8_t digitSize)
+{
+    updateBitmap(row_bitmap, char_index, digit, digitSize, false);
+}
+
+static void displayTime(Bitmap *row_bitmap, uint32_t time_ms)
+{
+    if (g_fsm.ctx->time_format == TRAD_24H || g_fsm.ctx->time_format == TRAD_12H)
+    {
+        displayChar(row_bitmap, SEMICOLON1_ROW2_DISPLAY_INDEX, large_numbers[SEMICOLON_INDEX], LARGE_DIGIT_ROWS);
+        displayChar(row_bitmap, SEMICOLON2_ROW2_DISPLAY_INDEX, large_numbers[SEMICOLON_INDEX], LARGE_DIGIT_ROWS);
+
+        uint8_t hr, min, sec;
+        msToTrad(time_ms, &hr, &min, &sec);
+        if (g_fsm.ctx->time_format == TRAD_12H && hr > 12) hr -= 12;
+
+        displayChar(row_bitmap, TRAD_DIGIT_1_ROW2_DISPLAY_INDEX, large_numbers[hr / 10], LARGE_DIGIT_ROWS);
+        displayChar(row_bitmap, TRAD_DIGIT_2_ROW2_DISPLAY_INDEX, large_numbers[hr % 10], LARGE_DIGIT_ROWS);
+        displayChar(row_bitmap, TRAD_DIGIT_3_ROW2_DISPLAY_INDEX, large_numbers[min / 10], LARGE_DIGIT_ROWS);
+        displayChar(row_bitmap, TRAD_DIGIT_4_ROW2_DISPLAY_INDEX, large_numbers[min % 10], LARGE_DIGIT_ROWS);
+        displayChar(row_bitmap, TRAD_DIGIT_5_ROW2_DISPLAY_INDEX, large_numbers[sec / 10], LARGE_DIGIT_ROWS);
+        displayChar(row_bitmap, TRAD_DIGIT_6_ROW2_DISPLAY_INDEX, large_numbers[sec % 10], LARGE_DIGIT_ROWS);
+    }
+    else if (g_fsm.ctx->time_format == DOZ_DRN5 || g_fsm.ctx->time_format == DOZ_SEMI)
+    {
+        displayChar(row_bitmap, RADIX_DRN5_ROW2_DISPLAY_INDEX, large_numbers[RADIX_INDEX], LARGE_DIGIT_ROWS);
+
+        uint8_t digit1, digit2, digit3, digit4, digit5;
+        if (g_fsm.ctx->time_format == DOZ_DRN5)
+        {
+            msToDiurn(time_ms, &digit1, &digit2, &digit3, &digit4, &digit5);
+        }
+        else if (g_fsm.ctx->time_format == DOZ_SEMI)
+        {
+            msToSemiDiurn(time_ms, &digit1, &digit2, &digit3, &digit4, &digit5);
+        }
+
+        displayChar(row_bitmap, DRN5_DIGIT_1_ROW2_DISPLAY_INDEX, large_numbers[digit1], LARGE_DIGIT_ROWS);
+        displayChar(row_bitmap, DRN5_DIGIT_2_ROW2_DISPLAY_INDEX, large_numbers[digit2], LARGE_DIGIT_ROWS);
+        displayChar(row_bitmap, DRN5_DIGIT_3_ROW2_DISPLAY_INDEX, large_numbers[digit3], LARGE_DIGIT_ROWS);
+        displayChar(row_bitmap, DRN5_DIGIT_4_ROW2_DISPLAY_INDEX, large_numbers[digit4], LARGE_DIGIT_ROWS);
+        displayChar(row_bitmap, DRN5_DIGIT_5_ROW2_DISPLAY_INDEX, large_numbers[digit5], LARGE_DIGIT_ROWS);
+    }
+    else if (g_fsm.ctx->time_format == DOZ_DRN4)
+    {
+        displayChar(row_bitmap, RADIX_DRN4_ROW2_DISPLAY_INDEX, large_numbers[RADIX_INDEX], LARGE_DIGIT_ROWS);
+
+        uint8_t digit1, digit2, digit3, digit4, digit5;
+        msToDiurn(time_ms, &digit1, &digit2, &digit3, &digit4, &digit5);
+
+        displayChar(row_bitmap, DRN4_DIGIT_1_ROW2_DISPLAY_INDEX, large_numbers[digit1], LARGE_DIGIT_ROWS);
+        displayChar(row_bitmap, DRN4_DIGIT_2_ROW2_DISPLAY_INDEX, large_numbers[digit2], LARGE_DIGIT_ROWS);
+        displayChar(row_bitmap, DRN4_DIGIT_3_ROW2_DISPLAY_INDEX, large_numbers[digit3], LARGE_DIGIT_ROWS);
+        displayChar(row_bitmap, DRN4_DIGIT_4_ROW2_DISPLAY_INDEX, large_numbers[digit4], LARGE_DIGIT_ROWS);
+    }
+}
+
+static void blinkDigit(Bitmap *row_bitmap, uint8_t char_index)
+{
+    if (row_bitmap->num == ROW_2)
+    {
+        if (blink_state)
+        {
+            updateBitmap(row_bitmap, char_index, large_numbers[BLANK_INDEX], LARGE_DIGIT_ROWS, true);
+        }
+        else
+        {
+            updateBitmap(row_bitmap, char_index, large_numbers[*(g_fsm.ctx->clock_vars->digit_val)], LARGE_DIGIT_ROWS, false);
+        }
+    }
+    else if (row_bitmap->num == ROW_3)
+    {
+        if (blink_state)
+        {
+            updateBitmap(row_bitmap, char_index, small_numbers[BLANK_INDEX], SMALL_DIGIT_ROWS, true);
+        }
+        else
+        {
+            updateBitmap(row_bitmap, char_index, small_numbers[*(g_fsm.ctx->clock_vars->digit_val)], SMALL_DIGIT_ROWS, false);
+        }
+    }
+}
+
+// Writes digit to row_bitmap starting at display index 'index'
+static void updateBitmap(Bitmap *rowBitmap, uint8_t index, uint8_t digit[], uint8_t digitSize, bool blank) {
+    uint8_t deadZoneColumns = (blank) ? ((rowBitmap->num != ROW_2) ? 3 : 0) : checkDeadZones(digit, digitSize);
+    uint8_t column = index / 8;
+    uint8_t bitIndex = index % 8;
+    uint8_t lhsChanges = (deadZoneColumns > bitIndex) ? (8-deadZoneColumns) : (8-bitIndex);
+    uint8_t rhsChanges = (deadZoneColumns >= bitIndex) ? 0 : (bitIndex - deadZoneColumns);
+
+    uint8_t byte;
+    uint8_t offset;
+    bool set;
+    for (uint8_t row = 0; row < digitSize; ++row)
+    {
+        byte = column + row*8;
+
+        uint8_t lhs = rowBitmap->p_bitmap[byte];
+        offset = 7 - bitIndex;
+        for (uint8_t i = 0; i < lhsChanges; ++i)
+        {
+            set = (digit[row] >> (7-i)) & 0x1;
+            if (set)
+            {
+                lhs = lhs | (0x1 << offset);
+            }
+            else
+            {
+                lhs = lhs & ~(0x1 << offset);
+            }
+            --offset;
+        }
+        rowBitmap->p_bitmap[byte] = lhs;
+
+        if ((column % 8 < 7) && (rhsChanges > 0))
+        {
+            uint8_t rhs = rowBitmap->p_bitmap[byte + 1];
+            offset = 7;
+            for (uint8_t i = 0; i < rhsChanges; ++i)
+            {
+                set = (digit[row] >> (7-lhsChanges-i)) & 0x1;
+                if (set)
+                {
+                    rhs = rhs | (0x1 << offset);
+                }
+                else
+                {
+                    rhs = rhs & ~(0x1 << offset);
+                }
+                --offset;
+            }
+            rowBitmap->p_bitmap[byte + 1] = rhs;
+        }
+    }
+}
+
+static uint8_t checkDeadZones(uint8_t digit[], uint8_t digitSize) {
+    uint8_t numDeadZones = 0;
+    for (unsigned offset = 0; offset < 8; ++offset)
+    {
+        for (unsigned row = 0; row < digitSize; ++row)
+        {
+            if (((digit[row] >> offset) & 0x1))
+            {
+                return numDeadZones;
+            }
+        }
+        ++numDeadZones;
+    }
+    return numDeadZones;
+}
+
+static void msToTrad(uint32_t time_ms, uint8_t *hr_24, uint8_t *min, uint8_t *sec)
+{
+    time_ms = time_ms / 1000;
+    *sec = time_ms % 60;
+    time_ms = time_ms / 60;
+    *min = time_ms % 60;
+    time_ms = time_ms / 60;
+    *hr_24 = time_ms % 24;
+}
+
+static void msToDiurn(uint32_t time_ms, uint8_t *digit1, uint8_t *digit2, uint8_t *digit3, uint8_t *digit4, uint8_t *digit5)
+{
+    uint8_t hr_24, min_total, sec_total, milliseconds = time_ms;
+    min_total = time_ms / 60000;
+    sec_total = time_ms / 1000;
+    hr_24 = (time_ms / 3600000) % 24;
+
+    *digit1 = hr_24 / 2;
+    *digit2 = (min_total / 10) % 12;
+    *digit3 = (sec_total / 50) % 12;
+    *digit4 = (time_ms / 4167) % 12;
+    *digit5 = (time_ms / 347) % 12;
+}
+
+static void msToSemiDiurn(uint32_t time_ms, uint8_t *digit1, uint8_t *digit2, uint8_t *digit3, uint8_t *digit4, uint8_t *digit5)
+{
+    uint8_t hr_24, min_total, sec_total, milliseconds = time_ms;
+    min_total = time_ms / 60000;
+    sec_total = time_ms / 1000;
+    hr_24 = (time_ms / 3600000) % 24;
+
+    *digit1 = hr_24 / 12;
+    *digit2 = hr_24 % 12;
+    *digit3 = (min_total / 5) % 12;
+    *digit4 = (sec_total / 25) % 12;
+    *digit5 = (time_ms / 2083) % 12;
 }

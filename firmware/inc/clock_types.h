@@ -4,6 +4,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <string.h>
 
 #define UNUSED(x) (void) x
 
