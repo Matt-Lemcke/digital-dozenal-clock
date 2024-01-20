@@ -601,28 +601,28 @@ static void msToTrad(uint32_t time_ms, uint8_t *hr_24, uint8_t *min, uint8_t *se
 
 static void msToDiurn(uint32_t time_ms, uint8_t *digit1, uint8_t *digit2, uint8_t *digit3, uint8_t *digit4, uint8_t *digit5)
 {
-    uint8_t hr_24, min_total, sec_total, milliseconds = time_ms;
-    min_total = time_ms / 60000;
+    uint8_t hr_24, min_total, sec_total;
     sec_total = time_ms / 1000;
-    hr_24 = (time_ms / 3600000) % 24;
+    min_total = time_ms / 60000;
+    hr_24 = time_ms / 3600000;
 
     *digit1 = hr_24 / 2;
     *digit2 = (min_total / 10) % 12;
     *digit3 = (sec_total / 50) % 12;
-    *digit4 = (time_ms / 4167) % 12;
-    *digit5 = (time_ms / 347) % 12;
+    *digit4 = ((sec_total * 6) / 25) % 12;
+    *digit5 = ((sec_total * 72) / 25) % 12;
 }
 
 static void msToSemiDiurn(uint32_t time_ms, uint8_t *digit1, uint8_t *digit2, uint8_t *digit3, uint8_t *digit4, uint8_t *digit5)
 {
-    uint8_t hr_24, min_total, sec_total, milliseconds = time_ms;
-    min_total = time_ms / 60000;
+    uint8_t hr_24, min_total, sec_total;
     sec_total = time_ms / 1000;
-    hr_24 = (time_ms / 3600000) % 24;
+    min_total = time_ms / 60000;
+    hr_24 = time_ms / 3600000;
 
     *digit1 = hr_24 / 12;
     *digit2 = hr_24 % 12;
     *digit3 = (min_total / 5) % 12;
     *digit4 = (sec_total / 25) % 12;
-    *digit5 = (time_ms / 2083) % 12;
+    *digit5 = ((sec_total * 12) / 25) % 12;
 }

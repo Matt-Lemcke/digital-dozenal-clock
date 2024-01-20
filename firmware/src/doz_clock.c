@@ -165,7 +165,7 @@ void Init_Entry(DozClock *ctx)
     {
         ctx->error_code = SFWR_INIT;
         ctx->error_handler();
-    } 
+    }
     if (Gps_Init(ctx->gps) != CLOCK_OK)
     {
         ctx->error_code = SFWR_INIT;
@@ -242,7 +242,7 @@ static void process_event()
 {
     if (g_clock_fsm.curr_state->state_code == STATE_IDLE_DISP_ON)
     {
-        switch(g_clock_fsm.ctx->curr_event)
+        switch (g_clock_fsm.ctx->curr_event)
         {
             case E_DISPLAY_SHORT:
                 Display_ToggleMode();
@@ -270,7 +270,7 @@ static void process_event()
     }
     else if (g_clock_fsm.curr_state->state_code == STATE_IDLE_DISP_OFF)
     {
-        switch(g_clock_fsm.ctx->curr_event)
+        switch (g_clock_fsm.ctx->curr_event)
         {
             case E_DISPLAY_LONG:
                 transition(&s_idle_disp_on);
