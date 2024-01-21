@@ -58,7 +58,13 @@ static uint8_t timer_delay = 0;
 static TimeFormats trad_format_list[] = {TRAD_24H, TRAD_12H};
 static TimeFormats doz_format_list[] = {DOZ_SEMI, DOZ_DRN4, DOZ_DRN5};
 
-static trad_index = 0, doz_index = 0;
+static uint8_t trad_index = 0, doz_index = 0;
+
+static RtcTime demo_reset = {
+        .hr = 17,
+        .min = 34,
+        .sec = 0
+};
 
 // State definitions
 static State s_init =
@@ -258,11 +264,20 @@ static void process_event()
                 trad_index = (trad_index + 1) % 2;
                 Display_SetFormat(trad_format_list[trad_index]);
                 break;
+            case E_ALARM_SHORT:
+                g_clock_fsm.ctx->alarm_set = !g_clock_fsm.ctx->alarm_set;
+                break;
+            case E_TIMER_SHORT:
+                g_clock_fsm.ctx->timer_set = !g_clock_fsm.ctx->timer_set;
+                break;
             case E_ROOM_DARK:
                 Display_SetBrightness(LOW_BRIGHTNESS);
                 break;
             case E_ROOM_LIGHT:
                 Display_SetBrightness(HIGH_BRIGHTNESS);
+                break;
+            case E_CANCEL_LONG:
+                Rtc_SetTime(&demo_reset);
                 break;
             default:
                 break;

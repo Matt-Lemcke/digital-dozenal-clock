@@ -143,6 +143,7 @@ int main(void)
   ds3231.setRtcTime = DS3231_SetTime;
   doz_clock.rtc = &ds3231;
 
+
   // Display
   if(!Esp8266Driver_Init(&huart2, 2000))
   {

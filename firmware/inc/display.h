@@ -19,6 +19,7 @@
 #define S_ROW1_DISPLAY_INDEX            60
 #define MOON_ROW1_DISPLAY_INDEX         58
 #define SUN_ROW1_DISPLAY_INDEX          57
+#define FORMAT_ROW1_DISPLAY_INDEX       57
 
 // Row 2 Display Indeces
 #define SEMICOLON1_ROW2_DISPLAY_INDEX    20

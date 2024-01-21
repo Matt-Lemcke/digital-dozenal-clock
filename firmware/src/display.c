@@ -17,6 +17,8 @@
 #define LARGE_BITMAP_SIZE 96
 #define SMALL_BITMAP_SIZE 56
 
+#define PM_12H_MS       (43200000 - 1)
+
 typedef struct bitmap{
     RowNumber   num;
     uint8_t     *p_bitmap;
@@ -75,6 +77,7 @@ static void transition(State *next);
 
 // Bitmap creation functions
 static void displayChar(Bitmap *row_bitmap, uint8_t char_index, uint8_t digit[], uint8_t digitSize);
+static void displayFormat(TimeFormats format);
 static void displayTime(Bitmap *row_bitmap, uint32_t time_ms);
 static void blinkDigit(Bitmap *row_bitmap, uint8_t char_index);
 static void updateBitmap(Bitmap *row_bitmap, uint8_t index, uint8_t digit[], uint8_t digitSize, bool blank);
@@ -317,6 +320,7 @@ void Display_ShowTime(void)
 void Display_SetFormat(TimeFormats format)
 {
     g_fsm.ctx->time_format = format;
+    memset(row1_bitmap.p_bitmap, 0, row1_bitmap.bitmap_size);
     memset(row2_bitmap.p_bitmap, 0, row2_bitmap.bitmap_size);
     memset(row3_bitmap.p_bitmap, 0, row3_bitmap.bitmap_size);
 }
@@ -380,6 +384,7 @@ static void ShowTime2_Entry(Display *ctx)
 }
 static void ShowTime_Update(Display *ctx)
 {
+    memset(row1_bitmap.p_bitmap, 0, row1_bitmap.bitmap_size);
     if (*ctx->clock_vars->alarm_set)
     {
         displayChar(&row1_bitmap, A_ROW1_DISPLAY_INDEX, small_symbols[A_INDEX], SMALL_DIGIT_ROWS);
@@ -392,6 +397,7 @@ static void ShowTime_Update(Display *ctx)
     {
         displayChar(&row1_bitmap, EXCLAMATION_ROW1_DISPLAY_INDEX, small_symbols[EXCLAMATION_INDEX], SMALL_DIGIT_ROWS);
     }
+    displayFormat(ctx->time_format);
     displayTime(&row2_bitmap, *ctx->clock_vars->time_ms);
 
     ctx->setBitmap(row1_bitmap.num, row1_bitmap.p_bitmap);
@@ -441,6 +447,34 @@ static void displayChar(Bitmap *row_bitmap, uint8_t char_index, uint8_t digit[],
     updateBitmap(row_bitmap, char_index, digit, digitSize, false);
 }
 
+static void displayFormat(TimeFormats format)
+{
+    switch (format)
+    {
+        case TRAD_24H:
+            break;
+        case TRAD_12H:
+            if (*g_fsm.ctx->clock_vars->time_ms > PM_12H_MS)
+            {
+                displayChar(&row1_bitmap, MOON_ROW1_DISPLAY_INDEX, small_symbols[MOON_INDEX], SMALL_DIGIT_ROWS);
+            }
+            else
+            {
+                displayChar(&row1_bitmap, SUN_ROW1_DISPLAY_INDEX, small_symbols[SUN_INDEX], SMALL_DIGIT_ROWS);
+            }
+            break;
+        case DOZ_DRN4:
+        case DOZ_DRN5:
+            displayChar(&row1_bitmap, D_ROW1_DISPLAY_INDEX, small_symbols[D_INDEX], SMALL_DIGIT_ROWS);
+            break;
+        case DOZ_SEMI:
+            displayChar(&row1_bitmap, S_ROW1_DISPLAY_INDEX, small_symbols[S_INDEX], SMALL_DIGIT_ROWS);
+            break;
+        default:
+            break;
+    }
+}
+
 static void displayTime(Bitmap *row_bitmap, uint32_t time_ms)
 {
     if (g_fsm.ctx->time_format == TRAD_24H || g_fsm.ctx->time_format == TRAD_12H)
@@ -450,8 +484,10 @@ static void displayTime(Bitmap *row_bitmap, uint32_t time_ms)
 
         uint8_t hr, min, sec;
         msToTrad(time_ms, &hr, &min, &sec);
-        if (g_fsm.ctx->time_format == TRAD_12H && hr > 12) hr -= 12;
-
+        if (g_fsm.ctx->time_format == TRAD_12H && hr > 12)
+        {
+            hr -= 12;
+        }
         displayChar(row_bitmap, TRAD_DIGIT_1_ROW2_DISPLAY_INDEX, large_numbers[hr / 10], LARGE_DIGIT_ROWS);
         displayChar(row_bitmap, TRAD_DIGIT_2_ROW2_DISPLAY_INDEX, large_numbers[hr % 10], LARGE_DIGIT_ROWS);
         displayChar(row_bitmap, TRAD_DIGIT_3_ROW2_DISPLAY_INDEX, large_numbers[min / 10], LARGE_DIGIT_ROWS);
