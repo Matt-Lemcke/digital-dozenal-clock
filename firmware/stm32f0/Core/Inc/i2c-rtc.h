@@ -141,6 +141,7 @@ uint8_t DS3231_IsAlarm2Triggered();
 int8_t DS3231_GetTemperatureInteger();
 uint8_t DS3231_GetTemperatureFraction();
 
-void DS3231_SetTime(uint8_t hour_24mode, uint8_t minute, uint8_t second, uint8_t date, uint8_t month, uint8_t dow, uint16_t year);
+void DS3231_SetTime(uint8_t hour_24mode, uint8_t minute, uint8_t second);
+void DS3231_EnableAlarm(uint8_t id, bool enable);
 
 #endif

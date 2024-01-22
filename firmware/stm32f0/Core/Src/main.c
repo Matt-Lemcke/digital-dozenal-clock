@@ -27,20 +27,21 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "adc-light-sens.h"
+
 #include "clock_types.h"
+#include "doz_clock.h"
+#include "event_queue.h"
 
 #include "buzzer.h"
 #include "display.h"
 #include "gps.h"
 #include "rtc.h"
 
+#include "adc-light-sens.h"
 #include "i2c-rtc.h"
 #include "gpio-buttons.h"
 #include "pwm-buzzer.h"
 #include "uart-display.h"
-
-#include "event_queue.h"
 
 /* USER CODE END Includes */
 
@@ -61,8 +62,10 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+DozClock doz_clock;
+
 Display rgb_matrix;
-ExternVars display_vars;
+Gps neo6m;
 Rtc ds3231;
 Buzzer buzzer;
 
@@ -116,8 +119,30 @@ int main(void)
   MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
 
-  // Event Queue
-  EventQ_Init();
+  // Buzzer
+  PKM22E_Init(&htim3, TIM_CHANNEL_1);
+  buzzer.setDutyCycle = PKM22E_SetDutyCyle;
+  buzzer.startPwm = PKM22E_StartPwm;
+  buzzer.stopPwm = PKM22E_StopPwm;
+  doz_clock.buzzer = &buzzer;
+
+  // RTC
+  DS3231_Init(&hi2c1);
+  ds3231.enableAlarm = DS3231_EnableAlarm;
+//  ds3231.getAlarmHour;
+//  ds3231.getAlarmMinute;
+//  ds3231.getAlarmSecond;
+  ds3231.getDay = DS3231_GetDate;
+  ds3231.getHour = DS3231_GetHour;
+  ds3231.getMinute = DS3231_GetMinute;
+  ds3231.getMonth = DS3231_GetMonth;
+  ds3231.getSecond = DS3231_GetSecond;
+//  ds3231.setAlarm;
+  ds3231.setDay = DS3231_SetDate;
+  ds3231.setMonth = DS3231_SetMonth;
+  ds3231.setRtcTime = DS3231_SetTime;
+  doz_clock.rtc = &ds3231;
+
 
   // Display
   if(!Esp8266Driver_Init(&huart2, 2000))
@@ -131,23 +156,12 @@ int main(void)
   rgb_matrix.setColour = Esp8266Driver_SetColour;
   rgb_matrix.show = Esp8266Driver_Show;
   rgb_matrix.hide = Esp8266Driver_Hide;
-  if(Display_Init(&rgb_matrix, &display_vars) != CLOCK_OK)
-  {
-      Error_Handler();
-  }
-  
-  // Buzzer
-  PKM22E_Init(&htim3, TIM_CHANNEL_1);
-  buzzer.setDutyCycle = PKM22E_SetDutyCyle;
-  buzzer.startPwm = PKM22E_StartPwm;
-  buzzer.stopPwm = PKM22E_StopPwm;
-  if (Buzzer_Init(&buzzer) != CLOCK_OK)
-  {
-      Error_Handler();
-  }
+  doz_clock.display = &rgb_matrix;
 
-  // RTC
-  DS3231_Init(&hi2c1);
+  // Doz Clock
+  doz_clock.error_handler = Error_Handler;
+  DozClock_Init(&doz_clock);
+  
 
   // Buttons
   Buttons_Init();
@@ -167,7 +181,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    Display_Update();
+    DozClock_Update();
 
     /* USER CODE END WHILE */
 
@@ -237,11 +251,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     {
         // 6 Hz freq
         Buttons_TimerCallback(167);
+        DozClock_TimerCallback();
     }
     else if(htim == &htim6)
     {
         // 2 Hz freq
-        Display_PeriodicCallback();
         LightSens_AdcStartConversion();
     }
 }

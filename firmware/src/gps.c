@@ -1,18 +1,18 @@
 #include "gps.h"
 
+Gps *g_gps;
+
 ClockStatus Gps_Init(Gps *self)
 {
-    UNUSED(self);
+    g_gps = self;
     return CLOCK_OK;
 }
-ClockStatus Gps_Connected(Gps *self)
+ClockStatus Gps_Connected()
 {
-    UNUSED(self);
     return CLOCK_OK;
 }
-GpsTime Gps_GetTime(Gps *self)
+GpsTime Gps_GetTime()
 {
-    UNUSED(self);
     GpsTime zero = { 0 };
     return zero;
 }

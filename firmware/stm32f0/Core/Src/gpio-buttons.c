@@ -21,14 +21,14 @@ typedef struct button_t
 static Button buttons[NUM_BUTTONS] =
 {
         {.id = B_DISPLAY, .pin = BTN1_IN_Pin,     .port = BTN1_IN_GPIO_Port},
-        {.id = B_ALARM,   .pin = BTN2_IN_Pin,     .port = BTN2_IN_GPIO_Port},
-        {.id = B_TIMER,   .pin = BTN3_IN_Pin,     .port = BTN3_IN_GPIO_Port},
+        {.id = B_DOZ,     .pin = BTN2_IN_Pin,     .port = BTN2_IN_GPIO_Port},
+        {.id = B_TRAD,    .pin = BTN3_IN_Pin,     .port = BTN3_IN_GPIO_Port},
         {.id = B_LEFT,    .pin = BTN4_IN_Pin,     .port = BTN4_IN_GPIO_Port},
         {.id = B_RIGHT,   .pin = BTN5_IN_Pin,     .port = BTN5_IN_GPIO_Port},
         {.id = B_UP,      .pin = BTN6_IN_Pin,     .port = BTN6_IN_GPIO_Port},
         {.id = B_DOWN,    .pin = BTN7_IN_Pin,     .port = BTN7_IN_GPIO_Port},
-        {.id = B_DOZ,     .pin = BTN8_IN_Pin,     .port = BTN8_IN_GPIO_Port},
-        {.id = B_TRAD,    .pin = BTN9_IN_Pin,     .port = BTN9_IN_GPIO_Port},
+        {.id = B_ALARM,   .pin = BTN8_IN_Pin,     .port = BTN8_IN_GPIO_Port},
+        {.id = B_TIMER,   .pin = BTN9_IN_Pin,     .port = BTN9_IN_GPIO_Port},
         {.id = B_VOLUP,   .pin = BTN10_IN_Pin,    .port = BTN10_IN_GPIO_Port},
         {.id = B_VOLDOWN, .pin = BTN11_IN_Pin,    .port = BTN11_IN_GPIO_Port},
         {.id = B_CANCEL,  .pin = BTN12_IN_Pin,    .port = BTN12_IN_GPIO_Port},

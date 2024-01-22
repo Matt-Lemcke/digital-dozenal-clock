@@ -8,7 +8,8 @@
 
 #include "time_track.h"
 
-TimeSources *time_sources = NULL;
+#include "gps.h"
+#include "rtc.h"
 
 uint8_t check_rtc = 0;
 uint8_t gps_lost = 0;
@@ -23,12 +24,11 @@ static uint32_t rtcTimeToMs(RtcTime *time);
 static uint32_t gpsTimeToMs(GpsTime *time);
 static void msToRtcTime(uint32_t time_ms, RtcTime *time);
 
-ClockStatus TimeTrack_Init(TimeSources *sources)
+ClockStatus TimeTrack_Init()
 {
-    time_sources = sources;
     time_ms = 0;
     n = 0;
-    if (Rtc_GetTime(time_sources->rtc, &rtc_time) != CLOCK_OK)
+    if (Rtc_GetTime(&rtc_time) != CLOCK_OK)
     {
         return CLOCK_FAIL;
     }
@@ -36,16 +36,23 @@ ClockStatus TimeTrack_Init(TimeSources *sources)
     return CLOCK_OK;
 }
 
-ClockStatus TimeTrack_Update()
+ClockStatus TimeTrack_SyncToRtc()
 {
-    if (time_sources == NULL)
+    if (Rtc_GetTime(&rtc_time) != CLOCK_OK)
     {
         return CLOCK_FAIL;
     }
+    prev_rtc_time = rtc_time;
+    time_ms = rtcTimeToMs(&rtc_time);
+    return CLOCK_OK;
+}
+
+ClockStatus TimeTrack_Update()
+{
     if (check_rtc)
     {
         check_rtc = 0;
-        if (Rtc_GetTime(time_sources->rtc, &rtc_time) != CLOCK_OK)
+        if (Rtc_GetTime(&rtc_time) != CLOCK_OK)
         {
             return CLOCK_FAIL;
         }
@@ -60,18 +67,18 @@ ClockStatus TimeTrack_Update()
     if (n >= 3600)
     {
         // Attempt to re-sync internal time and RTC to GPS every hour
-        if (Gps_Connected(time_sources->gps))
+        if (Gps_Connected())
         {
             // GPS connected
             gps_lost = 0;
-            gps_time = Gps_GetTime(time_sources->gps);
+            gps_time = Gps_GetTime();
 
             time_ms = gpsTimeToMs(&gps_time);   // Sync internal time to GPS
 
             msToRtcTime(time_ms, &rtc_time);
 
             // Sync RTC to GPS
-            if (Rtc_SetTime(time_sources->rtc, &rtc_time) != CLOCK_OK)
+            if (Rtc_SetTime(&rtc_time) != CLOCK_OK)
             {
                 return CLOCK_FAIL;
             }
@@ -89,10 +96,6 @@ ClockStatus TimeTrack_Update()
 
 ClockStatus TimeTrack_PeriodicCallback(uint32_t period_ms)
 {
-    if (time_sources == NULL)
-    {
-        return CLOCK_FAIL;
-    }
     time_ms += period_ms;
     check_rtc = 1;
     return CLOCK_OK;
@@ -100,10 +103,6 @@ ClockStatus TimeTrack_PeriodicCallback(uint32_t period_ms)
 
 ClockStatus TimeTrack_GetTimeMs(uint32_t *output_ms)
 {
-    if (time_sources == NULL)
-    {
-        return CLOCK_FAIL;
-    }
     *output_ms = time_ms;
     return CLOCK_OK;
 }

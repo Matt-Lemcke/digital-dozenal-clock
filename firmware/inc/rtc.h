@@ -48,11 +48,11 @@ typedef struct rtc_t
 }Rtc;
 
 ClockStatus Rtc_Init(Rtc *self);
-ClockStatus Rtc_IsValid(Rtc *self);
-ClockStatus Rtc_SetTime(Rtc *self, RtcTime *time);
-ClockStatus Rtc_GetTime(Rtc *self, RtcTime *time);
-ClockStatus Rtc_SetAlarm(Rtc *self, RtcTime *time, AlarmId id);
-ClockStatus Rtc_GetAlarm(Rtc *self, RtcTime *time, AlarmId id);
-ClockStatus Rtc_EnableAlarm(Rtc *self, AlarmId id, AlarmStatus enable);
+ClockStatus Rtc_IsValid();
+ClockStatus Rtc_SetTime(RtcTime *time);
+ClockStatus Rtc_GetTime(RtcTime *time);
+ClockStatus Rtc_SetAlarm(RtcTime *time, AlarmId id);
+ClockStatus Rtc_GetAlarm(RtcTime *time, AlarmId id);
+ClockStatus Rtc_EnableAlarm(AlarmId id, AlarmStatus enable);
 
 #endif /* FIRMWARE_INC_RTC_H_ */

@@ -8,14 +8,14 @@
 typedef enum btnId
 {
     B_DISPLAY,
-    B_ALARM,
-    B_TIMER,
+    B_DOZ,
+    B_TRAD,
     B_LEFT,
     B_RIGHT,
     B_UP,
     B_DOWN,
-    B_DOZ,
-    B_TRAD,
+    B_ALARM,
+    B_TIMER,
     B_VOLUP,
     B_VOLDOWN,
     B_CANCEL
