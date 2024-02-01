@@ -7,7 +7,7 @@
 
 #include "pwm-buzzer.h"
 
-#define CCR_COEFF 99
+#define CCR_COEFF 90
 
 TIM_HandleTypeDef *pwm_timer;
 uint32_t pwm_channel;
