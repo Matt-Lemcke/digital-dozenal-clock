@@ -21,6 +21,7 @@
 #include "adc.h"
 #include "dma.h"
 #include "i2c.h"
+#include "spi.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
@@ -42,6 +43,8 @@
 #include "gpio-buttons.h"
 #include "pwm-buzzer.h"
 #include "uart-display.h"
+
+#include "hub75-driver.h"
 
 /* USER CODE END Includes */
 
@@ -117,7 +120,12 @@ int main(void)
   MX_TIM3_Init();
   MX_ADC_Init();
   MX_TIM6_Init();
+  MX_SPI2_Init();
+  MX_TIM7_Init();
+  MX_TIM14_Init();
   /* USER CODE BEGIN 2 */
+
+
 
   // Buzzer
   PKM22E_Init(&htim3, TIM_CHANNEL_1);
@@ -143,37 +151,41 @@ int main(void)
   ds3231.setRtcTime = DS3231_SetTime;
   doz_clock.rtc = &ds3231;
 
+  HUB75_Init(&hspi2);
+  HUB75_Start();
 
   // Display
-  if(!Esp8266Driver_Init(&huart2, 2000))
-  {
-      Error_Handler();
-  }
-  rgb_matrix.displayOff = Esp8266Driver_DisplayOff;
-  rgb_matrix.displayOn = Esp8266Driver_DisplayOn;
-  rgb_matrix.setBrightness = Esp8266Driver_SetDisplayBrightness;
-  rgb_matrix.setBitmap = Esp8266Driver_SetBitmap;
-  rgb_matrix.setColour = Esp8266Driver_SetColour;
-  rgb_matrix.show = Esp8266Driver_Show;
-  rgb_matrix.hide = Esp8266Driver_Hide;
-  doz_clock.display = &rgb_matrix;
-
-  // Doz Clock
-  doz_clock.error_handler = Error_Handler;
-  DozClock_Init(&doz_clock);
-  
+//  if(!Esp8266Driver_Init(&huart2, 2000))
+//  {
+//      Error_Handler();
+//  }
+//  rgb_matrix.displayOff = Esp8266Driver_DisplayOff;
+//  rgb_matrix.displayOn = Esp8266Driver_DisplayOn;
+//  rgb_matrix.setBrightness = Esp8266Driver_SetDisplayBrightness;
+//  rgb_matrix.setBitmap = Esp8266Driver_SetBitmap;
+//  rgb_matrix.setColour = Esp8266Driver_SetColour;
+//  rgb_matrix.show = Esp8266Driver_Show;
+//  rgb_matrix.hide = Esp8266Driver_Hide;
+//  doz_clock.display = &rgb_matrix;
+//
+//  // Doz Clock
+//  doz_clock.error_handler = Error_Handler;
+//  DozClock_Init(&doz_clock);
+//
 
   // Buttons
-  Buttons_Init();
+//  Buttons_Init();
 
   // Light sensor
-  LightSens_Init(&hadc, 1600);
+//  LightSens_Init(&hadc, 1600);
 
   // Start 2Hz timer
-  HAL_TIM_Base_Start_IT(&htim6);
+//  HAL_TIM_Base_Start_IT(&htim6);
 
   // Start 6Hz timer
-  HAL_TIM_Base_Start_IT(&htim3);
+//  HAL_TIM_Base_Start_IT(&htim14);
+
+
 
   /* USER CODE END 2 */
 
@@ -181,7 +193,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    DozClock_Update();
+//    DozClock_Update();
 
     /* USER CODE END WHILE */
 
@@ -257,6 +269,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     {
         // 2 Hz freq
         LightSens_AdcStartConversion();
+    }
+    else if(htim == &htim7)
+    {
+        HUB75_TimerCallback();
     }
 }
 
