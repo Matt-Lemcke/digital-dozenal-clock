@@ -56,8 +56,6 @@ void hide(uint8_t region_id)
 
 TEST_GROUP(DisplayModule)
 {
-    // NOTE (For now): For tests to run, comment out all setBitmap() calls in display.c
-
     void setup()
     {
         testDisplay.setBrightness = setBrightness;
