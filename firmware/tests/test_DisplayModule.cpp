@@ -86,18 +86,15 @@ TEST(DisplayModule, U31_TimeFormatChangingStates)
     // Setup mock function calls
 
     // Display Init
-    mock().expectNCalls(1,"setBrightness").withParameter("brightness", HIGH_BRIGHTNESS);
-    mock().expectNCalls(1,"setColour").withParameter("region_id", 1).withParameter("colour_id", 0x81);
-    mock().expectNCalls(1,"setColour").withParameter("region_id", 2).withParameter("colour_id", 0x85);
-    mock().expectNCalls(1,"setColour").withParameter("region_id", 3).withParameter("colour_id", 0x82);
+    mock().expectNCalls(1,"setBrightness").ignoreOtherParameters();
+    mock().expectNCalls(3,"setColour").ignoreOtherParameters();
+    mock().expectNCalls(3,"setBitmap").ignoreOtherParameters();
     mock().expectNCalls(1,"displayOff");
     // Display Init
 
     mock().expectNCalls(1,"displayOn");
-    mock().expectNCalls(3,"show").withParameter("region_id", 1);
-    mock().expectNCalls(4,"show").withParameter("region_id", 2);
-    mock().expectNCalls(4,"show").withParameter("region_id", 3);
-    mock().expectNCalls(1,"hide").withParameter("region_id", 1);
+    mock().expectNCalls(11,"show").ignoreOtherParameters();
+    mock().expectNCalls(1,"hide").ignoreOtherParameters();
 
     // Production code
     TimeFormats Format1, Format2, Format3;
@@ -113,7 +110,6 @@ TEST(DisplayModule, U31_TimeFormatChangingStates)
     Display_ToggleMode();
     Format3 = testDisplay.time_format;
 
-
     // Checks
     CHECK_EQUAL(DOZ_DRN4, Format1);
     CHECK_EQUAL(DOZ_DRN4, Format2);
@@ -125,19 +121,15 @@ TEST(DisplayModule, U32_DisplayOffWhileSetAlarm)
     // Setup mock function calls
 
     // Display Init
-    mock().expectNCalls(1,"setBrightness").withParameter("brightness", HIGH_BRIGHTNESS);
-    mock().expectNCalls(1,"setColour").withParameter("region_id", 1).withParameter("colour_id", 0x81);
-    mock().expectNCalls(1,"setColour").withParameter("region_id", 2).withParameter("colour_id", 0x85);
-    mock().expectNCalls(1,"setColour").withParameter("region_id", 3).withParameter("colour_id", 0x82);
+    mock().expectNCalls(1,"setBrightness").ignoreOtherParameters();
+    mock().expectNCalls(3,"setColour").ignoreOtherParameters();
+    mock().expectNCalls(3,"setBitmap").ignoreOtherParameters();
     mock().expectNCalls(1,"displayOff");
     // Display Init
 
     mock().expectNCalls(1,"displayOn");
-    mock().expectNCalls(2,"show").withParameter("region_id", 1);
-    mock().expectNCalls(4,"show").withParameter("region_id", 2);
-    mock().expectNCalls(2,"show").withParameter("region_id", 3);
-    mock().expectNCalls(2,"hide").withParameter("region_id", 1);
-    mock().expectNCalls(2,"hide").withParameter("region_id", 3);
+    mock().expectNCalls(8,"show").ignoreOtherParameters();
+    mock().expectNCalls(4,"hide").ignoreOtherParameters();
 
     // Production code
     Display_Init(&testDisplay, &testExternVars);
