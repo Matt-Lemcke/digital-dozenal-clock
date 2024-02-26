@@ -136,18 +136,18 @@ int main(void)
   // RTC
   DS3231_Init(&hi2c1);
   ds3231.enableAlarm = DS3231_EnableAlarm;
-//  ds3231.getAlarmHour;
-//  ds3231.getAlarmMinute;
-//  ds3231.getAlarmSecond;
-  ds3231.getDay     = DS3231_GetDate;
-  ds3231.getHour    = DS3231_GetHour;
-  ds3231.getMinute  = DS3231_GetMinute;
-  ds3231.getMonth   = DS3231_GetMonth;
-  ds3231.getSecond  = DS3231_GetSecond;
-//  ds3231.setAlarm;
-  ds3231.setDay         = DS3231_SetDate;
-  ds3231.setMonth       = DS3231_SetMonth;
-  ds3231.setRtcTime     = DS3231_SetTime;
+  ds3231.getAlarmHour = DS3231_GetAlarmHour;
+  ds3231.getAlarmMinute = DS3231_GetAlarmMinute;
+  ds3231.getAlarmSecond = DS3231_GetAlarmSecond;
+  ds3231.getDay = DS3231_GetDate;
+  ds3231.getHour = DS3231_GetHour;
+  ds3231.getMinute = DS3231_GetMinute;
+  ds3231.getMonth = DS3231_GetMonth;
+  ds3231.getSecond = DS3231_GetSecond;
+  ds3231.setAlarm = DS3231_SetAlarm;
+  ds3231.setDay = DS3231_SetDate;
+  ds3231.setMonth = DS3231_SetMonth;
+  ds3231.setRtcTime = DS3231_SetTime;
   doz_clock.rtc = &ds3231;
 
   // Display
