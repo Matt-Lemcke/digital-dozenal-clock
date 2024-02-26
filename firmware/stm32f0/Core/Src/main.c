@@ -40,6 +40,7 @@
 
 #include "adc-light-sens.h"
 #include "hub75-driver.h"
+#include "hub75-driver.h"
 #include "i2c-rtc.h"
 #include "gpio-buttons.h"
 #include "pwm-buzzer.h"
@@ -161,19 +162,6 @@ int main(void)
   doz_clock.display = &rgb_matrix;
 
 
-//  if(!Esp8266Driver_Init(&huart2, 2000))
-//  {
-//      Error_Handler();
-//  }
-//  rgb_matrix.displayOff = Esp8266Driver_DisplayOff;
-//  rgb_matrix.displayOn = Esp8266Driver_DisplayOn;
-//  rgb_matrix.setBrightness = Esp8266Driver_SetDisplayBrightness;
-//  rgb_matrix.setBitmap = Esp8266Driver_SetBitmap;
-//  rgb_matrix.setColour = Esp8266Driver_SetColour;
-//  rgb_matrix.show = Esp8266Driver_Show;
-//  rgb_matrix.hide = Esp8266Driver_Hide;
-//  doz_clock.display = &rgb_matrix;
-//
   // Doz Clock
   doz_clock.error_handler = Error_Handler;
   DozClock_Init(&doz_clock);
