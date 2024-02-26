@@ -39,12 +39,10 @@
 #include "rtc.h"
 
 #include "adc-light-sens.h"
+#include "hub75-driver.h"
 #include "i2c-rtc.h"
 #include "gpio-buttons.h"
 #include "pwm-buzzer.h"
-#include "uart-display.h"
-
-#include "hub75-driver.h"
 
 /* USER CODE END Includes */
 
@@ -122,16 +120,16 @@ int main(void)
   MX_TIM6_Init();
   MX_SPI2_Init();
   MX_TIM7_Init();
-  MX_TIM14_Init();
+  MX_TIM15_Init();
   /* USER CODE BEGIN 2 */
 
 
 
   // Buzzer
   PKM22E_Init(&htim3, TIM_CHANNEL_1);
-  buzzer.setDutyCycle = PKM22E_SetDutyCyle;
-  buzzer.startPwm = PKM22E_StartPwm;
-  buzzer.stopPwm = PKM22E_StopPwm;
+  buzzer.setDutyCycle   = PKM22E_SetDutyCyle;
+  buzzer.startPwm       = PKM22E_StartPwm;
+  buzzer.stopPwm        = PKM22E_StopPwm;
   doz_clock.buzzer = &buzzer;
 
   // RTC
@@ -151,10 +149,18 @@ int main(void)
   ds3231.setRtcTime = DS3231_SetTime;
   doz_clock.rtc = &ds3231;
 
-  HUB75_Init(&hspi2);
-  HUB75_Start();
-
   // Display
+  HUB75_Init(&hspi2, &htim15, TIM_CHANNEL_1);
+  rgb_matrix.displayOff     = HUB75_DisplayOff;
+  rgb_matrix.displayOn      = HUB75_DisplayOn;
+  rgb_matrix.setBrightness  = HUB75_SetDisplayBrightness;
+  rgb_matrix.setBitmap      = HUB75_SetBitmap;
+  rgb_matrix.setColour      = HUB75_SetColour;
+  rgb_matrix.show           = HUB75_Show;
+  rgb_matrix.hide           = HUB75_Hide;
+  doz_clock.display = &rgb_matrix;
+
+
 //  if(!Esp8266Driver_Init(&huart2, 2000))
 //  {
 //      Error_Handler();
@@ -168,22 +174,22 @@ int main(void)
 //  rgb_matrix.hide = Esp8266Driver_Hide;
 //  doz_clock.display = &rgb_matrix;
 //
-//  // Doz Clock
-//  doz_clock.error_handler = Error_Handler;
-//  DozClock_Init(&doz_clock);
-//
+  // Doz Clock
+  doz_clock.error_handler = Error_Handler;
+  DozClock_Init(&doz_clock);
+
 
   // Buttons
-//  Buttons_Init();
+  Buttons_Init();
 
   // Light sensor
-//  LightSens_Init(&hadc, 1600);
+  LightSens_Init(&hadc, 1600);
 
   // Start 2Hz timer
-//  HAL_TIM_Base_Start_IT(&htim6);
+  HAL_TIM_Base_Start_IT(&htim6);
 
   // Start 6Hz timer
-//  HAL_TIM_Base_Start_IT(&htim14);
+  HAL_TIM_Base_Start_IT(&htim7);
 
 
 
@@ -193,7 +199,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-//    DozClock_Update();
+    DozClock_Update();
 
     /* USER CODE END WHILE */
 
@@ -263,7 +269,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t pin)
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-    if(htim == &htim3)
+    if(htim == &htim7)
     {
         // 6 Hz freq
         Buttons_TimerCallback(167);
@@ -274,9 +280,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
         // 2 Hz freq
         LightSens_AdcStartConversion();
     }
-    else if(htim == &htim7)
+    else if(htim == &htim15)
     {
-        HUB75_TimerCallback();
+        HUB75_PwmStartPulse();
     }
 }
 

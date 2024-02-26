@@ -17,4 +17,16 @@ typedef enum clockstatus
     CLOCK_FAIL
 } ClockStatus;
 
+// Colour values in 2-state RGB
+typedef enum
+{
+    RED     = 0b100,
+    GREEN   = 0b010,
+    BLUE    = 0b001,
+    YELLOW  = 0b110,
+    MAGENTA = 0b101,
+    CYAN    = 0b011,
+    WHITE   = 0b111,
+} Colour;
+
 #endif  // FIRMWARE_INC_CLOCK_TYPES_H_
