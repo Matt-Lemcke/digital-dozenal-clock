@@ -8,161 +8,269 @@
 #include "hub75-driver.h"
 #include "tim.h"
 
-#define NUM_WRITE_CYCLES    6
+#define MIN_PWM_CCR 500
+#define MAX_PWM_CCR 4000
+#define BRIGHTNESS_TO_CCR(x)    MAX_PWM_CCR - (MAX_PWM_CCR-MIN_PWM_CCR)/MAX_BRIGHTNESS*x
+
 #define MAX_SCAN_ROWS       16
 #define BYTES_PER_ROW       8
 #define NUM_COLOUR_LINES    3
-#define ROW_BUFFER_SIZE     BYTES_PER_ROW*NUM_COLOUR_LINES*2
+#define BUFFER_ROW_SIZE     BYTES_PER_ROW*NUM_COLOUR_LINES
+#define BITMAP_SIZE         BUFFER_ROW_SIZE*2*MAX_SCAN_ROWS
 
+#define NUM_REGIONS 3
 
-static SPI_HandleTypeDef *hspi;
-
-static uint8_t bitmap[] = {
-        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
-        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
-        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
-        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
-        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
-        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
-        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
-        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
-        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
-        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
-        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
-        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
-        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
-        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
-        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
-        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
-        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
-        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
-        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
-        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
-        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
-        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
-        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
-        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
-        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
-        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
-        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
-        0,0,0,0,0,0,0,0,
-        0,0,0,0,0,0,0,0,
-        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
-        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
-        0,0,0,0,0,0,0,0,
-        0,0,0,0,0,0,0,0,
-        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
-        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
-        0,0,0,0,0,0,0,0,
-        0,0,0,0,0,0,0,0,
-        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
-        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
-        0,0,0,0,0,0,0,0,
-        0,0,0,0,0,0,0,0,
-        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
-        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
-        0,0,0,0,0,0,0,0,
-        0,0,0,0,0,0,0,0,
-        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
-        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
-        0,0,0,0,0,0,0,0,
-        0,0,0,0,0,0,0,0,
-};
-static uint8_t zeros[] =
+typedef struct bitmap_region
 {
-        0,0,0,0,0,0,0,0
-};
-static uint8_t row_buffer[ROW_BUFFER_SIZE];
+    uint8_t     *p_source;
+    uint32_t    size;
+    Colour      colour;
+    uint8_t     start_row;
+    bool        show;
+}Bitmap_Region;
 
-static uint8_t row_id = 11;
-static Colours row_colour = Yellow;
-
-static void write_row(uint8_t row_num);
-
+/*
+    Private function definitions
+*/
 static inline void set_row_address(uint8_t row_num);
 static inline void set_latch(void);
 static inline void reset_latch(void);
 
-void HUB75_Init(SPI_HandleTypeDef *spi)
+static void set_oe_pwm_ccr(uint16_t ccr);
+static void copy_to_buffer(Bitmap_Region *region);
+
+/*
+    Private variables
+*/
+static SPI_HandleTypeDef    *hspi;
+static TIM_HandleTypeDef    *htim;
+static uint32_t             htim_channel;
+
+static uint8_t row_id = 0;
+
+/*
+ * Bitmap buffer format:
+ *
+ * Blue Bits Row 16
+ * Green Bits Row 16
+ * Red Bits Row 16
+ * Blue Bits row 0
+ * Green Bits Row 0
+ * Red Bits Row 0
+ * Blue Bits Row 17
+ * Green Bits Row 17
+ * Red Bits Row 17
+ * Blue Bits row 1
+ * Green Bits Row 1
+ * Red Bits Row 1
+ * ...
+ */
+static uint8_t bitmap_buffer[BITMAP_SIZE];
+static Bitmap_Region regions[NUM_REGIONS] =
+{
+    {
+        // Top region
+        .start_row = 1,
+        .size      = SMALL_REGION_SIZE,
+        .colour    = RED,
+        .p_source  = NULL,
+        .show      = 1,
+    },
+    {
+        // Middle region
+        .start_row = 10,
+        .size      = LARGE_REGION_SIZE,
+        .colour    = BLUE,
+        .p_source  = NULL,
+        .show      = 1,
+    },
+    {
+        // Bottom region
+        .start_row = 24,
+        .size      = SMALL_REGION_SIZE,
+        .colour    = GREEN,
+        .p_source  = NULL,
+        .show      = 1,
+    },
+};
+
+/*
+    Public functions
+*/
+void HUB75_Init(SPI_HandleTypeDef *spi, TIM_HandleTypeDef *tim, uint32_t channel)
 {
     hspi = spi;
-    for (int i=0; i<12; i++)
-    {
-        HAL_GPIO_WritePin(DISP_LAT_GPIO_Port, DISP_LAT_Pin, GPIO_PIN_RESET);
-        HAL_GPIO_WritePin(DISP_OE_GPIO_Port, DISP_OE_Pin, GPIO_PIN_RESET);
-        HAL_SPI_Transmit(hspi, zeros, 8, 500);
-        HAL_GPIO_WritePin(DISP_LAT_GPIO_Port, DISP_LAT_Pin, GPIO_PIN_SET);
-        HAL_GPIO_WritePin(DISP_OE_GPIO_Port, DISP_OE_Pin, GPIO_PIN_SET);
-    }
-    HAL_GPIO_WritePin(DISP_LAT_GPIO_Port, DISP_LAT_Pin, GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(DISP_OE_GPIO_Port, DISP_OE_Pin, GPIO_PIN_RESET);
-}
+    htim = tim;
+    htim_channel = channel;
 
-void HUB75_Start(void)
-{
-    HAL_TIM_Base_Start_IT(&htim7);
-}
+    // Clear bitmap buffer
+    memset(bitmap_buffer, 0, BITMAP_SIZE);
 
-void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
-{
-    set_latch();
-    row_id = (row_id + 1) % MAX_SCAN_ROWS;
-    HAL_TIM_Base_Start_IT(&htim7);
-}
-
-void HUB75_TimerCallback(void)
-{
-    HAL_TIM_Base_Stop(&htim7);
+    // Clear the display memory
+    uint8_t zeros[BUFFER_ROW_SIZE];
+    memset(zeros, 0, BUFFER_ROW_SIZE);
     reset_latch();
-    set_row_address(row_id);
-    write_row(row_id);
+    for(int i = 0; i < 4; i++)
+    {
+        HAL_SPI_Transmit(hspi, zeros, BUFFER_ROW_SIZE, 500);
+    }
+    set_latch();
+    set_row_address(0);
+    reset_latch();
+
+    // Set pmw duty cycle to min
+    set_oe_pwm_ccr(MIN_PWM_CCR);
 }
 
+void HUB75_DisplayOn(void)
+{
+    // Enable PWM timer
+    __HAL_TIM_ENABLE_IT(htim, TIM_IT_UPDATE);
+    HAL_TIM_PWM_Start_IT(htim, htim_channel);
+}
+
+void HUB75_DisplayOff(void)
+{
+    // Disable PWM timer
+    __HAL_TIM_DISABLE_IT(htim, TIM_IT_UPDATE);
+    HAL_TIM_PWM_Stop_IT(htim, htim_channel);
+}
+
+void HUB75_SetDisplayBrightness(uint8_t brightness)
+{
+    if (brightness <= MAX_BRIGHTNESS)
+    {
+        set_oe_pwm_ccr(BRIGHTNESS_TO_CCR((uint16_t)brightness));
+    }
+}
+
+void HUB75_SetBitmap(uint8_t region_id, uint8_t *bitmap)
+{
+    if (region_id < NUM_REGIONS)
+    {
+        regions[region_id].p_source = bitmap;
+        if (regions[region_id].show)
+        {
+            copy_to_buffer(regions + region_id);
+        }
+    }
+}
+
+void HUB75_SetColour(uint8_t region_id, Colour colour_id)
+{
+    if (region_id < NUM_REGIONS)
+    {
+        regions[region_id].colour = colour_id;
+        if (regions[region_id].show)
+        {
+            copy_to_buffer(regions + region_id);
+        }
+    }
+}
+
+void HUB75_Show(uint8_t region_id)
+{
+    if (region_id < NUM_REGIONS && !regions[region_id].show)
+    {
+        regions[region_id].show = 1;
+        copy_to_buffer(regions + region_id);
+    }
+}
+
+void HUB75_Hide(uint8_t region_id)
+{
+    if (region_id < NUM_REGIONS && regions[region_id].show)
+    {
+        regions[region_id].show = 0;
+        copy_to_buffer(regions + region_id);
+    }
+}
+
+void HUB75_PwmStartPulse(void)
+{
+    // Triggers when OE is HIGH (display off)
+    set_latch();                // Latch data written in last call
+    set_row_address(row_id);    // Go to row address of last call
+    reset_latch();              // Unlatch
+
+    row_id = (row_id + 1) % MAX_SCAN_ROWS;  // Move to next row
+
+    HAL_SPI_Transmit_DMA(hspi, bitmap_buffer + row_id*BUFFER_ROW_SIZE*2, BUFFER_ROW_SIZE*2);    // Write data for next call
+}
+
+/*
+    Private functions
+*/
 inline void set_row_address(uint8_t row_num)
 {
     HAL_GPIO_WritePin(DISP_A_GPIO_Port, DISP_A_Pin, row_num & (1<<0));
     HAL_GPIO_WritePin(DISP_B_GPIO_Port, DISP_B_Pin, row_num & (1<<1));
     HAL_GPIO_WritePin(DISP_C_GPIO_Port, DISP_C_Pin, row_num & (1<<2));
     HAL_GPIO_WritePin(DISP_D_GPIO_Port, DISP_D_Pin, row_num & (1<<3));
-    HAL_GPIO_WritePin(DISP_E_GPIO_Port, DISP_E_Pin, 1);
+    HAL_GPIO_WritePin(DISP_E_GPIO_Port, DISP_E_Pin, 1); // Always 1 for 32 row display
 }
 
 inline void reset_latch(void)
 {
     HAL_GPIO_WritePin(DISP_LAT_GPIO_Port, DISP_LAT_Pin, GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(DISP_OE_GPIO_Port, DISP_OE_Pin, GPIO_PIN_SET);
 }
 
 inline void set_latch(void)
 {
     HAL_GPIO_WritePin(DISP_LAT_GPIO_Port, DISP_LAT_Pin, GPIO_PIN_SET);
-    HAL_GPIO_WritePin(DISP_OE_GPIO_Port, DISP_OE_Pin, GPIO_PIN_RESET);
 }
 
-void write_row(uint8_t row_num)
+void set_oe_pwm_ccr(uint16_t ccr)
 {
-    uint8_t *data_pointer = bitmap + row_num*BYTES_PER_ROW;
-    for (int i=0; i<NUM_COLOUR_LINES; i++)
+    // Adjust PWM duty cycle
+    // Longer OE HIGH time = shorter LED on time = lower brightness
+    if (ccr < MIN_PWM_CCR)
     {
-        if (row_colour & (1<<i))
+        ccr = MIN_PWM_CCR;
+    }
+    else if (ccr > MAX_PWM_CCR)
+    {
+        ccr = MAX_PWM_CCR;
+    }
+    htim->Instance->CCR1 = ccr;
+}
+
+void copy_to_buffer(Bitmap_Region *region)
+{
+    uint32_t buffer_row = 0;
+    if (region->p_source == NULL)
+    {
+        return;
+    }
+    for(int region_row = 0; region_row < region->size / BYTES_PER_ROW; region_row++)
+    {
+        buffer_row = region_row + region->start_row;
+        if (buffer_row < MAX_SCAN_ROWS)
         {
-            memcpy(row_buffer + i*BYTES_PER_ROW, data_pointer + MAX_SCAN_ROWS*BYTES_PER_ROW, BYTES_PER_ROW);
+            buffer_row = buffer_row * 2 + 1;
         }
         else
         {
-            memset(row_buffer + i*BYTES_PER_ROW, 0, BYTES_PER_ROW);
+            buffer_row = (buffer_row % MAX_SCAN_ROWS)*2;
         }
-    }
-    for (int i=0; i<NUM_COLOUR_LINES; i++)
-    {
-        if (row_colour & (1<<i))
+
+        if (!region->show)
         {
-            memcpy(row_buffer + i*BYTES_PER_ROW + ROW_BUFFER_SIZE/2, data_pointer, BYTES_PER_ROW);
+            memset(bitmap_buffer + buffer_row*BUFFER_ROW_SIZE, 0, BUFFER_ROW_SIZE);
         }
         else
         {
-            memset(row_buffer + i*BYTES_PER_ROW + ROW_BUFFER_SIZE/2, 0, BYTES_PER_ROW);
+            for(int i = 0; i < NUM_COLOUR_LINES; i++)
+            {
+                if (region->colour & (1<<i))
+                {
+                    memcpy(bitmap_buffer + buffer_row*BUFFER_ROW_SIZE + i*BYTES_PER_ROW, region->p_source + region_row*BYTES_PER_ROW, BYTES_PER_ROW);
+                }
+                else
+                {
+                    memset(bitmap_buffer + buffer_row*BUFFER_ROW_SIZE + i*BYTES_PER_ROW, 0, BYTES_PER_ROW);
+                }
+            }
         }
     }
-    HAL_SPI_Transmit_IT(hspi, row_buffer, ROW_BUFFER_SIZE);
 }

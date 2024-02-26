@@ -95,7 +95,7 @@ void Error_Handler(void);
 #define DISP_E_GPIO_Port GPIOB
 #define DISP_LAT_Pin GPIO_PIN_11
 #define DISP_LAT_GPIO_Port GPIOB
-#define DISP_OE_Pin GPIO_PIN_12
+#define DISP_OE_Pin GPIO_PIN_14
 #define DISP_OE_GPIO_Port GPIOB
 #define RTC_SQW_Pin GPIO_PIN_9
 #define RTC_SQW_GPIO_Port GPIOC
