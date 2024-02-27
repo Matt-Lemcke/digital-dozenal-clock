@@ -82,9 +82,6 @@ static void displayTime(Bitmap *row_bitmap, uint32_t time_ms);
 static void blinkDigit(Bitmap *row_bitmap, uint8_t char_index);
 static void updateBitmap(Bitmap *row_bitmap, uint8_t index, uint8_t digit[], uint8_t digitSize, bool blank);
 static uint8_t checkDeadZones(uint8_t digit[], uint8_t digitSize);
-static void msToTrad(uint32_t time_ms, uint8_t *hr_24, uint8_t *min, uint8_t *sec);
-static void msToDiurn(uint32_t time_ms, uint8_t *digit1, uint8_t *digit2, uint8_t *digit3, uint8_t *digit4, uint8_t *digit5);
-static void msToSemiDiurn(uint32_t time_ms, uint8_t *digit1, uint8_t *digit2, uint8_t *digit3, uint8_t *digit4, uint8_t *digit5);
 /*
     State definitions
 */
@@ -442,6 +439,34 @@ void transition(State *next)
     g_fsm.curr_state->entry(g_fsm.ctx);
 }
 
+void msToTrad(uint32_t time_ms, uint8_t *hr_24, uint8_t *min, uint8_t *sec)
+{
+    time_ms = time_ms / 1000;
+    *sec = time_ms % 60;
+    time_ms = time_ms / 60;
+    *min = time_ms % 60;
+    time_ms = time_ms / 60;
+    *hr_24 = time_ms % 24;
+}
+
+void msToDiurn(uint32_t time_ms, uint8_t *digit1, uint8_t *digit2, uint8_t *digit3, uint8_t *digit4, uint8_t *digit5)
+{
+    *digit1 = (time_ms / 7200000) % 12;
+    *digit2 = (time_ms / 600000) % 12;
+    *digit3 = (time_ms / 50000) % 12;
+    *digit4 = (((uint64_t) time_ms * 6) / 25000) % 12;
+    *digit5 = (((uint64_t) time_ms * 72) / 25000) % 12;
+}
+
+void msToSemiDiurn(uint32_t time_ms, uint8_t *digit1, uint8_t *digit2, uint8_t *digit3, uint8_t *digit4, uint8_t *digit5)
+{
+    *digit1 = (time_ms / 43200000) % 2;
+    *digit2 = (time_ms / 3600000) % 12;
+    *digit3 = (time_ms / 300000) % 12;
+    *digit4 = (time_ms / 25000) % 12;
+    *digit5 = (((uint64_t) time_ms * 12) / 25000) % 12;
+}
+
 static void displayChar(Bitmap *row_bitmap, uint8_t char_index, uint8_t digit[], uint8_t digitSize)
 {
     updateBitmap(row_bitmap, char_index, digit, digitSize, false);
@@ -623,32 +648,4 @@ static uint8_t checkDeadZones(uint8_t digit[], uint8_t digitSize) {
         ++numDeadZones;
     }
     return numDeadZones;
-}
-
-static void msToTrad(uint32_t time_ms, uint8_t *hr_24, uint8_t *min, uint8_t *sec)
-{
-    time_ms = time_ms / 1000;
-    *sec = time_ms % 60;
-    time_ms = time_ms / 60;
-    *min = time_ms % 60;
-    time_ms = time_ms / 60;
-    *hr_24 = time_ms % 24;
-}
-
-static void msToDiurn(uint32_t time_ms, uint8_t *digit1, uint8_t *digit2, uint8_t *digit3, uint8_t *digit4, uint8_t *digit5)
-{
-    *digit1 = time_ms / 7200000;
-    *digit2 = (time_ms / 600000) % 12;
-    *digit3 = (time_ms / 50000) % 12;
-    *digit4 = (((uint64_t) time_ms * 6) / 25000) % 12;
-    *digit5 = (((uint64_t) time_ms * 72) / 25000) % 12;
-}
-
-static void msToSemiDiurn(uint32_t time_ms, uint8_t *digit1, uint8_t *digit2, uint8_t *digit3, uint8_t *digit4, uint8_t *digit5)
-{
-    *digit1 = time_ms / 43200000;
-    *digit2 = (time_ms / 3600000) % 12;
-    *digit3 = (time_ms / 300000) % 12;
-    *digit4 = (time_ms / 25000) % 12;
-    *digit5 = (((uint64_t) time_ms * 12) / 25000) % 12;
 }

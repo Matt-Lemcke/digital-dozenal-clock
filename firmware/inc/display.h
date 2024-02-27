@@ -137,4 +137,7 @@ void Display_SetAlarm(void);
 void Display_ShowTime(void);
 void Display_SetFormat(TimeFormats format);
 void Display_SetBrightness(BrightnessLevels brightness);
+void msToTrad(uint32_t time_ms, uint8_t *hr_24, uint8_t *min, uint8_t *sec);
+void msToDiurn(uint32_t time_ms, uint8_t *digit1, uint8_t *digit2, uint8_t *digit3, uint8_t *digit4, uint8_t *digit5);
+void msToSemiDiurn(uint32_t time_ms, uint8_t *digit1, uint8_t *digit2, uint8_t *digit3, uint8_t *digit4, uint8_t *digit5);
 #endif  // FIRMWARE_INC_DISPLAY_H_
