@@ -26,12 +26,12 @@ static void msToRtcTime(uint32_t time_ms, RtcTime *time);
 
 ClockStatus TimeTrack_Init()
 {
-    time_ms = 0;
     n = 0;
     if (Rtc_GetTime(&rtc_time) != CLOCK_OK)
     {
         return CLOCK_FAIL;
     }
+    time_ms = rtcTimeToMs(&rtc_time);
     prev_rtc_time = rtc_time;
     return CLOCK_OK;
 }
