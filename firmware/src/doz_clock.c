@@ -22,6 +22,12 @@ static void SetTimer_Exit(DozClock *ctx);
 static void SetTime_Entry(DozClock *ctx);
 static void SetTime_Update(DozClock *ctx);
 static void SetTime_Exit(DozClock *ctx);
+static void AlarmTimerDispOn_Entry(DozClock *ctx);
+static void AlarmTimerDispOn_Update(DozClock *ctx);
+static void AlarmTimerDispOn_Exit(DozClock *ctx);
+static void AlarmTimerDispOff_Entry(DozClock *ctx);
+static void AlarmTimerDispOff_Update(DozClock *ctx);
+static void AlarmTimerDispOff_Exit(DozClock *ctx);
 
 static void transition(State *next);
 static void process_event();
@@ -36,6 +42,8 @@ static TimeFormats doz_format_list[] = {DOZ_SEMI, DOZ_DRN4, DOZ_DRN5};
 static TimeFormats curr_format;
 
 static uint8_t trad_index = 0, doz_index = 0;
+static uint8_t displayOn = 1;
+static uint8_t cancel_pressed = 0;
 
 static RtcTime demo_reset = {
         .hr = 17,
@@ -85,6 +93,20 @@ static State s_set_time =
     .entry      = SetTime_Entry,
     .update     = SetTime_Update,
     .exit       = SetTime_Exit,
+};
+static State s_alarm_timer_disp_on =
+{
+    .state_code = STATE_ALARM_TIMER_DISP_ON,
+    .entry      = AlarmTimerDispOn_Entry,
+    .update     = AlarmTimerDispOn_Update,
+    .exit       = AlarmTimerDispOn_Exit,
+};
+static State s_alarm_timer_disp_off =
+{
+    .state_code = STATE_ALARM_TIMER_DISP_OFF,
+    .entry      = AlarmTimerDispOff_Entry,
+    .update     = AlarmTimerDispOff_Update,
+    .exit       = AlarmTimerDispOff_Exit,
 };
 
 // FSM Event Functions
@@ -214,6 +236,7 @@ void Init_Update(DozClock *ctx)
 void Init_Exit(DozClock *ctx)
 {
     UNUSED(ctx);
+    TimeTrack_GetTimeMs(&ctx->time_ms);
     Display_On();
 }
 void IdleDispOn_Entry(DozClock *ctx)
@@ -245,6 +268,7 @@ void SetAlarm_Entry(DozClock *ctx)
 {
     ctx->digit_sel = 0;
     ctx->user_alarm_ms = 0;
+    g_clock_fsm.ctx->alarm_set = false;
     Display_SetAlarm();
 }
 void SetAlarm_Update(DozClock *ctx)
@@ -284,6 +308,11 @@ void SetAlarm_Update(DozClock *ctx)
 }
 void SetAlarm_Exit(DozClock *ctx)
 {
+    if (cancel_pressed) {
+        cancel_pressed = 0;
+        return;
+    }
+
     RtcTime alarmTime;
     msToRtcTime(ctx->user_alarm_ms, &alarmTime);
     Rtc_SetAlarm(&alarmTime, ALARM);
@@ -293,6 +322,7 @@ void SetTimer_Entry(DozClock *ctx)
 {
     ctx->digit_sel = 0;
     ctx->user_timer_ms = 0;
+    g_clock_fsm.ctx->timer_set = false;
     Display_SetTimer();
 }
 void SetTimer_Update(DozClock *ctx)
@@ -325,6 +355,11 @@ void SetTimer_Update(DozClock *ctx)
 }
 void SetTimer_Exit(DozClock *ctx)
 {
+    if (cancel_pressed) {
+        cancel_pressed = 0;
+        return;
+    }
+
     RtcTime timerTime;
     msToRtcTime(ctx->user_timer_ms, &timerTime);
     Rtc_SetAlarm(&timerTime, TIMER);
@@ -366,10 +401,61 @@ void SetTime_Update(DozClock *ctx)
 }
 void SetTime_Exit(DozClock *ctx)
 {
+    if (cancel_pressed) {
+        cancel_pressed = 0;
+        return;
+    }
+
     RtcTime time;
     msToRtcTime(ctx->user_time_ms, &time);
     Rtc_SetTime(&time);
-    TimeTrack_SyncToRtc();
+    if (TimeTrack_SyncToRtc() != CLOCK_OK)
+    {
+        ctx->error_code = TIME_INIT;
+        ctx->error_handler();
+    }
+}
+static void AlarmTimerDispOn_Entry(DozClock *ctx)
+{
+    if (ctx->alarm_triggered) {
+        // Display alarm triggered on display
+    } else if (ctx->timer_triggered) {
+        // Display timer triggered on display
+    }
+    Buzzer_Start();
+}
+static void AlarmTimerDispOn_Update(DozClock *ctx)
+{
+    UNUSED(ctx);
+    // Countdown
+    // Display time left on alarm trigger?
+}
+static void AlarmTimerDispOn_Exit(DozClock *ctx)
+{
+    UNUSED(ctx);
+    Buzzer_Stop();
+}
+static void AlarmTimerDispOff_Entry(DozClock *ctx)
+{
+    Buzzer_Start();
+}
+static void AlarmTimerDispOff_Update(DozClock *ctx)
+{
+    UNUSED(ctx);
+    // Countdown
+}
+static void AlarmTimerDispOff_Exit(DozClock *ctx)
+{
+    Buzzer_Stop();
+    if (ctx->alarm_triggered) {
+        // Stop displaying alarm triggered on display
+        ctx->alarm_triggered = false;
+        ctx->alarm_set = false;
+    } else if (ctx->timer_triggered) {
+        // Stop displaying timer triggered on display
+        ctx->timer_triggered = false;
+        ctx->timer_set = false;
+    }
 }
 
 // Helper functions
@@ -389,6 +475,7 @@ static void process_event()
     g_clock_fsm.ctx->curr_event = E_NONE;
 }
 
+
 // STATE EVENT MAP
 
 static void toggle_mode(void);
@@ -396,47 +483,157 @@ static void toggle_doz_mode(void);
 static void toggle_trad_mode(void);
 static void toggle_alarm_set(void);
 static void toggle_timer_set(void);
+static void toggle_display(void);
 static void transition_idle_disp_off(void);
 static void transition_idle_disp_on(void);
 static void transition_set_alarm(void);
 static void transition_set_timer(void);
+static void transition_set_time_doz(void);
+static void transition_set_time_trad(void);
 static void set_low_brightness(void);
 static void set_high_brightness(void);
 static void set_state_right_short(void);
 static void set_state_left_short(void);
 static void set_state_up_short(void);
 static void set_state_down_short(void);
+static void set_am_pm(void);
 static void rtc_demo_reset(void);
+static void cancel_set_state(void);
+static void vol_up_short(void);
+static void vol_up_long(void);
+static void vol_down_short(void);
+static void vol_down_long(void);
+
+static void transition_alarm_disp_on(void);
+static void transition_timer_disp_on(void);
+static void transition_alarm_disp_off(void);
+static void transition_timer_disp_off(void);
+static void set_time_doz_done(void);
+static void set_time_trad_done(void);
 
 static void state_event_map_init() 
 {
-    state_event_map[STATE_IDLE_DISP_ON][E_DISPLAY_SHORT] = toggle_mode;
-    state_event_map[STATE_IDLE_DISP_ON][E_DISPLAY_LONG] = transition_idle_disp_off;
-    state_event_map[STATE_IDLE_DISP_ON][E_DOZ_SHORT] = toggle_doz_mode;
-    state_event_map[STATE_IDLE_DISP_ON][E_TRAD_SHORT] = toggle_trad_mode;
-    state_event_map[STATE_IDLE_DISP_ON][E_ALARM_SHORT] = toggle_alarm_set;
-    state_event_map[STATE_IDLE_DISP_ON][E_TIMER_SHORT] = toggle_timer_set;
-    state_event_map[STATE_IDLE_DISP_ON][E_ROOM_DARK] = set_low_brightness;
-    state_event_map[STATE_IDLE_DISP_ON][E_ROOM_LIGHT] = set_high_brightness;
-    state_event_map[STATE_IDLE_DISP_ON][E_CANCEL_LONG] = rtc_demo_reset;
-    state_event_map[STATE_IDLE_DISP_ON][E_ALARM_LONG] = transition_set_alarm;
-    state_event_map[STATE_IDLE_DISP_ON][E_TIMER_LONG] = transition_set_timer;
+    // IDLE ON
+    state_event_map[STATE_IDLE_DISP_ON][E_DISPLAY_SHORT]            = toggle_mode;
+    state_event_map[STATE_IDLE_DISP_ON][E_DISPLAY_LONG]             = transition_idle_disp_off;
+    state_event_map[STATE_IDLE_DISP_ON][E_DOZ_SHORT]                = toggle_doz_mode;
+    state_event_map[STATE_IDLE_DISP_ON][E_DOZ_LONG]                 = transition_set_time_doz;
+    state_event_map[STATE_IDLE_DISP_ON][E_TRAD_SHORT]               = toggle_trad_mode;
+    state_event_map[STATE_IDLE_DISP_ON][E_TRAD_LONG]                = transition_set_time_trad;
+    state_event_map[STATE_IDLE_DISP_ON][E_ALARM_SHORT]              = toggle_alarm_set;
+    state_event_map[STATE_IDLE_DISP_ON][E_ALARM_LONG]               = transition_set_alarm;
+    state_event_map[STATE_IDLE_DISP_ON][E_TIMER_SHORT]              = toggle_timer_set;
+    state_event_map[STATE_IDLE_DISP_ON][E_TIMER_LONG]               = transition_set_timer;
+    state_event_map[STATE_IDLE_DISP_ON][E_ROOM_DARK]                = set_low_brightness;
+    state_event_map[STATE_IDLE_DISP_ON][E_ROOM_LIGHT]               = set_high_brightness;
+    state_event_map[STATE_IDLE_DISP_ON][E_CANCEL_LONG]              = rtc_demo_reset;
+    state_event_map[STATE_IDLE_DISP_ON][E_VOLUP_SHORT]              = vol_up_short;
+    state_event_map[STATE_IDLE_DISP_ON][E_VOLUP_LONG]               = vol_up_long;
+    state_event_map[STATE_IDLE_DISP_ON][E_VOLDOWN_SHORT]            = vol_down_short;
+    state_event_map[STATE_IDLE_DISP_ON][E_VOLDOWN_LONG]             = vol_down_long;
+    state_event_map[STATE_IDLE_DISP_ON][E_ALARM_TRIG]               = transition_alarm_disp_on;
+    state_event_map[STATE_IDLE_DISP_ON][E_TIMER_TRIG]               = transition_timer_disp_on;
 
-    state_event_map[STATE_IDLE_DISP_OFF][E_DISPLAY_LONG] = transition_idle_disp_on;
-    state_event_map[STATE_IDLE_DISP_OFF][E_ROOM_DARK] = set_low_brightness;
-    state_event_map[STATE_IDLE_DISP_OFF][E_ROOM_LIGHT] = set_high_brightness;
+    // IDLE OFF
+    state_event_map[STATE_IDLE_DISP_OFF][E_DISPLAY_SHORT]           = toggle_mode;
+    state_event_map[STATE_IDLE_DISP_OFF][E_DISPLAY_LONG]            = transition_idle_disp_on;
+    state_event_map[STATE_IDLE_DISP_OFF][E_ROOM_DARK]               = set_low_brightness;
+    state_event_map[STATE_IDLE_DISP_OFF][E_ROOM_LIGHT]              = set_high_brightness;
+    state_event_map[STATE_IDLE_DISP_OFF][E_VOLUP_SHORT]             = vol_up_short;
+    state_event_map[STATE_IDLE_DISP_OFF][E_VOLUP_LONG]              = vol_up_long;
+    state_event_map[STATE_IDLE_DISP_OFF][E_VOLDOWN_SHORT]           = vol_down_short;
+    state_event_map[STATE_IDLE_DISP_OFF][E_VOLDOWN_LONG]            = vol_down_long;
+    state_event_map[STATE_IDLE_DISP_OFF][E_ALARM_TRIG]              = transition_alarm_disp_off;
+    state_event_map[STATE_IDLE_DISP_OFF][E_TIMER_TRIG]              = transition_timer_disp_off;
 
-    state_event_map[STATE_SET_ALARM][E_ALARM_LONG] = transition_idle_disp_on;
-    state_event_map[STATE_SET_ALARM][E_LEFT_SHORT] = set_state_left_short;
-    state_event_map[STATE_SET_ALARM][E_RIGHT_SHORT] = set_state_right_short;
-    state_event_map[STATE_SET_ALARM][E_UP_SHORT] = set_state_up_short;
-    state_event_map[STATE_SET_ALARM][E_DOWN_SHORT] = set_state_down_short;
+    // SET ALARM
+    state_event_map[STATE_SET_ALARM][E_DISPLAY_SHORT]               = toggle_mode;
+    state_event_map[STATE_SET_ALARM][E_DISPLAY_LONG]                = toggle_display;
+    state_event_map[STATE_SET_ALARM][E_DOZ_SHORT]                   = toggle_doz_mode;
+    state_event_map[STATE_SET_ALARM][E_TRAD_SHORT]                  = toggle_trad_mode;
+    state_event_map[STATE_SET_ALARM][E_TRAD_LONG]                   = set_am_pm;
+    state_event_map[STATE_SET_ALARM][E_LEFT_SHORT]                  = set_state_left_short;
+    state_event_map[STATE_SET_ALARM][E_RIGHT_SHORT]                 = set_state_right_short;
+    state_event_map[STATE_SET_ALARM][E_UP_SHORT]                    = set_state_up_short;
+    state_event_map[STATE_SET_ALARM][E_DOWN_SHORT]                  = set_state_down_short;
+    state_event_map[STATE_SET_ALARM][E_CANCEL_SHORT]                = cancel_set_state;
+    state_event_map[STATE_SET_ALARM][E_VOLUP_SHORT]                 = vol_up_short;
+    state_event_map[STATE_SET_ALARM][E_VOLUP_LONG]                  = vol_up_long;
+    state_event_map[STATE_SET_ALARM][E_VOLDOWN_SHORT]               = vol_down_short;
+    state_event_map[STATE_SET_ALARM][E_VOLDOWN_LONG]                = vol_down_long;
+    state_event_map[STATE_SET_ALARM][E_ALARM_LONG]                  = transition_idle_disp_on;
 
-    state_event_map[STATE_SET_TIMER][E_TIMER_LONG] = transition_idle_disp_on;
-    state_event_map[STATE_SET_TIMER][E_LEFT_SHORT] = set_state_left_short;
-    state_event_map[STATE_SET_TIMER][E_RIGHT_SHORT] = set_state_right_short;
-    state_event_map[STATE_SET_TIMER][E_UP_SHORT] = set_state_up_short;
-    state_event_map[STATE_SET_TIMER][E_DOWN_SHORT] = set_state_down_short;
+    // SET TIMER
+    state_event_map[STATE_SET_TIMER][E_DISPLAY_SHORT]               = toggle_mode;
+    state_event_map[STATE_SET_TIMER][E_DISPLAY_LONG]                = toggle_display;
+    state_event_map[STATE_SET_TIMER][E_DOZ_SHORT]                   = toggle_doz_mode;
+    state_event_map[STATE_SET_TIMER][E_TRAD_SHORT]                  = toggle_trad_mode;
+    state_event_map[STATE_SET_TIMER][E_LEFT_SHORT]                  = set_state_left_short;
+    state_event_map[STATE_SET_TIMER][E_RIGHT_SHORT]                 = set_state_right_short;
+    state_event_map[STATE_SET_TIMER][E_UP_SHORT]                    = set_state_up_short;
+    state_event_map[STATE_SET_TIMER][E_DOWN_SHORT]                  = set_state_down_short;
+    state_event_map[STATE_SET_TIMER][E_CANCEL_SHORT]                = cancel_set_state;
+    state_event_map[STATE_SET_TIMER][E_VOLUP_SHORT]                 = vol_up_short;
+    state_event_map[STATE_SET_TIMER][E_VOLUP_LONG]                  = vol_up_long;
+    state_event_map[STATE_SET_TIMER][E_VOLDOWN_SHORT]               = vol_down_short;
+    state_event_map[STATE_SET_TIMER][E_VOLDOWN_LONG]                = vol_down_long;
+    state_event_map[STATE_SET_TIMER][E_TIMER_LONG]                  = transition_idle_disp_on;
+
+    // SET TIME
+    state_event_map[STATE_SET_TIME][E_DISPLAY_SHORT]                = toggle_mode;
+    state_event_map[STATE_SET_TIME][E_DISPLAY_LONG]                 = toggle_display;
+    state_event_map[STATE_SET_TIME][E_DOZ_SHORT]                    = toggle_doz_mode;
+    state_event_map[STATE_SET_TIME][E_DOZ_LONG]                     = set_time_doz_done;
+    state_event_map[STATE_SET_TIME][E_TRAD_SHORT]                   = toggle_trad_mode;
+    state_event_map[STATE_SET_TIME][E_TRAD_LONG]                    = set_time_trad_done;
+    state_event_map[STATE_SET_TIME][E_LEFT_SHORT]                   = set_state_left_short;
+    state_event_map[STATE_SET_TIME][E_RIGHT_SHORT]                  = set_state_right_short;
+    state_event_map[STATE_SET_TIME][E_UP_SHORT]                     = set_state_up_short;
+    state_event_map[STATE_SET_TIME][E_DOWN_SHORT]                   = set_state_down_short;
+    state_event_map[STATE_SET_TIME][E_CANCEL_SHORT]                 = cancel_set_state;
+    state_event_map[STATE_SET_TIME][E_VOLUP_SHORT]                  = vol_up_short;
+    state_event_map[STATE_SET_TIME][E_VOLUP_LONG]                   = vol_up_long;
+    state_event_map[STATE_SET_TIME][E_VOLDOWN_SHORT]                = vol_down_short;
+    state_event_map[STATE_SET_TIME][E_VOLDOWN_LONG]                 = vol_down_long;
+
+    // ALARM TIMER TRIGGERED DISP ON
+    state_event_map[STATE_ALARM_TIMER_DISP_ON][E_CANCEL_SHORT]      = transition_idle_disp_on;
+
+    // ALARM TIMER TRIGGERED DISP OFF
+    state_event_map[STATE_ALARM_TIMER_DISP_OFF][E_CANCEL_SHORT]     = transition_idle_disp_on;
+}
+
+static void set_time_doz_done(void)
+{
+    curr_format = doz_format_list[doz_index];
+    Display_SetFormat(curr_format);
+    transition(&s_idle_disp_on);
+}
+static void set_time_trad_done(void)
+{
+    curr_format = trad_format_list[trad_index];
+    Display_SetFormat(curr_format);
+    transition(&s_idle_disp_on);
+}
+static void transition_alarm_disp_on(void)
+{
+    g_clock_fsm.ctx->alarm_triggered = true;
+    transition(&s_alarm_timer_disp_on);
+}
+static void transition_timer_disp_on(void)
+{
+    g_clock_fsm.ctx->timer_triggered = true;
+    transition(&s_alarm_timer_disp_on);
+}
+static void transition_alarm_disp_off(void)
+{
+    g_clock_fsm.ctx->alarm_triggered = true;
+    transition(&s_alarm_timer_disp_off);
+}
+static void transition_timer_disp_off(void)
+{
+    g_clock_fsm.ctx->timer_triggered = true;
+    transition(&s_alarm_timer_disp_off);
 }
 
 static void set_state_right_short(void)
@@ -479,6 +676,11 @@ static void set_high_brightness(void)
 {
     Display_SetBrightness(HIGH_BRIGHTNESS);
 }
+static void set_am_pm(void)
+{
+    if (curr_format == TRAD_12H)
+        g_clock_fsm.ctx->digit_vals[6] = !g_clock_fsm.ctx->digit_vals[6];
+}
 static void transition_set_alarm(void)
 { 
     transition(&s_set_alarm);
@@ -495,13 +697,37 @@ static void transition_idle_disp_off(void)
 {
     transition(&s_idle_disp_off);
 }
+static void transition_set_time_doz(void)
+{
+    curr_format = doz_format_list[doz_index];
+    Display_SetFormat(curr_format);
+    transition(&s_set_time);
+}
+static void transition_set_time_trad(void)
+{
+    curr_format = trad_format_list[trad_index];
+    Display_SetFormat(curr_format);
+    transition(&s_set_time);
+}
+static void toggle_display(void)
+{
+    if (displayOn) {
+        displayOn = 0;
+        Display_Off();
+    } else {
+        displayOn = 1;
+        Display_On();
+    }
+}
 static void toggle_alarm_set(void)
 {
     g_clock_fsm.ctx->alarm_set = !g_clock_fsm.ctx->alarm_set;
+    Rtc_EnableAlarm(ALARM, g_clock_fsm.ctx->alarm_set);
 }
 static void toggle_timer_set(void)
 {
     g_clock_fsm.ctx->timer_set = !g_clock_fsm.ctx->timer_set;
+    Rtc_EnableAlarm(TIMER, g_clock_fsm.ctx->timer_set);
 }
 static void toggle_trad_mode(void) 
 { 
@@ -522,6 +748,33 @@ static void toggle_mode(void)
 static void rtc_demo_reset(void)
 {
     Rtc_SetTime(&demo_reset);
+}
+static void cancel_set_state(void)
+{
+    cancel_pressed = 1;
+    transition(&s_idle_disp_off);
+}
+static void vol_up_short(void)
+{
+    if (Buzzer_SetVolume(g_clock_fsm.ctx->buzzer->volume + 1) == CLOCK_OK) {
+        g_clock_fsm.ctx->buzzer->volume += 1;
+    }
+}
+static void vol_up_long(void)
+{
+    Buzzer_SetVolumeMax();
+    g_clock_fsm.ctx->buzzer->volume = MAX_VOLUME;
+}
+static void vol_down_short(void)
+{
+    if (Buzzer_SetVolume(g_clock_fsm.ctx->buzzer->volume - 1) == CLOCK_OK) {
+        g_clock_fsm.ctx->buzzer->volume -= 1;
+    }
+}
+static void vol_down_long(void)
+{
+    Buzzer_SetVolumeMin();
+    g_clock_fsm.ctx->buzzer->volume = MIN_VOLUME;
 }
 
 #ifdef NO_PLATFORM
