@@ -564,7 +564,7 @@ static void blinkDigit(Bitmap *row_bitmap, uint8_t char_index)
         }
         else
         {
-            updateBitmap(row_bitmap, char_index, large_numbers[*(g_fsm.ctx->clock_vars->digit_val)], LARGE_DIGIT_ROWS, false);
+            updateBitmap(row_bitmap, char_index, large_numbers[g_fsm.ctx->clock_vars->digit_vals[*(g_fsm.ctx->clock_vars->digit_sel)]], LARGE_DIGIT_ROWS, false);
         }
     }
     else if (row_bitmap->num == ROW_3)
@@ -575,7 +575,7 @@ static void blinkDigit(Bitmap *row_bitmap, uint8_t char_index)
         }
         else
         {
-            updateBitmap(row_bitmap, char_index, small_numbers[*(g_fsm.ctx->clock_vars->digit_val)], SMALL_DIGIT_ROWS, false);
+            updateBitmap(row_bitmap, char_index, small_numbers[g_fsm.ctx->clock_vars->digit_vals[*(g_fsm.ctx->clock_vars->digit_sel)]], SMALL_DIGIT_ROWS, false);
         }
     }
 }

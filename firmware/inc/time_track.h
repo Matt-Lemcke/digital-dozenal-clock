@@ -9,11 +9,15 @@
 #define FIRMWARE_INC_TIME_TRACK_H_
 
 #include "clock_types.h"
+#include "gps.h"
+#include "rtc.h"
 
 ClockStatus TimeTrack_Init();
 ClockStatus TimeTrack_SyncToRtc();
 ClockStatus TimeTrack_Update();
 ClockStatus TimeTrack_PeriodicCallback(uint32_t period_ms);
 ClockStatus TimeTrack_GetTimeMs(uint32_t *output_ms);
+
+void msToRtcTime(uint32_t time_ms, RtcTime *time);
 
 #endif /* FIRMWARE_INC_TIME_TRACK_H_ */

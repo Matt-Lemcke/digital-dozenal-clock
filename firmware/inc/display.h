@@ -101,7 +101,7 @@ typedef struct extern_vars_t
     uint32_t    *user_alarm_ms;
     uint32_t    *user_timer_ms;
     uint8_t     *digit_sel;
-    uint8_t     *digit_val;
+    uint8_t     *digit_vals;
     uint8_t     *error_code;
     bool        *alarm_set;
     bool        *timer_set;
