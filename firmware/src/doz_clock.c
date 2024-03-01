@@ -771,7 +771,7 @@ static void rtc_demo_reset(void)
 static void cancel_set_state(void)
 {
     cancel_pressed = 1;
-    transition(&s_idle_disp_off);
+    transition(&s_idle_disp_on);
 }
 static void vol_up_short(void)
 {
