@@ -79,7 +79,7 @@ static void transition(State *next);
 static void displayChar(Bitmap *row_bitmap, uint8_t char_index, uint8_t digit[], uint8_t digitSize);
 static void displayFormat(TimeFormats format);
 static void displayTime(Bitmap *row_bitmap, uint32_t time_ms);
-static void blinkDigit(Bitmap *row_bitmap, uint8_t char_index);
+static void blinkDigit(Bitmap *row_bitmap, uint8_t char_index, bool symbol);
 static void updateBitmap(Bitmap *row_bitmap, uint8_t index, uint8_t digit[], uint8_t digitSize, bool blank);
 static uint8_t checkDeadZones(uint8_t digit[], uint8_t digitSize);
 /*
@@ -186,6 +186,56 @@ static State *show_time_states[NUM_SHOWTIME_STATES] =
 };
 static uint8_t show_time_index = 0;
 volatile uint8_t blink_state = 0;
+
+static const uint8_t row2_trad_digit_indices[7] = {
+    TRAD_DIGIT_1_ROW2_DISPLAY_INDEX,
+    TRAD_DIGIT_2_ROW2_DISPLAY_INDEX,
+    TRAD_DIGIT_3_ROW2_DISPLAY_INDEX,
+    TRAD_DIGIT_4_ROW2_DISPLAY_INDEX,
+    TRAD_DIGIT_5_ROW2_DISPLAY_INDEX,
+    TRAD_DIGIT_6_ROW2_DISPLAY_INDEX,
+    AM_PM_ROW1_DISPLAY_INDEX
+};
+
+static const uint8_t row2_drn4_digit_indices[4] = {
+    DRN4_DIGIT_1_ROW2_DISPLAY_INDEX,
+    DRN4_DIGIT_2_ROW2_DISPLAY_INDEX,
+    DRN4_DIGIT_3_ROW2_DISPLAY_INDEX,
+    DRN4_DIGIT_4_ROW2_DISPLAY_INDEX
+};
+
+static const uint8_t row2_drn5_digit_indices[5] = {
+    DRN5_DIGIT_1_ROW2_DISPLAY_INDEX,
+    DRN5_DIGIT_2_ROW2_DISPLAY_INDEX,
+    DRN5_DIGIT_3_ROW2_DISPLAY_INDEX,
+    DRN5_DIGIT_4_ROW2_DISPLAY_INDEX,
+    DRN5_DIGIT_5_ROW2_DISPLAY_INDEX
+};
+
+static const uint8_t row3_trad_digit_indices[7] = {
+    TRAD_DIGIT_1_ROW3_DISPLAY_INDEX,
+    TRAD_DIGIT_2_ROW3_DISPLAY_INDEX,
+    TRAD_DIGIT_3_ROW3_DISPLAY_INDEX,
+    TRAD_DIGIT_4_ROW3_DISPLAY_INDEX,
+    TRAD_DIGIT_5_ROW3_DISPLAY_INDEX,
+    TRAD_DIGIT_6_ROW3_DISPLAY_INDEX,
+    AM_PM_ROW3_DISPLAY_INDEX
+};
+
+static const uint8_t row3_drn4_digit_indices[4] = {
+    DRN4_DIGIT_1_ROW3_DISPLAY_INDEX,
+    DRN4_DIGIT_2_ROW3_DISPLAY_INDEX,
+    DRN4_DIGIT_3_ROW3_DISPLAY_INDEX,
+    DRN4_DIGIT_4_ROW3_DISPLAY_INDEX
+};
+
+static const uint8_t row3_drn5_digit_indices[5] = {
+    DRN5_DIGIT_1_ROW3_DISPLAY_INDEX,
+    DRN5_DIGIT_2_ROW3_DISPLAY_INDEX,
+    DRN5_DIGIT_3_ROW3_DISPLAY_INDEX,
+    DRN5_DIGIT_4_ROW3_DISPLAY_INDEX,
+    DRN5_DIGIT_5_ROW3_DISPLAY_INDEX
+};
 
 /*
     Public functions
@@ -395,7 +445,16 @@ static void ShowTime_Update(Display *ctx)
         displayChar(&row1_bitmap, EXCLAMATION_ROW1_DISPLAY_INDEX, small_symbols[EXCLAMATION_INDEX], SMALL_DIGIT_ROWS);
     }
     displayFormat(ctx->time_format);
+
+    memset(row2_bitmap.p_bitmap, 0, row2_bitmap.bitmap_size);
     displayTime(&row2_bitmap, *ctx->clock_vars->time_ms);
+
+    memset(row3_bitmap.p_bitmap, 0, row3_bitmap.bitmap_size);
+    if (*ctx->clock_vars->timer_set) {
+        displayTime(&row3_bitmap, *ctx->clock_vars->user_timer_ms);
+    } else if (*ctx->clock_vars->alarm_set) {
+        displayTime(&row3_bitmap, *ctx->clock_vars->user_alarm_ms);
+    }
 
     ctx->setBitmap(row1_bitmap.num, row1_bitmap.p_bitmap);
     ctx->setBitmap(row2_bitmap.num, row2_bitmap.p_bitmap);
@@ -409,7 +468,54 @@ static void SetTime_Entry(Display *ctx)
 }
 static void SetTime_Update(Display *ctx)
 {
-    UNUSED(ctx);
+    memset(row1_bitmap.p_bitmap, 0, row1_bitmap.bitmap_size);
+    if (*ctx->clock_vars->alarm_set)
+    {
+        displayChar(&row1_bitmap, A_ROW1_DISPLAY_INDEX, small_symbols[A_INDEX], SMALL_DIGIT_ROWS);
+    }
+    if (*ctx->clock_vars->timer_set)
+    {
+        displayChar(&row1_bitmap, T_ROW1_DISPLAY_INDEX, small_symbols[T_INDEX], SMALL_DIGIT_ROWS);
+    }
+    if (*ctx->clock_vars->show_error && *ctx->clock_vars->error_code)
+    {
+        displayChar(&row1_bitmap, EXCLAMATION_ROW1_DISPLAY_INDEX, small_symbols[EXCLAMATION_INDEX], SMALL_DIGIT_ROWS);
+    }
+    displayFormat(ctx->time_format);
+
+    memset(row3_bitmap.p_bitmap, 0, row3_bitmap.bitmap_size);
+    if (*ctx->clock_vars->timer_set) {
+        displayTime(&row3_bitmap, *ctx->clock_vars->user_timer_ms);
+    } else if (*ctx->clock_vars->alarm_set) {
+        displayTime(&row3_bitmap, *ctx->clock_vars->user_alarm_ms);
+    }
+
+    memset(row2_bitmap.p_bitmap, 0, row2_bitmap.bitmap_size);
+    displayTime(&row2_bitmap, *ctx->clock_vars->user_time_ms);
+
+    if (*ctx->clock_vars->digit_sel == 6) // AM/PM
+    {
+        blinkDigit(&row1_bitmap, row2_trad_digit_indices[*ctx->clock_vars->digit_sel], true);
+    }
+    else 
+    {
+        if (ctx->time_format == TRAD_24H || ctx->time_format == TRAD_12H)
+        {
+            blinkDigit(&row2_bitmap, row2_trad_digit_indices[*ctx->clock_vars->digit_sel], false);
+        } 
+        else if (ctx->time_format == DOZ_DRN5 || ctx->time_format == DOZ_SEMI) 
+        {
+            blinkDigit(&row2_bitmap, row2_drn5_digit_indices[*ctx->clock_vars->digit_sel], false);
+        } 
+        else if (ctx->time_format == DOZ_DRN4) 
+        {
+            blinkDigit(&row2_bitmap, row2_drn4_digit_indices[*ctx->clock_vars->digit_sel], false);
+        }
+    }
+
+    ctx->setBitmap(row1_bitmap.num, row1_bitmap.p_bitmap);
+    ctx->setBitmap(row2_bitmap.num, row2_bitmap.p_bitmap);
+    ctx->setBitmap(row3_bitmap.num, row3_bitmap.p_bitmap);
 }
 static void SetTimer_Entry(Display *ctx)
 {
@@ -419,7 +525,43 @@ static void SetTimer_Entry(Display *ctx)
 }
 static void SetTimer_Update(Display *ctx)
 {
-    UNUSED(ctx);
+    memset(row1_bitmap.p_bitmap, 0, row1_bitmap.bitmap_size);
+    if (*ctx->clock_vars->alarm_set)
+    {
+        displayChar(&row1_bitmap, A_ROW1_DISPLAY_INDEX, small_symbols[A_INDEX], SMALL_DIGIT_ROWS);
+    }
+    if (*ctx->clock_vars->timer_set)
+    {
+        displayChar(&row1_bitmap, T_ROW1_DISPLAY_INDEX, small_symbols[T_INDEX], SMALL_DIGIT_ROWS);
+    }
+    if (*ctx->clock_vars->show_error && *ctx->clock_vars->error_code)
+    {
+        displayChar(&row1_bitmap, EXCLAMATION_ROW1_DISPLAY_INDEX, small_symbols[EXCLAMATION_INDEX], SMALL_DIGIT_ROWS);
+    }
+    displayFormat(ctx->time_format);
+
+    memset(row2_bitmap.p_bitmap, 0, row2_bitmap.bitmap_size);
+    displayTime(&row2_bitmap, *ctx->clock_vars->time_ms);
+
+    memset(row3_bitmap.p_bitmap, 0, row3_bitmap.bitmap_size);
+    displayTime(&row3_bitmap, *ctx->clock_vars->user_timer_ms);
+
+    if (ctx->time_format == TRAD_24H || ctx->time_format == TRAD_12H)
+    {
+        blinkDigit(&row3_bitmap, row3_trad_digit_indices[*ctx->clock_vars->digit_sel], (*ctx->clock_vars->digit_sel == 6));
+    } 
+    else if (ctx->time_format == DOZ_DRN5 || ctx->time_format == DOZ_SEMI) 
+    {
+        blinkDigit(&row3_bitmap, row3_drn5_digit_indices[*ctx->clock_vars->digit_sel], false);
+    } 
+    else if (ctx->time_format == DOZ_DRN4) 
+    {
+        blinkDigit(&row3_bitmap, row3_drn4_digit_indices[*ctx->clock_vars->digit_sel], false);
+    }
+
+    ctx->setBitmap(row1_bitmap.num, row1_bitmap.p_bitmap);
+    ctx->setBitmap(row2_bitmap.num, row2_bitmap.p_bitmap);
+    ctx->setBitmap(row3_bitmap.num, row3_bitmap.p_bitmap);
 }
 static void SetAlarm_Entry(Display *ctx)
 {
@@ -429,7 +571,44 @@ static void SetAlarm_Entry(Display *ctx)
 }
 static void SetAlarm_Update(Display *ctx)
 {
-    UNUSED(ctx);
+    memset(row1_bitmap.p_bitmap, 0, row1_bitmap.bitmap_size);
+    if (*ctx->clock_vars->alarm_set)
+    {
+        displayChar(&row1_bitmap, A_ROW1_DISPLAY_INDEX, small_symbols[A_INDEX], SMALL_DIGIT_ROWS);
+    }
+    if (*ctx->clock_vars->timer_set)
+    {
+        displayChar(&row1_bitmap, T_ROW1_DISPLAY_INDEX, small_symbols[T_INDEX], SMALL_DIGIT_ROWS);
+    }
+    if (*ctx->clock_vars->show_error && *ctx->clock_vars->error_code)
+    {
+        displayChar(&row1_bitmap, EXCLAMATION_ROW1_DISPLAY_INDEX, small_symbols[EXCLAMATION_INDEX], SMALL_DIGIT_ROWS);
+    }
+    displayFormat(ctx->time_format);
+
+    memset(row2_bitmap.p_bitmap, 0, row2_bitmap.bitmap_size);
+    displayTime(&row2_bitmap, *ctx->clock_vars->time_ms);
+
+    memset(row3_bitmap.p_bitmap, 0, row3_bitmap.bitmap_size);
+    displayTime(&row3_bitmap, *ctx->clock_vars->user_alarm_ms);
+
+    if (ctx->time_format == TRAD_24H || ctx->time_format == TRAD_12H)
+    {
+        blinkDigit(&row3_bitmap, row3_trad_digit_indices[*ctx->clock_vars->digit_sel], (*ctx->clock_vars->digit_sel == 6));
+    } 
+    else if (ctx->time_format == DOZ_DRN5 || ctx->time_format == DOZ_SEMI) 
+    {
+        blinkDigit(&row3_bitmap, row3_drn5_digit_indices[*ctx->clock_vars->digit_sel], false);
+    } 
+    else if (ctx->time_format == DOZ_DRN4) 
+    {
+        blinkDigit(&row3_bitmap, row3_drn4_digit_indices[*ctx->clock_vars->digit_sel], false);
+    }
+
+    ctx->setBitmap(row1_bitmap.num, row1_bitmap.p_bitmap);
+    ctx->setBitmap(row2_bitmap.num, row2_bitmap.p_bitmap);
+    ctx->setBitmap(row3_bitmap.num, row3_bitmap.p_bitmap);
+
 }
 
 void transition(State *next)
@@ -481,11 +660,11 @@ static void displayFormat(TimeFormats format)
         case TRAD_12H:
             if (*g_fsm.ctx->clock_vars->time_ms > PM_12H_MS)
             {
-                displayChar(&row1_bitmap, MOON_ROW1_DISPLAY_INDEX, small_symbols[MOON_INDEX], SMALL_DIGIT_ROWS);
+                displayChar(&row1_bitmap, AM_PM_ROW1_DISPLAY_INDEX, small_symbols[PM_INDEX], SMALL_DIGIT_ROWS);
             }
             else
             {
-                displayChar(&row1_bitmap, SUN_ROW1_DISPLAY_INDEX, small_symbols[SUN_INDEX], SMALL_DIGIT_ROWS);
+                displayChar(&row1_bitmap, AM_PM_ROW1_DISPLAY_INDEX, small_symbols[AM_INDEX], SMALL_DIGIT_ROWS);
             }
             break;
         case DOZ_DRN4:
@@ -502,60 +681,145 @@ static void displayFormat(TimeFormats format)
 
 static void displayTime(Bitmap *row_bitmap, uint32_t time_ms)
 {
-    if (g_fsm.ctx->time_format == TRAD_24H || g_fsm.ctx->time_format == TRAD_12H)
-    {
-        displayChar(row_bitmap, SEMICOLON1_ROW2_DISPLAY_INDEX, large_numbers[SEMICOLON_INDEX], LARGE_DIGIT_ROWS);
-        displayChar(row_bitmap, SEMICOLON2_ROW2_DISPLAY_INDEX, large_numbers[SEMICOLON_INDEX], LARGE_DIGIT_ROWS);
 
-        uint8_t hr, min, sec;
-        msToTrad(time_ms, &hr, &min, &sec);
-        if (g_fsm.ctx->time_format == TRAD_12H && hr > 12)
+    if (row_bitmap->num == ROW_2) 
+    {
+
+        if (g_fsm.ctx->time_format == TRAD_24H || g_fsm.ctx->time_format == TRAD_12H)
         {
-            hr -= 12;
+            displayChar(row_bitmap, SEMICOLON1_ROW2_DISPLAY_INDEX, large_numbers[SEMICOLON_INDEX], LARGE_DIGIT_ROWS);
+            displayChar(row_bitmap, SEMICOLON2_ROW2_DISPLAY_INDEX, large_numbers[SEMICOLON_INDEX], LARGE_DIGIT_ROWS);
+
+            uint8_t hr, min, sec;
+            msToTrad(time_ms, &hr, &min, &sec);
+            if (g_fsm.ctx->time_format == TRAD_12H && hr > 12)
+            {
+                hr -= 12;
+            }
+            displayChar(row_bitmap, TRAD_DIGIT_1_ROW2_DISPLAY_INDEX, large_numbers[hr / 10], LARGE_DIGIT_ROWS);
+            displayChar(row_bitmap, TRAD_DIGIT_2_ROW2_DISPLAY_INDEX, large_numbers[hr % 10], LARGE_DIGIT_ROWS);
+            displayChar(row_bitmap, TRAD_DIGIT_3_ROW2_DISPLAY_INDEX, large_numbers[min / 10], LARGE_DIGIT_ROWS);
+            displayChar(row_bitmap, TRAD_DIGIT_4_ROW2_DISPLAY_INDEX, large_numbers[min % 10], LARGE_DIGIT_ROWS);
+            displayChar(row_bitmap, TRAD_DIGIT_5_ROW2_DISPLAY_INDEX, large_numbers[sec / 10], LARGE_DIGIT_ROWS);
+            displayChar(row_bitmap, TRAD_DIGIT_6_ROW2_DISPLAY_INDEX, large_numbers[sec % 10], LARGE_DIGIT_ROWS);
         }
-        displayChar(row_bitmap, TRAD_DIGIT_1_ROW2_DISPLAY_INDEX, large_numbers[hr / 10], LARGE_DIGIT_ROWS);
-        displayChar(row_bitmap, TRAD_DIGIT_2_ROW2_DISPLAY_INDEX, large_numbers[hr % 10], LARGE_DIGIT_ROWS);
-        displayChar(row_bitmap, TRAD_DIGIT_3_ROW2_DISPLAY_INDEX, large_numbers[min / 10], LARGE_DIGIT_ROWS);
-        displayChar(row_bitmap, TRAD_DIGIT_4_ROW2_DISPLAY_INDEX, large_numbers[min % 10], LARGE_DIGIT_ROWS);
-        displayChar(row_bitmap, TRAD_DIGIT_5_ROW2_DISPLAY_INDEX, large_numbers[sec / 10], LARGE_DIGIT_ROWS);
-        displayChar(row_bitmap, TRAD_DIGIT_6_ROW2_DISPLAY_INDEX, large_numbers[sec % 10], LARGE_DIGIT_ROWS);
-    }
-    else if (g_fsm.ctx->time_format == DOZ_DRN5 || g_fsm.ctx->time_format == DOZ_SEMI)
-    {
-        displayChar(row_bitmap, RADIX_DRN5_ROW2_DISPLAY_INDEX, large_numbers[RADIX_INDEX], LARGE_DIGIT_ROWS);
-
-        uint8_t digit1, digit2, digit3, digit4, digit5;
-        if (g_fsm.ctx->time_format == DOZ_DRN5)
+        else if (g_fsm.ctx->time_format == DOZ_DRN5 || g_fsm.ctx->time_format == DOZ_SEMI)
         {
+            displayChar(row_bitmap, RADIX_DRN5_ROW2_DISPLAY_INDEX, large_numbers[RADIX_INDEX], LARGE_DIGIT_ROWS);
+
+            uint8_t digit1, digit2, digit3, digit4, digit5;
+            if (g_fsm.ctx->time_format == DOZ_DRN5)
+            {
+                msToDiurn(time_ms, &digit1, &digit2, &digit3, &digit4, &digit5);
+            }
+            else if (g_fsm.ctx->time_format == DOZ_SEMI)
+            {
+                msToSemiDiurn(time_ms, &digit1, &digit2, &digit3, &digit4, &digit5);
+            }
+
+            displayChar(row_bitmap, DRN5_DIGIT_1_ROW2_DISPLAY_INDEX, large_numbers[digit1], LARGE_DIGIT_ROWS);
+            displayChar(row_bitmap, DRN5_DIGIT_2_ROW2_DISPLAY_INDEX, large_numbers[digit2], LARGE_DIGIT_ROWS);
+            displayChar(row_bitmap, DRN5_DIGIT_3_ROW2_DISPLAY_INDEX, large_numbers[digit3], LARGE_DIGIT_ROWS);
+            displayChar(row_bitmap, DRN5_DIGIT_4_ROW2_DISPLAY_INDEX, large_numbers[digit4], LARGE_DIGIT_ROWS);
+            displayChar(row_bitmap, DRN5_DIGIT_5_ROW2_DISPLAY_INDEX, large_numbers[digit5], LARGE_DIGIT_ROWS);
+        }
+        else if (g_fsm.ctx->time_format == DOZ_DRN4)
+        {
+            displayChar(row_bitmap, RADIX_DRN4_ROW2_DISPLAY_INDEX, large_numbers[RADIX_INDEX], LARGE_DIGIT_ROWS);
+
+            uint8_t digit1, digit2, digit3, digit4, digit5;
             msToDiurn(time_ms, &digit1, &digit2, &digit3, &digit4, &digit5);
-        }
-        else if (g_fsm.ctx->time_format == DOZ_SEMI)
-        {
-            msToSemiDiurn(time_ms, &digit1, &digit2, &digit3, &digit4, &digit5);
+
+            displayChar(row_bitmap, DRN4_DIGIT_1_ROW2_DISPLAY_INDEX, large_numbers[digit1], LARGE_DIGIT_ROWS);
+            displayChar(row_bitmap, DRN4_DIGIT_2_ROW2_DISPLAY_INDEX, large_numbers[digit2], LARGE_DIGIT_ROWS);
+            displayChar(row_bitmap, DRN4_DIGIT_3_ROW2_DISPLAY_INDEX, large_numbers[digit3], LARGE_DIGIT_ROWS);
+            displayChar(row_bitmap, DRN4_DIGIT_4_ROW2_DISPLAY_INDEX, large_numbers[digit4], LARGE_DIGIT_ROWS);
         }
 
-        displayChar(row_bitmap, DRN5_DIGIT_1_ROW2_DISPLAY_INDEX, large_numbers[digit1], LARGE_DIGIT_ROWS);
-        displayChar(row_bitmap, DRN5_DIGIT_2_ROW2_DISPLAY_INDEX, large_numbers[digit2], LARGE_DIGIT_ROWS);
-        displayChar(row_bitmap, DRN5_DIGIT_3_ROW2_DISPLAY_INDEX, large_numbers[digit3], LARGE_DIGIT_ROWS);
-        displayChar(row_bitmap, DRN5_DIGIT_4_ROW2_DISPLAY_INDEX, large_numbers[digit4], LARGE_DIGIT_ROWS);
-        displayChar(row_bitmap, DRN5_DIGIT_5_ROW2_DISPLAY_INDEX, large_numbers[digit5], LARGE_DIGIT_ROWS);
-    }
-    else if (g_fsm.ctx->time_format == DOZ_DRN4)
+    } 
+    else if (row_bitmap->num == ROW_3) 
     {
-        displayChar(row_bitmap, RADIX_DRN4_ROW2_DISPLAY_INDEX, large_numbers[RADIX_INDEX], LARGE_DIGIT_ROWS);
+        if (g_fsm.ctx->time_format == TRAD_24H || g_fsm.ctx->time_format == TRAD_12H)
+        {
 
-        uint8_t digit1, digit2, digit3, digit4, digit5;
-        msToDiurn(time_ms, &digit1, &digit2, &digit3, &digit4, &digit5);
+            displayChar(row_bitmap, SEMICOLON1_ROW3_DISPLAY_INDEX, small_numbers[SEMICOLON_INDEX], SMALL_DIGIT_ROWS);
+            displayChar(row_bitmap, SEMICOLON2_ROW3_DISPLAY_INDEX, small_numbers[SEMICOLON_INDEX], SMALL_DIGIT_ROWS);
 
-        displayChar(row_bitmap, DRN4_DIGIT_1_ROW2_DISPLAY_INDEX, large_numbers[digit1], LARGE_DIGIT_ROWS);
-        displayChar(row_bitmap, DRN4_DIGIT_2_ROW2_DISPLAY_INDEX, large_numbers[digit2], LARGE_DIGIT_ROWS);
-        displayChar(row_bitmap, DRN4_DIGIT_3_ROW2_DISPLAY_INDEX, large_numbers[digit3], LARGE_DIGIT_ROWS);
-        displayChar(row_bitmap, DRN4_DIGIT_4_ROW2_DISPLAY_INDEX, large_numbers[digit4], LARGE_DIGIT_ROWS);
+            uint8_t hr, min, sec;
+            msToTrad(time_ms, &hr, &min, &sec);
+            if (g_fsm.ctx->time_format == TRAD_12H)
+            {
+                if (hr > 12) {
+                    hr -= 12;
+                    displayChar(row_bitmap, AM_PM_ROW3_DISPLAY_INDEX, small_symbols[PM_INDEX], SMALL_DIGIT_ROWS);
+                } else {
+                    displayChar(row_bitmap, AM_PM_ROW3_DISPLAY_INDEX, small_symbols[AM_INDEX], SMALL_DIGIT_ROWS);
+                }
+            }
+            displayChar(row_bitmap, TRAD_DIGIT_1_ROW3_DISPLAY_INDEX, small_numbers[hr / 10], SMALL_DIGIT_ROWS);
+            displayChar(row_bitmap, TRAD_DIGIT_2_ROW3_DISPLAY_INDEX, small_numbers[hr % 10], SMALL_DIGIT_ROWS);
+            displayChar(row_bitmap, TRAD_DIGIT_3_ROW3_DISPLAY_INDEX, small_numbers[min / 10], SMALL_DIGIT_ROWS);
+            displayChar(row_bitmap, TRAD_DIGIT_4_ROW3_DISPLAY_INDEX, small_numbers[min % 10], SMALL_DIGIT_ROWS);
+            displayChar(row_bitmap, TRAD_DIGIT_5_ROW3_DISPLAY_INDEX, small_numbers[sec / 10], SMALL_DIGIT_ROWS);
+            displayChar(row_bitmap, TRAD_DIGIT_6_ROW3_DISPLAY_INDEX, small_numbers[sec % 10], SMALL_DIGIT_ROWS);
+
+        }
+        else if (g_fsm.ctx->time_format == DOZ_DRN5 || g_fsm.ctx->time_format == DOZ_SEMI)
+        {
+
+            displayChar(row_bitmap, RADIX_DRN5_ROW3_DISPLAY_INDEX, small_numbers[RADIX_INDEX], SMALL_DIGIT_ROWS);
+
+            uint8_t digit1, digit2, digit3, digit4, digit5;
+            if (g_fsm.ctx->time_format == DOZ_DRN5)
+            {
+                msToDiurn(time_ms, &digit1, &digit2, &digit3, &digit4, &digit5);
+            }
+            else if (g_fsm.ctx->time_format == DOZ_SEMI)
+            {
+                msToSemiDiurn(time_ms, &digit1, &digit2, &digit3, &digit4, &digit5);
+            }
+
+            displayChar(row_bitmap, DRN5_DIGIT_1_ROW3_DISPLAY_INDEX, small_numbers[digit1], SMALL_DIGIT_ROWS);
+            displayChar(row_bitmap, DRN5_DIGIT_2_ROW3_DISPLAY_INDEX, small_numbers[digit2], SMALL_DIGIT_ROWS);
+            displayChar(row_bitmap, DRN5_DIGIT_3_ROW3_DISPLAY_INDEX, small_numbers[digit3], SMALL_DIGIT_ROWS);
+            displayChar(row_bitmap, DRN5_DIGIT_4_ROW3_DISPLAY_INDEX, small_numbers[digit4], SMALL_DIGIT_ROWS);
+            displayChar(row_bitmap, DRN5_DIGIT_5_ROW3_DISPLAY_INDEX, small_numbers[digit5], SMALL_DIGIT_ROWS);
+
+        }
+        else if (g_fsm.ctx->time_format == DOZ_DRN4)
+        {
+
+            displayChar(row_bitmap, RADIX_DRN4_ROW3_DISPLAY_INDEX, small_numbers[RADIX_INDEX], SMALL_DIGIT_ROWS);
+
+            uint8_t digit1, digit2, digit3, digit4, digit5;
+            msToDiurn(time_ms, &digit1, &digit2, &digit3, &digit4, &digit5);
+
+            displayChar(row_bitmap, DRN4_DIGIT_1_ROW3_DISPLAY_INDEX, small_numbers[digit1], SMALL_DIGIT_ROWS);
+            displayChar(row_bitmap, DRN4_DIGIT_2_ROW3_DISPLAY_INDEX, small_numbers[digit2], SMALL_DIGIT_ROWS);
+            displayChar(row_bitmap, DRN4_DIGIT_3_ROW3_DISPLAY_INDEX, small_numbers[digit3], SMALL_DIGIT_ROWS);
+            displayChar(row_bitmap, DRN4_DIGIT_4_ROW3_DISPLAY_INDEX, small_numbers[digit4], SMALL_DIGIT_ROWS);
+
+        }
     }
+    
 }
 
-static void blinkDigit(Bitmap *row_bitmap, uint8_t char_index)
+static void blinkDigit(Bitmap *row_bitmap, uint8_t char_index, bool symbol)
 {
+    if (symbol) { // Blink AM/PM
+        if (blink_state)
+        {
+            updateBitmap(row_bitmap, char_index, small_numbers[BLANK_INDEX], SMALL_DIGIT_ROWS, true);
+        }
+        else
+        {
+            uint8_t am_pm_index = (g_fsm.ctx->clock_vars->digit_vals[6]) ? PM_INDEX : AM_INDEX;
+            updateBitmap(row_bitmap, char_index, small_symbols[am_pm_index], SMALL_DIGIT_ROWS, false);
+        }
+
+        return;
+    }
+
     if (row_bitmap->num == ROW_2)
     {
         if (blink_state)
