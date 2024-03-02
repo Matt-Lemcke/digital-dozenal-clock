@@ -87,9 +87,9 @@ typedef enum time_formats_t
 
 typedef enum row_number_t
 {
-    ROW_1 = 1,
-    ROW_2 = 2,
-    ROW_3 = 3
+    ROW_1 = 0,
+    ROW_2 = 1,
+    ROW_3 = 2
 } RowNumber;
 
 typedef struct extern_vars_t
@@ -118,7 +118,7 @@ typedef struct display_t
     void (*displayOn)(void);
     void (*setBrightness)(uint8_t brightness);
     void (*setBitmap)(uint8_t region_id, uint8_t *bitmap);
-    void (*setColour)(uint8_t region_id, uint8_t colour_id);
+    void (*setColour)(uint8_t region_id, Colour colour_id);
     void (*show)(uint8_t region_id);
     void (*hide)(uint8_t region_id);
 } Display;

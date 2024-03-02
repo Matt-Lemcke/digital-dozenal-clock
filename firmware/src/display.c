@@ -268,9 +268,9 @@ ClockStatus Display_Init(Display *self, ExternVars *vars)
     memset(row2_bitmap.p_bitmap, 0, row2_bitmap.bitmap_size);
     memset(row3_bitmap.p_bitmap, 0, row3_bitmap.bitmap_size);
 
-    g_fsm.ctx->setColour(row1_bitmap.num, 0x81);    // Row1 Red
-    g_fsm.ctx->setColour(row2_bitmap.num, 0x85);    // Row2 Cyan
-    g_fsm.ctx->setColour(row3_bitmap.num, 0x82);    // Row3 Blue
+    g_fsm.ctx->setColour(row1_bitmap.num, RED);    // Row1 Red
+    g_fsm.ctx->setColour(row2_bitmap.num, CYAN);    // Row2 Cyan
+    g_fsm.ctx->setColour(row3_bitmap.num, BLUE);    // Row3 Blue
 
     g_fsm.ctx->setBitmap(row1_bitmap.num, row1_bitmap.p_bitmap);
     g_fsm.ctx->setBitmap(row2_bitmap.num, row2_bitmap.p_bitmap);
