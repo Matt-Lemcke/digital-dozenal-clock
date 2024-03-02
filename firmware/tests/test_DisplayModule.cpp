@@ -20,7 +20,7 @@ void setBrightness(uint8_t brightness)
     mock().actualCall("setBrightness").withParameter("brightness", brightness);   
 }
 
-void setColour(uint8_t region_id, uint8_t colour_id)
+void setColour(uint8_t region_id, Colour colour_id)
 {
     mock().actualCall("setColour").withParameter("region_id", region_id).withParameter("colour_id", colour_id);   
 }
@@ -136,11 +136,11 @@ TEST(DisplayModule, U32_DisplayOffWhileSetAlarm)
     Display_ToggleMode();
     Display_ToggleMode();
 
-    mock().expectNCalls(1,"show").withParameter("region_id", 1);
-    mock().expectNCalls(3,"show").withParameter("region_id", 2);
-    mock().expectNCalls(1,"show").withParameter("region_id", 3);
-    mock().expectNCalls(2,"hide").withParameter("region_id", 1);
-    mock().expectNCalls(2,"hide").withParameter("region_id", 3);
+    mock().expectNCalls(1,"show").withParameter("region_id", ROW_1);
+    mock().expectNCalls(3,"show").withParameter("region_id", ROW_2);
+    mock().expectNCalls(1,"show").withParameter("region_id", ROW_3);
+    mock().expectNCalls(2,"hide").withParameter("region_id", ROW_1);
+    mock().expectNCalls(2,"hide").withParameter("region_id", ROW_3);
     mock().expectNCalls(1,"displayOff");
     mock().expectNCalls(1,"displayOn");
 
