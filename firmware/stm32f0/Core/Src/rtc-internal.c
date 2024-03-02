@@ -28,7 +28,7 @@ void RTC_Init(RTC_HandleTypeDef *rtc)
 
     HAL_RTC_GetTime(hrtc, &sTime, RTC_FORMAT);
     HAL_RTC_GetDate(hrtc, &sDate, RTC_FORMAT);
-    HAL_RTC_GetAlarm(hrtc, &sAlarm, RTC_FORMAT);
+    HAL_RTC_GetAlarm(hrtc, &sAlarm, sAlarm.Alarm, RTC_FORMAT);
 }
 
 void RTC_SetTime(uint8_t hr, uint8_t min, uint8_t sec)
@@ -67,7 +67,7 @@ void RTC_GetDay(uint8_t *d)
 
 void RTC_SetMonth(uint8_t m)
 {
-    if (d <= 12)
+    if (m <= 12)
     {
         sDate.Month = m;
         HAL_RTC_SetDate(hrtc, &sDate, RTC_FORMAT);
@@ -105,7 +105,7 @@ void RTC_GetAlarm(uint8_t id, uint8_t *hr, uint8_t *min, uint8_t *sec)
     switch (id)
     {
     case ALARM1_ID:
-        HAL_RTC_GetAlarm(hrtc, &sAlarm, RTC_FORMAT);
+        HAL_RTC_GetAlarm(hrtc, &sAlarm, sAlarm.Alarm, RTC_FORMAT);
         hr = &sAlarm.AlarmTime.Hours;
         min = &sAlarm.AlarmTime.Minutes;
         sec = &sAlarm.AlarmTime.Seconds;

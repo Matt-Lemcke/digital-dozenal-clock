@@ -37,7 +37,7 @@
 #include "buzzer.h"
 #include "display.h"
 #include "gps.h"
-#include "rtc.h"
+#include "rtc_module.h"
 
 #include "adc-light-sens.h"
 #include "hub75-driver.h"
@@ -45,6 +45,8 @@
 #include "i2c-rtc.h"
 #include "gpio-buttons.h"
 #include "pwm-buzzer.h"
+
+#include "rtc-internal.h"
 
 /* USER CODE END Includes */
 
@@ -182,6 +184,11 @@ int main(void)
   HAL_TIM_Base_Start_IT(&htim7);
 
 
+
+  RTC_Init(&hrtc);
+  RTC_SetTime(0,0,5);
+  RTC_SetAlarm(ALARM1_ID, 0,0,15);
+  RTC_EnableAlarm(ALARM1_ID, 1);
 
   /* USER CODE END 2 */
 
