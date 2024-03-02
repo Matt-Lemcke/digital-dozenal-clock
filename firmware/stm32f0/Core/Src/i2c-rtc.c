@@ -15,6 +15,7 @@ extern "C"{
 #endif
 
 I2C_HandleTypeDef *_ds3231_ui2c;
+static uint8_t Alarm2Seconds = 0;
 
 /**
  * @brief Initializes the DS3231 module. Set clock halt bit to 0 to start timing.

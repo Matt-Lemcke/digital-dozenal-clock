@@ -28,7 +28,7 @@ typedef struct doz_clock_t
     bool show_error;
     uint8_t digit_sel;
     uint8_t digit_vals[7];
-    uint8_t error_code;
+    ClockStatus error_code;
     uint32_t time_ms;
     uint32_t user_alarm_ms;
     uint32_t user_time_ms;
@@ -36,13 +36,6 @@ typedef struct doz_clock_t
 
     void (*error_handler)(void);
 } DozClock;
-
-enum {
-    NO_ERROR,
-    SFWR_INIT,
-    DISP_INIT,
-    TIME_INIT
-} error_codes;
 
 typedef enum {
     STATE_INIT,

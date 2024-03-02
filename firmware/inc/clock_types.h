@@ -14,7 +14,10 @@
 typedef enum clockstatus
 {
     CLOCK_OK,
-    CLOCK_FAIL
+    CLOCK_FAIL,
+    SFWR_INIT,
+    DISP_INIT,
+    TIME_INIT
 } ClockStatus;
 
 // Colour values in 2-state RGB
