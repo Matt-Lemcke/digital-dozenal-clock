@@ -22,6 +22,7 @@
 #include "dma.h"
 #include "i2c.h"
 #include "spi.h"
+#include "rtc.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
@@ -122,6 +123,7 @@ int main(void)
   MX_SPI2_Init();
   MX_TIM7_Init();
   MX_TIM15_Init();
+  MX_RTC_Init();
   /* USER CODE BEGIN 2 */
 
 
