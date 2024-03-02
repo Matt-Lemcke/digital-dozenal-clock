@@ -28,23 +28,27 @@ typedef struct rtc_t
         uint8_t hour_24mode,
         uint8_t minute,
         uint8_t second);
+    void (*getTime)(
+        uint8_t *hour_24mode,
+        uint8_t *minute,
+        uint8_t *second);
     void (*setDay)(uint8_t day);
     void (*setMonth)(uint8_t month);
-    void (*enableAlarm)(uint8_t id, bool enable);
+    uint8_t (*getDay)(void);
+    uint8_t (*getMonth)(void);
     void (*setAlarm)(
         uint8_t id,
         uint8_t hour_24mode,
         uint8_t minute,
         uint8_t second);
+    void (*getAlarm)(
+        uint8_t id,
+        uint8_t *hour_24mode,
+        uint8_t *min,
+        uint8_t *sec);
+    void (*enableAlarm)(uint8_t id, bool enable);
 
-    uint8_t (*getHour)(void);
-    uint8_t (*getMinute)(void);
-    uint8_t (*getSecond)(void);
-    uint8_t (*getDay)(void);
-    uint8_t (*getMonth)(void);
-    uint8_t (*getAlarmHour)(uint8_t id);
-    uint8_t (*getAlarmMinute)(uint8_t id);
-    uint8_t (*getAlarmSecond)(uint8_t id);
+
 }Rtc;
 
 ClockStatus Rtc_Init(Rtc *self);

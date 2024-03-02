@@ -21,6 +21,7 @@
 #include "adc.h"
 #include "dma.h"
 #include "i2c.h"
+#include "rtc.h"
 #include "spi.h"
 #include "tim.h"
 #include "usart.h"
@@ -32,18 +33,18 @@
 #include "clock_types.h"
 #include "doz_clock.h"
 #include "event_queue.h"
+#include "rtc_module.h"
 
 #include "buzzer.h"
 #include "display.h"
 #include "gps.h"
-#include "rtc.h"
-
 #include "adc-light-sens.h"
 #include "hub75-driver.h"
 #include "hub75-driver.h"
 #include "i2c-rtc.h"
 #include "gpio-buttons.h"
 #include "pwm-buzzer.h"
+#include "rtc-internal.h"
 
 /* USER CODE END Includes */
 
@@ -68,7 +69,7 @@ DozClock doz_clock;
 
 Display rgb_matrix;
 Gps neo6m;
-Rtc ds3231;
+Rtc rtc_internal;
 Buzzer buzzer;
 
 /* USER CODE END PV */
@@ -122,6 +123,7 @@ int main(void)
   MX_SPI2_Init();
   MX_TIM7_Init();
   MX_TIM15_Init();
+  MX_RTC_Init();
   /* USER CODE BEGIN 2 */
 
 
@@ -134,21 +136,17 @@ int main(void)
   doz_clock.buzzer = &buzzer;
 
   // RTC
-  DS3231_Init(&hi2c1);
-  ds3231.enableAlarm = DS3231_EnableAlarm;
-  ds3231.getAlarmHour = DS3231_GetAlarmHour;
-  ds3231.getAlarmMinute = DS3231_GetAlarmMinute;
-  ds3231.getAlarmSecond = DS3231_GetAlarmSecond;
-  ds3231.getDay = DS3231_GetDate;
-  ds3231.getHour = DS3231_GetHour;
-  ds3231.getMinute = DS3231_GetMinute;
-  ds3231.getMonth = DS3231_GetMonth;
-  ds3231.getSecond = DS3231_GetSecond;
-  ds3231.setAlarm = DS3231_SetAlarm;
-  ds3231.setDay = DS3231_SetDate;
-  ds3231.setMonth = DS3231_SetMonth;
-  ds3231.setRtcTime = DS3231_SetTime;
-  doz_clock.rtc = &ds3231;
+  RTC_Init(&hrtc);
+  rtc_internal.enableAlarm  = RTC_EnableAlarm;
+  rtc_internal.getAlarm     = RTC_GetAlarm;
+  rtc_internal.getDay       = RTC_GetDay;
+  rtc_internal.getMonth     = RTC_GetMonth;
+  rtc_internal.getTime      = RTC_GetTime;
+  rtc_internal.setAlarm     = RTC_SetAlarm;
+  rtc_internal.setDay       = RTC_SetDay;
+  rtc_internal.setMonth     = RTC_SetMonth;
+  rtc_internal.setRtcTime   = RTC_SetTime;
+  doz_clock.rtc = &rtc_internal;
 
   // Display
   HUB75_Init(&hspi2, &htim15, TIM_CHANNEL_1);
@@ -179,8 +177,6 @@ int main(void)
   // Start 6Hz timer
   HAL_TIM_Base_Start_IT(&htim7);
 
-
-
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -209,11 +205,13 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_HSI14;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_HSI14
+                              |RCC_OSCILLATORTYPE_LSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSI14State = RCC_HSI14_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
   RCC_OscInitStruct.HSI14CalibrationValue = 16;
+  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
@@ -232,9 +230,11 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART1|RCC_PERIPHCLK_I2C1;
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART1|RCC_PERIPHCLK_I2C1
+                              |RCC_PERIPHCLK_RTC;
   PeriphClkInit.Usart1ClockSelection = RCC_USART1CLKSOURCE_PCLK1;
   PeriphClkInit.I2c1ClockSelection = RCC_I2C1CLKSOURCE_HSI;
+  PeriphClkInit.RTCClockSelection = RCC_RTCCLKSOURCE_LSI;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
     Error_Handler();
