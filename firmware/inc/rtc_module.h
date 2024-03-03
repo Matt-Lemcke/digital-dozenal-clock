@@ -6,8 +6,8 @@
 #define MAX_NO_DAYS_RESET   5
 
 typedef enum AlarmStatus{
-    ALARM_DISABLE,
-    ALARM_ENABLE
+    ALARM_DISABLE   = 0,
+    ALARM_ENABLE    = 1,
 }AlarmStatus;
 
 typedef enum AlarmId{

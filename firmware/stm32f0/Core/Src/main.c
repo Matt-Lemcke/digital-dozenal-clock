@@ -70,6 +70,7 @@ DozClock doz_clock;
 Display rgb_matrix;
 Gps neo6m;
 Rtc rtc_internal;
+Rtc ds3231;
 Buzzer buzzer;
 
 /* USER CODE END PV */
@@ -135,18 +136,31 @@ int main(void)
   buzzer.stopPwm        = PKM22E_StopPwm;
   doz_clock.buzzer = &buzzer;
 
-  // RTC
-  RTC_Init(&hrtc);
-  rtc_internal.enableAlarm  = RTC_EnableAlarm;
-  rtc_internal.getAlarm     = RTC_GetAlarm;
-  rtc_internal.getDay       = RTC_GetDay;
-  rtc_internal.getMonth     = RTC_GetMonth;
-  rtc_internal.getTime      = RTC_GetTime;
-  rtc_internal.setAlarm     = RTC_SetAlarm;
-  rtc_internal.setDay       = RTC_SetDay;
-  rtc_internal.setMonth     = RTC_SetMonth;
-  rtc_internal.setRtcTime   = RTC_SetTime;
-  doz_clock.rtc = &rtc_internal;
+  // Internal RTC
+  // RTC_Init(&hrtc);
+  // rtc_internal.enableAlarm  = RTC_EnableAlarm;
+  // rtc_internal.getAlarm     = RTC_GetAlarm;
+  // rtc_internal.getDay       = RTC_GetDay;
+  // rtc_internal.getMonth     = RTC_GetMonth;
+  // rtc_internal.getTime      = RTC_GetTime;
+  // rtc_internal.setAlarm     = RTC_SetAlarm;
+  // rtc_internal.setDay       = RTC_SetDay;
+  // rtc_internal.setMonth     = RTC_SetMonth;
+  // rtc_internal.setRtcTime   = RTC_SetTime;
+  // doz_clock.rtc = &rtc_internal;
+
+  // External RTC
+  DS3231_Init(&hi2c1);
+  ds3231.enableAlarm = DS3231_EnableAlarm;
+  ds3231.getAlarm = DS3231_GetAlarm;
+  ds3231.getTime = DS3231_GetTime;
+  ds3231.getDay = DS3231_GetDate;
+  ds3231.getMonth = DS3231_GetMonth;
+  ds3231.setAlarm = DS3231_SetAlarm;
+  ds3231.setDay = DS3231_SetDate;
+  ds3231.setMonth = DS3231_SetMonth;
+  ds3231.setRtcTime = DS3231_SetTime;
+  doz_clock.rtc = &ds3231;
 
   // Display
   HUB75_Init(&hspi2, &htim15, TIM_CHANNEL_1);
