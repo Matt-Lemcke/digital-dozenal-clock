@@ -77,7 +77,7 @@ static void transition(State *next);
 
 // Bitmap creation functions
 static void displayChar(Bitmap *row_bitmap, uint8_t char_index, uint8_t digit[], uint8_t digitSize);
-static void displayFormat(TimeFormats format);
+static void displayFormat(TimeFormats format, uint32_t time_ms);
 static void displayTime(Bitmap *row_bitmap, uint32_t time_ms);
 static void blinkDigit(Bitmap *row_bitmap, uint8_t char_index, bool symbol);
 static void updateBitmap(Bitmap *row_bitmap, uint8_t index, uint8_t digit[], uint8_t digitSize, bool blank);
@@ -444,7 +444,7 @@ static void ShowTime_Update(Display *ctx)
     {
         displayChar(&row1_bitmap, EXCLAMATION_ROW1_DISPLAY_INDEX, small_symbols[EXCLAMATION_INDEX], SMALL_DIGIT_ROWS);
     }
-    displayFormat(ctx->time_format);
+    displayFormat(ctx->time_format, *ctx->clock_vars->time_ms);
 
     memset(row2_bitmap.p_bitmap, 0, row2_bitmap.bitmap_size);
     displayTime(&row2_bitmap, *ctx->clock_vars->time_ms);
@@ -481,7 +481,7 @@ static void SetTime_Update(Display *ctx)
     {
         displayChar(&row1_bitmap, EXCLAMATION_ROW1_DISPLAY_INDEX, small_symbols[EXCLAMATION_INDEX], SMALL_DIGIT_ROWS);
     }
-    displayFormat(ctx->time_format);
+    displayFormat(ctx->time_format, *ctx->clock_vars->user_time_ms);
 
     memset(row3_bitmap.p_bitmap, 0, row3_bitmap.bitmap_size);
     if (*ctx->clock_vars->timer_set) {
@@ -538,7 +538,7 @@ static void SetTimer_Update(Display *ctx)
     {
         displayChar(&row1_bitmap, EXCLAMATION_ROW1_DISPLAY_INDEX, small_symbols[EXCLAMATION_INDEX], SMALL_DIGIT_ROWS);
     }
-    displayFormat(ctx->time_format);
+    displayFormat(ctx->time_format, *ctx->clock_vars->user_timer_ms);
 
     memset(row2_bitmap.p_bitmap, 0, row2_bitmap.bitmap_size);
     displayTime(&row2_bitmap, *ctx->clock_vars->time_ms);
@@ -584,7 +584,7 @@ static void SetAlarm_Update(Display *ctx)
     {
         displayChar(&row1_bitmap, EXCLAMATION_ROW1_DISPLAY_INDEX, small_symbols[EXCLAMATION_INDEX], SMALL_DIGIT_ROWS);
     }
-    displayFormat(ctx->time_format);
+    displayFormat(ctx->time_format, *ctx->clock_vars->user_alarm_ms);
 
     memset(row2_bitmap.p_bitmap, 0, row2_bitmap.bitmap_size);
     displayTime(&row2_bitmap, *ctx->clock_vars->time_ms);
@@ -651,14 +651,14 @@ static void displayChar(Bitmap *row_bitmap, uint8_t char_index, uint8_t digit[],
     updateBitmap(row_bitmap, char_index, digit, digitSize, false);
 }
 
-static void displayFormat(TimeFormats format)
+static void displayFormat(TimeFormats format, uint32_t time_ms)
 {
     switch (format)
     {
         case TRAD_24H:
             break;
         case TRAD_12H:
-            if (*g_fsm.ctx->clock_vars->time_ms > PM_12H_MS)
+            if (time_ms >= PM_12H_MS)
             {
                 displayChar(&row1_bitmap, AM_PM_ROW1_DISPLAY_INDEX, small_symbols[PM_INDEX], SMALL_DIGIT_ROWS);
             }
@@ -749,8 +749,9 @@ static void displayTime(Bitmap *row_bitmap, uint32_t time_ms)
             msToTrad(time_ms, &hr, &min, &sec);
             if (g_fsm.ctx->time_format == TRAD_12H)
             {
-                if (hr > 12) {
-                    hr -= 12;
+                if (hr >= 12) {
+                    if (hr > 12)
+                        hr -= 12;
                     displayChar(row_bitmap, AM_PM_ROW3_DISPLAY_INDEX, small_symbols[PM_INDEX], SMALL_DIGIT_ROWS);
                 } else {
                     displayChar(row_bitmap, AM_PM_ROW3_DISPLAY_INDEX, small_symbols[AM_INDEX], SMALL_DIGIT_ROWS);

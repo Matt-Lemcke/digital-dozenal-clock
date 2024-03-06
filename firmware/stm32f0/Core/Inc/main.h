@@ -121,6 +121,7 @@ void Error_Handler(void);
 #define BTN11_IN_Pin GPIO_PIN_8
 #define BTN11_IN_GPIO_Port GPIOB
 #define BTN11_IN_EXTI_IRQn EXTI4_15_IRQn
+
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

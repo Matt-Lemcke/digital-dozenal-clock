@@ -11,6 +11,7 @@
 #include "time_track.h"
 
 #define TIMER_PERIOD_MS 167
+#define MAX_DIGITS  7
 
 typedef struct doz_clock_t
 {
@@ -27,7 +28,7 @@ typedef struct doz_clock_t
     bool timer_triggered;
     bool show_error;
     uint8_t digit_sel;
-    uint8_t digit_vals[7];
+    uint8_t digit_vals[MAX_DIGITS];
     ClockStatus error_code;
     uint32_t time_ms;
     uint32_t user_alarm_ms;

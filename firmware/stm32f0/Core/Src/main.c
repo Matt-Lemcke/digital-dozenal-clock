@@ -249,6 +249,10 @@ void HAL_GPIO_EXTI_Callback(uint16_t pin)
     {
         Buttons_GpioCallback(pin);
     }
+    else
+    {
+    	EventQ_TriggerAlarmEvent(ALARM_TRIG);
+    }
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
