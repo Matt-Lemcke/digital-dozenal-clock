@@ -8,48 +8,10 @@
 
 #include "display.h"
 #include "bitmaps.h"
-
-#define NUM_SHOWTIME_STATES 4
+#include "doz_clock.h"
 
 #define DEFAULT_FORMAT      TRAD_24H
 #define DEFAULT_BRIGHTNESS  HIGH_BRIGHTNESS
-
-#define LARGE_BITMAP_SIZE 96
-#define SMALL_BITMAP_SIZE 56
-
-#define PM_12H_MS       (43200000 - 1)
-
-typedef struct bitmap{
-    RowNumber   num;
-    uint8_t     *p_bitmap;
-    uint8_t     bitmap_size;
-} Bitmap;
-
-typedef enum state_code_t
-{
-    STATE_OFF,
-    STATE_SHOWTIME123,
-    STATE_SHOWTIME23,
-    STATE_SHOWTIME12,
-    STATE_SHOWTIME2,
-    STATE_SETTIME,
-    STATE_SETTIMER,
-    STATE_SETALARM
-} StateCode;
-
-typedef struct state_t
-{
-    StateCode state_code;
-
-    void (*entry)(Display *ctx);
-    void (*update)(Display *ctx);
-    void (*exit)(Display *ctx);
-} State;
-
-typedef struct state_machine_t {
-    State *curr_state;
-    Display *ctx;
-} DisplayFSM;
 
 /*
     Private function definitions
@@ -73,7 +35,7 @@ static void SetTimer_Update(Display *ctx);
 static void SetAlarm_Entry(Display *ctx);
 static void SetAlarm_Update(Display *ctx);
 
-static void transition(State *next);
+static void transition(DisplayState *next);
 
 // Bitmap creation functions
 static void displayChar(Bitmap *row_bitmap, uint8_t char_index, uint8_t digit[], uint8_t digitSize);
@@ -85,7 +47,7 @@ static uint8_t checkDeadZones(uint8_t digit[], uint8_t digitSize);
 /*
     State definitions
 */
-static State s_off =
+static DisplayState s_off =
 {
     .state_code = STATE_OFF,
     .entry = Off_Entry,
@@ -93,7 +55,7 @@ static State s_off =
     .exit = Off_Exit,
 };
 
-static State s_show_time123 =
+static DisplayState s_show_time123 =
 {
     .state_code = STATE_SHOWTIME123,
     .entry = ShowTime123_Entry,
@@ -101,7 +63,7 @@ static State s_show_time123 =
     .exit = Default_Exit,
 };
 
-static State s_show_time23 =
+static DisplayState s_show_time23 =
 {
     .state_code = STATE_SHOWTIME23,
     .entry = ShowTime23_Entry,
@@ -109,7 +71,7 @@ static State s_show_time23 =
     .exit = Default_Exit,
 };
 
-static State s_show_time12 =
+static DisplayState s_show_time12 =
 {
     .state_code = STATE_SHOWTIME12,
     .entry = ShowTime12_Entry,
@@ -117,7 +79,7 @@ static State s_show_time12 =
     .exit = Default_Exit,
 };
 
-static State s_show_time2 =
+static DisplayState s_show_time2 =
 {
     .state_code = STATE_SHOWTIME2,
     .entry = ShowTime2_Entry,
@@ -125,7 +87,7 @@ static State s_show_time2 =
     .exit = Default_Exit,
 };
 
-static State s_set_time =
+static DisplayState s_set_time =
 {
     .state_code = STATE_SETTIME,
     .entry = SetTime_Entry,
@@ -133,7 +95,7 @@ static State s_set_time =
     .exit = Default_Exit,
 };
 
-static State s_set_timer =
+static DisplayState s_set_timer =
 {
     .state_code = STATE_SETTIMER,
     .entry = SetTimer_Entry,
@@ -141,7 +103,7 @@ static State s_set_timer =
     .exit = Default_Exit,
 };
 
-static State s_set_alarm =
+static DisplayState s_set_alarm =
 {
     .state_code = STATE_SETALARM,
     .entry = SetAlarm_Entry,
@@ -177,7 +139,7 @@ Bitmap row3_bitmap = {
     Private variables
 */
 static DisplayFSM g_fsm = {0};
-static State *show_time_states[NUM_SHOWTIME_STATES] =
+static DisplayState *show_time_states[NUM_SHOWTIME_STATES] =
 {
     &s_show_time123,
     &s_show_time23,
@@ -538,7 +500,7 @@ static void SetTimer_Update(Display *ctx)
     {
         displayChar(&row1_bitmap, EXCLAMATION_ROW1_DISPLAY_INDEX, small_symbols[EXCLAMATION_INDEX], SMALL_DIGIT_ROWS);
     }
-    displayFormat(ctx->time_format, *ctx->clock_vars->user_timer_ms);
+    displayFormat(ctx->time_format, *ctx->clock_vars->time_ms);
 
     memset(row2_bitmap.p_bitmap, 0, row2_bitmap.bitmap_size);
     displayTime(&row2_bitmap, *ctx->clock_vars->time_ms);
@@ -584,7 +546,7 @@ static void SetAlarm_Update(Display *ctx)
     {
         displayChar(&row1_bitmap, EXCLAMATION_ROW1_DISPLAY_INDEX, small_symbols[EXCLAMATION_INDEX], SMALL_DIGIT_ROWS);
     }
-    displayFormat(ctx->time_format, *ctx->clock_vars->user_alarm_ms);
+    displayFormat(ctx->time_format, *ctx->clock_vars->time_ms);
 
     memset(row2_bitmap.p_bitmap, 0, row2_bitmap.bitmap_size);
     displayTime(&row2_bitmap, *ctx->clock_vars->time_ms);
@@ -611,39 +573,11 @@ static void SetAlarm_Update(Display *ctx)
 
 }
 
-void transition(State *next)
+void transition(DisplayState *next)
 {
     g_fsm.curr_state->exit(g_fsm.ctx);
     g_fsm.curr_state = next;
     g_fsm.curr_state->entry(g_fsm.ctx);
-}
-
-void msToTrad(uint32_t time_ms, uint8_t *hr_24, uint8_t *min, uint8_t *sec)
-{
-    time_ms = time_ms / 1000;
-    *sec = time_ms % 60;
-    time_ms = time_ms / 60;
-    *min = time_ms % 60;
-    time_ms = time_ms / 60;
-    *hr_24 = time_ms % 24;
-}
-
-void msToDiurn(uint32_t time_ms, uint8_t *digit1, uint8_t *digit2, uint8_t *digit3, uint8_t *digit4, uint8_t *digit5)
-{
-    *digit1 = (time_ms / 7200000) % 12;
-    *digit2 = (time_ms / 600000) % 12;
-    *digit3 = (time_ms / 50000) % 12;
-    *digit4 = (((uint64_t) time_ms * 6) / 25000) % 12;
-    *digit5 = (((uint64_t) time_ms * 72) / 25000) % 12;
-}
-
-void msToSemiDiurn(uint32_t time_ms, uint8_t *digit1, uint8_t *digit2, uint8_t *digit3, uint8_t *digit4, uint8_t *digit5)
-{
-    *digit1 = (time_ms / 43200000) % 2;
-    *digit2 = (time_ms / 3600000) % 12;
-    *digit3 = (time_ms / 300000) % 12;
-    *digit4 = (time_ms / 25000) % 12;
-    *digit5 = (((uint64_t) time_ms * 12) / 25000) % 12;
 }
 
 static void displayChar(Bitmap *row_bitmap, uint8_t char_index, uint8_t digit[], uint8_t digitSize)

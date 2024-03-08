@@ -480,11 +480,11 @@ static unsigned char small_symbols[SMALL_SYMB_LENGTH][SMALL_DIGIT_ROWS] = {
         // AM
         0b00000000,
         0b00000000,
-        0b01001010,
-        0b10101110,
-        0b11101110,
-        0b10101010,
-        0b10101010
+        0b00100101,
+        0b01010111,
+        0b01110111,
+        0b01010101,
+        0b01010101
     },
     {
         // PM

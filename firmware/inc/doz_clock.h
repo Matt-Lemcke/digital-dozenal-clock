@@ -9,9 +9,12 @@
 #include "gps.h"
 #include "rtc.h"
 #include "time_track.h"
+#include <math.h>
 
-#define TIMER_PERIOD_MS 167
-#define MAX_DIGITS  7
+#define TIMER_PERIOD_MS  167
+#define MAX_DIGITS       7
+#define TIME_24H_MS      86400000
+#define PM_12H_MS       (43200000 - 1)
 
 typedef struct doz_clock_t
 {
@@ -38,7 +41,7 @@ typedef struct doz_clock_t
     void (*error_handler)(void);
 } DozClock;
 
-typedef enum {
+typedef enum doz_clock_state_code_t {
     STATE_INIT,
     STATE_SET_TIME,
     STATE_SET_ALARM,
@@ -48,18 +51,18 @@ typedef enum {
     STATE_ALARM_TIMER_DISP_ON,
     STATE_ALARM_TIMER_DISP_OFF,
     NUM_STATES
-} StateCode;
+} DozClockStateCode;
 
-typedef struct state_t {
-    StateCode state_code;
+typedef struct doz_clock_state_t {
+    DozClockStateCode state_code;
 
     void (*entry)(DozClock *ctx);
     void (*update)(DozClock *ctx);
     void (*exit)(DozClock *ctx);
-} State;
+} DozClockState;
 
-typedef struct state_machine_t {
-    State *curr_state;
+typedef struct doz_clock_state_machine_t {
+    DozClockState *curr_state;
     DozClock *ctx;
 } DozClockFSM;
 
@@ -67,5 +70,8 @@ typedef struct state_machine_t {
 void DozClock_Init(DozClock *ctx);
 void DozClock_Update();
 void DozClock_TimerCallback();  // Called from 6 Hz timer
+void msToTrad(uint32_t time_ms, uint8_t *hr_24, uint8_t *min, uint8_t *sec);
+void msToDiurn(uint32_t time_ms, uint8_t *digit1, uint8_t *digit2, uint8_t *digit3, uint8_t *digit4, uint8_t *digit5);
+void msToSemiDiurn(uint32_t time_ms, uint8_t *digit1, uint8_t *digit2, uint8_t *digit3, uint8_t *digit4, uint8_t *digit5);
 
 #endif  // FIRMWARE_INC_DOZ_CLOCK_H_

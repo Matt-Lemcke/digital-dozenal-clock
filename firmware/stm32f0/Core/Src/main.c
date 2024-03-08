@@ -251,7 +251,11 @@ void HAL_GPIO_EXTI_Callback(uint16_t pin)
     }
     else
     {
-    	EventQ_TriggerAlarmEvent(ALARM_TRIG);
+    	if (DS3231_IsAlarm1Triggered()) {
+    		EventQ_TriggerAlarmEvent(ALARM_TRIG);
+    	} else if (DS3231_IsAlarm2Triggered()) {
+    		EventQ_TriggerAlarmEvent(TIMER_TRIG);
+    	}
     }
 }
 

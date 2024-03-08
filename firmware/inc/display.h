@@ -17,7 +17,7 @@
 #define EXCLAMATION_ROW1_DISPLAY_INDEX  11
 #define D_ROW1_DISPLAY_INDEX            60
 #define S_ROW1_DISPLAY_INDEX            60
-#define AM_PM_ROW1_DISPLAY_INDEX        56
+#define AM_PM_ROW1_DISPLAY_INDEX        55
 #define FORMAT_ROW1_DISPLAY_INDEX       57
 
 // Row 2 Display Indeces
@@ -68,6 +68,11 @@
 #define DRN5_DIGIT_3_ROW3_DISPLAY_INDEX     28
 #define DRN5_DIGIT_4_ROW3_DISPLAY_INDEX     36
 #define DRN5_DIGIT_5_ROW3_DISPLAY_INDEX     42
+
+#define NUM_SHOWTIME_STATES 4
+
+#define LARGE_BITMAP_SIZE 96
+#define SMALL_BITMAP_SIZE 56
 
 typedef enum brightness_levels_t
 {
@@ -123,6 +128,37 @@ typedef struct display_t
     void (*hide)(uint8_t region_id);
 } Display;
 
+typedef struct bitmap{
+    RowNumber   num;
+    uint8_t     *p_bitmap;
+    uint8_t     bitmap_size;
+} Bitmap;
+typedef enum display_state_code_t
+{
+    STATE_OFF,
+    STATE_SHOWTIME123,
+    STATE_SHOWTIME23,
+    STATE_SHOWTIME12,
+    STATE_SHOWTIME2,
+    STATE_SETTIME,
+    STATE_SETTIMER,
+    STATE_SETALARM
+} DisplayStateCode;
+
+typedef struct display_state_t
+{
+    DisplayStateCode state_code;
+
+    void (*entry)(Display *ctx);
+    void (*update)(Display *ctx);
+    void (*exit)(Display *ctx);
+} DisplayState;
+
+typedef struct display_state_machine_t {
+    DisplayState *curr_state;
+    Display *ctx;
+} DisplayFSM;
+
 ClockStatus Display_Init(Display *self, ExternVars *vars);
 void Display_Update(void);
 void Display_PeriodicCallback(void);
@@ -135,7 +171,4 @@ void Display_SetAlarm(void);
 void Display_ShowTime(void);
 void Display_SetFormat(TimeFormats format);
 void Display_SetBrightness(BrightnessLevels brightness);
-void msToTrad(uint32_t time_ms, uint8_t *hr_24, uint8_t *min, uint8_t *sec);
-void msToDiurn(uint32_t time_ms, uint8_t *digit1, uint8_t *digit2, uint8_t *digit3, uint8_t *digit4, uint8_t *digit5);
-void msToSemiDiurn(uint32_t time_ms, uint8_t *digit1, uint8_t *digit2, uint8_t *digit3, uint8_t *digit4, uint8_t *digit5);
 #endif  // FIRMWARE_INC_DISPLAY_H_
