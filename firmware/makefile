@@ -44,7 +44,7 @@ $(BUILD_DIR)/%.c.o: %.c
 
 # build executable file
 build: $(OBJS)
-	$(CC) $(OBJS) -o $(BUILD_DIR)/$(TARGET_EXEC)
+	$(CC) $(OBJS) -o $(BUILD_DIR)/$(TARGET_EXEC) -lm
 
 # run executable
 run: $(BUILD_DIR)/$(TARGET_EXEC)

@@ -306,18 +306,18 @@ void SetAlarm_Update(DozClock *ctx)
                              (uint32_t) ctx->digit_vals[1] * 3600000 +
                              (uint32_t) ctx->digit_vals[2] * 300000 +
                              (uint32_t) ctx->digit_vals[3] * 25000 +
-                             (uint32_t) (ctx->digit_vals[4] * 25000) / 12.0;
-                            //  (uint32_t) round((ctx->digit_vals[4] * 25000) / 12.0);
+                            //  (uint32_t) (ctx->digit_vals[4] * 25000) / 12.0;
+                             (uint32_t) round((ctx->digit_vals[4] * 25000) / 12.0);
 
     } else { // DOZ_DRN4 || DOZ_DRN5
 
         ctx->user_alarm_ms = (uint32_t) ctx->digit_vals[0] * 7200000 +
                              (uint32_t) ctx->digit_vals[1] * 600000 +
                              (uint32_t) ctx->digit_vals[2] * 50000 +
-                             (uint32_t) (ctx->digit_vals[3] * 25000) / 6.0 +
-                             (uint32_t) (ctx->digit_vals[4] * 25000) / 72.0;
-                            //  (uint32_t) round((ctx->digit_vals[3] * 25000) / 6.0) +
-                            //  (uint32_t) round((ctx->digit_vals[4] * 25000) / 72.0);
+                            //  (uint32_t) (ctx->digit_vals[3] * 25000) / 6.0 +
+                            //  (uint32_t) (ctx->digit_vals[4] * 25000) / 72.0;
+                             (uint32_t) round((ctx->digit_vals[3] * 25000) / 6.0) +
+                             (uint32_t) round((ctx->digit_vals[4] * 25000) / 72.0);
     }
 }
 void SetAlarm_Exit(DozClock *ctx)
@@ -376,16 +376,16 @@ void SetTimer_Update(DozClock *ctx)
                              (uint32_t) ctx->digit_vals[1] * 3600000 +
                              (uint32_t) ctx->digit_vals[2] * 300000 +
                              (uint32_t) ctx->digit_vals[3] * 25000 +
-                             (uint32_t) (ctx->digit_vals[4] * 25000) / 12.0;
-                            //  (uint32_t) round((ctx->digit_vals[4] * 25000) / 12.0);
+                            //  (uint32_t) (ctx->digit_vals[4] * 25000) / 12.0;
+                             (uint32_t) round((ctx->digit_vals[4] * 25000) / 12.0);
     } else {
         ctx->user_timer_ms = (uint32_t) ctx->digit_vals[0] * 7200000 +
                              (uint32_t) ctx->digit_vals[1] * 600000 +
                              (uint32_t) ctx->digit_vals[2] * 50000 +
-                             (uint32_t) (ctx->digit_vals[3] * 25000) / 6.0 + 
-                             (uint32_t) (ctx->digit_vals[4] * 25000) / 72.0;
-                            //  (uint32_t) round((ctx->digit_vals[3] * 25000) / 6.0) + 
-                            //  (uint32_t) round((ctx->digit_vals[4] * 25000) / 72.0);
+                            //  (uint32_t) (ctx->digit_vals[3] * 25000) / 6.0 + 
+                            //  (uint32_t) (ctx->digit_vals[4] * 25000) / 72.0;
+                             (uint32_t) round((ctx->digit_vals[3] * 25000) / 6.0) + 
+                             (uint32_t) round((ctx->digit_vals[4] * 25000) / 72.0);
     } 
 }
 void SetTimer_Exit(DozClock *ctx)
@@ -434,16 +434,16 @@ void SetTime_Update(DozClock *ctx)
                              (uint32_t) ctx->digit_vals[1] * 3600000 +
                              (uint32_t) ctx->digit_vals[2] * 300000 +
                              (uint32_t) ctx->digit_vals[3] * 25000 +
-                             (uint32_t) (ctx->digit_vals[4] * 25000) / 12.0;
-                            //  (uint32_t) round((ctx->digit_vals[4] * 25000) / 12.0);
+                            //  (uint32_t) (ctx->digit_vals[4] * 25000) / 12.0;
+                             (uint32_t) round((ctx->digit_vals[4] * 25000) / 12.0);
     } else {
         ctx->user_time_ms = (uint32_t) ctx->digit_vals[0] * 7200000 +
                              (uint32_t) ctx->digit_vals[1] * 600000 +
                              (uint32_t) ctx->digit_vals[2] * 50000 +
-                             (uint32_t) (ctx->digit_vals[3] * 25000) / 6.0 +
-                             (uint32_t) (ctx->digit_vals[4] * 25000) / 72.0;
-                            //  (uint32_t) round((ctx->digit_vals[3] * 25000) / 6.0) +
-                            //  (uint32_t) round((ctx->digit_vals[4] * 25000) / 72.0);
+                            //  (uint32_t) (ctx->digit_vals[3] * 25000) / 6.0 +
+                            //  (uint32_t) (ctx->digit_vals[4] * 25000) / 72.0;
+                             (uint32_t) round((ctx->digit_vals[3] * 25000) / 6.0) +
+                             (uint32_t) round((ctx->digit_vals[4] * 25000) / 72.0);
     } 
 }
 void SetTime_Exit(DozClock *ctx)
