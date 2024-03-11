@@ -4,7 +4,7 @@ extern "C"
 
 #include "time_track.h"
 #include "clock_types.h"
-#include "rtc.h"
+#include "rtc_module.h"
 }
 #include "CppUTest/TestHarness.h"
 #include "CppUTestExt/MockSupport.h"

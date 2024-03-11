@@ -1,4 +1,4 @@
-#include "rtc.h"
+#include "rtc-module.h"
 
 Rtc *g_rtc;
 

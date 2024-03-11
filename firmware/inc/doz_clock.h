@@ -7,7 +7,7 @@
 #include "display.h"
 #include "event_queue.h"
 #include "gps.h"
-#include "rtc.h"
+#include "rtc-module.h"
 
 
 typedef struct doz_clock_t
