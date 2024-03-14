@@ -10,7 +10,7 @@
 #include "time_track.h"
 
 #include "gps.h"
-#include "rtc-module.h"
+#include "rtc_module.h"
 
 uint8_t check_rtc = 0;
 uint8_t gps_lost = 0;
