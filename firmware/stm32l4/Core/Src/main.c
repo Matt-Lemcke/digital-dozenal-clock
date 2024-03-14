@@ -17,7 +17,6 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
-#include <rtc-module.h>
 #include "main.h"
 #include "adc.h"
 #include "dma.h"
@@ -25,28 +24,22 @@
 #include "rtc.h"
 #include "spi.h"
 #include "tim.h"
-#include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "buzzer.h"
 #include "clock_types.h"
+#include "display.h"
 #include "doz_clock.h"
 #include "event_queue.h"
-#include "rtc_module.h"
 
-#include "buzzer.h"
-#include "display.h"
-#include "gps.h"
 #include "adc-light-sens.h"
-#include "hub75-driver.h"
+#include "gpio-buttons.h"
 #include "hub75-driver.h"
 #include "i2c-rtc.h"
-#include "gpio-buttons.h"
 #include "pwm-buzzer.h"
 #include "rtc-internal.h"
-
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -61,19 +54,23 @@
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
 
+//#define USE_EXTERNAL_RTC
+
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-DozClock doz_clock;
+DozClock    doz_clock;
 
 Display rgb_matrix;
-Gps neo6m;
-Rtc rtc_internal;
-Rtc ds3231;
-Buzzer buzzer;
+Buzzer  buzzer;
 
+#ifdef USE_EXTERNAL_RTC
+Rtc ds3231;
+#else
+Rtc rtc_internal;
+#endif
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -116,55 +113,25 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
-  MX_I2C1_Init();
-  MX_USART1_UART_Init();
-  MX_USART2_UART_Init();
-  MX_TIM3_Init();
-  MX_ADC_Init();
+  MX_TIM2_Init();
+  MX_SPI1_Init();
+  MX_ADC1_Init();
   MX_TIM6_Init();
-  MX_SPI2_Init();
   MX_TIM7_Init();
-  MX_TIM15_Init();
+  MX_I2C1_Init();
+  MX_TIM1_Init();
   MX_RTC_Init();
   /* USER CODE BEGIN 2 */
 
-
-
   // Buzzer
-  PKM22E_Init(&htim3, TIM_CHANNEL_1);
+  PKM22E_Init(&htim1, TIM_CHANNEL_1);
   buzzer.setDutyCycle   = PKM22E_SetDutyCyle;
   buzzer.startPwm       = PKM22E_StartPwm;
   buzzer.stopPwm        = PKM22E_StopPwm;
   doz_clock.buzzer = &buzzer;
 
-  // Internal RTC
-  // RTC_Init(&hrtc);
-  // rtc_internal.enableAlarm  = RTC_EnableAlarm;
-  // rtc_internal.getAlarm     = RTC_GetAlarm;
-  // rtc_internal.getDay       = RTC_GetDay;
-  // rtc_internal.getMonth     = RTC_GetMonth;
-  // rtc_internal.getTime      = RTC_GetTime;
-  // rtc_internal.setAlarm     = RTC_SetAlarm;
-  // rtc_internal.setDay       = RTC_SetDay;
-  // rtc_internal.setMonth     = RTC_SetMonth;
-  // rtc_internal.setRtcTime   = RTC_SetTime;
-  // doz_clock.rtc = &rtc_internal;
-
-  // External RTC
-  DS3231_Init(&hi2c1);
-  ds3231.enableAlarm = DS3231_EnableAlarm;
-  ds3231.getAlarm = DS3231_GetAlarm;
-  ds3231.getTime = DS3231_GetTime;
-  ds3231.getDay = DS3231_GetDate;
-  ds3231.getMonth = DS3231_GetMonth;
-  ds3231.setAlarm = DS3231_SetAlarm;
-  ds3231.setDay = DS3231_SetDate;
-  ds3231.setMonth = DS3231_SetMonth;
-  ds3231.setRtcTime = DS3231_SetTime;
-  doz_clock.rtc = &ds3231;
-
   // Display
-  HUB75_Init(&hspi2, &htim15, TIM_CHANNEL_1);
+  HUB75_Init(&hspi1, &htim2, TIM_CHANNEL_1);
   rgb_matrix.displayOff     = HUB75_DisplayOff;
   rgb_matrix.displayOn      = HUB75_DisplayOn;
   rgb_matrix.setBrightness  = HUB75_SetDisplayBrightness;
@@ -175,19 +142,44 @@ int main(void)
   doz_clock.display = &rgb_matrix;
 
 
+
+#ifdef USE_EXTERNAL_RTC
+  // External RTC
+  DS3231_Init(&hi2c1);
+  ds3231.enableAlarm    = DS3231_EnableAlarm;
+  ds3231.getAlarm       = DS3231_GetAlarm;
+  ds3231.getTime        = DS3231_GetTime;
+  ds3231.getDay         = DS3231_GetDate;
+  ds3231.getMonth       = DS3231_GetMonth;
+  ds3231.setAlarm       = DS3231_SetAlarm;
+  ds3231.setDay         = DS3231_SetDate;
+  ds3231.setMonth       = DS3231_SetMonth;
+  ds3231.setRtcTime     = DS3231_SetTime;
+  doz_clock.rtc = &ds3231;
+#else
+  // Internal RTC
+  RTC_Init(&hrtc);
+  rtc_internal.enableAlarm  = RTC_EnableAlarm;
+  rtc_internal.getAlarm     = RTC_GetAlarm;
+  rtc_internal.getDay       = RTC_GetDay;
+  rtc_internal.getMonth     = RTC_GetMonth;
+  rtc_internal.getTime      = RTC_GetTime;
+  rtc_internal.setAlarm     = RTC_SetAlarm;
+  rtc_internal.setDay       = RTC_SetDay;
+  rtc_internal.setMonth     = RTC_SetMonth;
+  rtc_internal.setRtcTime   = RTC_SetTime;
+  doz_clock.rtc = &rtc_internal;
+#endif
+
   // Doz Clock
   doz_clock.error_handler = Error_Handler;
   DozClock_Init(&doz_clock);
-
 
   // Buttons
   Buttons_Init();
 
   // Light sensor
-  LightSens_Init(&hadc, 1600);
-
-  // Start 2Hz timer
-  HAL_TIM_Base_Start_IT(&htim6);
+  LightSens_Init(&hadc1, &htim6, 1800);
 
   // Start 6Hz timer
   HAL_TIM_Base_Start_IT(&htim7);
@@ -198,8 +190,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    DozClock_Update();
-
+      DozClock_Update();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -215,18 +206,25 @@ void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
-  RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
+
+  /** Configure the main internal regulator output voltage
+  */
+  if (HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure LSE Drive Capability
+  */
+  HAL_PWR_EnableBkUpAccess();
+  __HAL_RCC_LSEDRIVE_CONFIG(RCC_LSEDRIVE_LOW);
 
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_HSI14
-                              |RCC_OSCILLATORTYPE_LSI;
-  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-  RCC_OscInitStruct.HSI14State = RCC_HSI14_ON;
-  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.HSI14CalibrationValue = 16;
-  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE|RCC_OSCILLATORTYPE_LSE;
+  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+  RCC_OscInitStruct.LSEState = RCC_LSE_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
@@ -236,60 +234,47 @@ void SystemClock_Config(void)
   /** Initializes the CPU, AHB and APB buses clocks
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-                              |RCC_CLOCKTYPE_PCLK1;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
+                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSE;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART1|RCC_PERIPHCLK_I2C1
-                              |RCC_PERIPHCLK_RTC;
-  PeriphClkInit.Usart1ClockSelection = RCC_USART1CLKSOURCE_PCLK1;
-  PeriphClkInit.I2c1ClockSelection = RCC_I2C1CLKSOURCE_HSI;
-  PeriphClkInit.RTCClockSelection = RCC_RTCCLKSOURCE_LSI;
-  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
   {
     Error_Handler();
   }
 }
 
 /* USER CODE BEGIN 4 */
-
-void HAL_GPIO_EXTI_Callback(uint16_t pin)
-{
-    if (pin != RTC_SQW_Pin)
-    {
-        Buttons_GpioCallback(pin);
-    }
-}
-
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-    if(htim == &htim7)
+    if (htim == &htim2)
+    {
+        HUB75_PwmStartPulse();
+    }
+    else if (htim == &htim6)
+    {
+        // 2 Hz freq
+        LightSens_AdcStartConversion();
+    }
+    else if (htim == &htim7)
     {
         // 6 Hz freq
         Buttons_TimerCallback(167);
         DozClock_TimerCallback();
     }
-    else if(htim == &htim6)
-    {
-        // 2 Hz freq
-        LightSens_AdcStartConversion();
-    }
-    else if(htim == &htim15)
-    {
-        HUB75_PwmStartPulse();
-    }
 }
 
-void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc)
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 {
     LightSens_AdcConversionCallback();
 }
 
+void HAL_GPIO_EXTI_Callback(uint16_t pin)
+{
+    Buttons_GpioCallback(pin);
+}
 /* USER CODE END 4 */
 
 /**
