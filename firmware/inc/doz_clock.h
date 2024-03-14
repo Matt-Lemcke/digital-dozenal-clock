@@ -1,13 +1,14 @@
 #ifndef FIRMWARE_INC_DOZ_CLOCK_H_
 #define FIRMWARE_INC_DOZ_CLOCK_H_
 
+#include <rtc_module.h>
 #include "bitmaps.h"
 #include "buzzer.h"
 #include "clock_types.h"
 #include "display.h"
 #include "event_queue.h"
 #include "gps.h"
-#include "rtc.h"
+#include "rtc_module.h"
 #include "time_track.h"
 #include <math.h>
 
