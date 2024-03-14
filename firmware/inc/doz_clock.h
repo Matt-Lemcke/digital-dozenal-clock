@@ -1,6 +1,7 @@
 #ifndef FIRMWARE_INC_DOZ_CLOCK_H_
 #define FIRMWARE_INC_DOZ_CLOCK_H_
 
+#include <rtc_module.h>
 #include "bitmaps.h"
 #include "buzzer.h"
 #include "clock_types.h"

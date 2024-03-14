@@ -1,11 +1,11 @@
-#include "rtc-module.h"
+#include <rtc_module.h>
 
 Rtc *g_rtc;
 
 ClockStatus Rtc_Init(Rtc *self)
 {
     g_rtc = self;
-    if (self->getHour == NULL)
+    if (self->getTime == NULL)
     {
         return CLOCK_FAIL;
     }
@@ -35,15 +35,10 @@ ClockStatus Rtc_SetTime(RtcTime *time)
 
 ClockStatus Rtc_GetTime(RtcTime *time)
 {
-    if (g_rtc->getHour == NULL
-        || g_rtc->getMinute == NULL
-        || g_rtc->getSecond == NULL) {
+    if (g_rtc->getTime == NULL) {
         return CLOCK_FAIL;
     }
-
-    time->hr = g_rtc->getHour();
-    time->min = g_rtc->getMinute();
-    time->sec = g_rtc->getSecond();
+    g_rtc->getTime(&time->hr, &time->min, &time->sec);
 
     return CLOCK_OK;
 }
@@ -73,15 +68,11 @@ ClockStatus Rtc_SetAlarm(RtcTime *time, AlarmId id)
 
 ClockStatus Rtc_GetAlarm(RtcTime *time, AlarmId id)
 {
-    if (g_rtc->getAlarmHour == NULL
-        || g_rtc->getAlarmMinute == NULL
-        || g_rtc->getAlarmSecond == NULL) {
+    if (g_rtc->getAlarm == NULL) {
         return CLOCK_FAIL;
     }
 
-    time->hr = g_rtc->getAlarmHour(id);
-    time->min = g_rtc->getAlarmMinute(id);
-    time->sec = g_rtc->getAlarmSecond(id);
+    g_rtc->getAlarm(id, &time->hr, &time->min, &time->sec);
 
     return CLOCK_OK;
 }

@@ -6,6 +6,7 @@
  */
 
 
+#include <rtc_module.h>
 #include "time_track.h"
 
 #include "gps.h"
