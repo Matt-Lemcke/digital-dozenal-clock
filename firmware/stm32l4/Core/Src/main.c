@@ -21,6 +21,7 @@
 #include "adc.h"
 #include "dma.h"
 #include "i2c.h"
+#include "rtc.h"
 #include "spi.h"
 #include "tim.h"
 #include "gpio.h"
@@ -38,6 +39,7 @@
 #include "hub75-driver.h"
 #include "i2c-rtc.h"
 #include "pwm-buzzer.h"
+#include "rtc-internal.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -111,6 +113,7 @@ int main(void)
   MX_TIM7_Init();
   MX_I2C1_Init();
   MX_TIM1_Init();
+  MX_RTC_Init();
   /* USER CODE BEGIN 2 */
 
   // Buzzer
@@ -156,10 +159,12 @@ int main(void)
   Buttons_Init();
 
   // Light sensor
-  LightSens_Init(&hadc1, &htim6, 1600);
+  LightSens_Init(&hadc1, &htim6, 1800);
 
   // Start 6Hz timer
   HAL_TIM_Base_Start_IT(&htim7);
+
+  RTC_Init(&hrtc);
 
   /* USER CODE END 2 */
 
@@ -191,11 +196,17 @@ void SystemClock_Config(void)
     Error_Handler();
   }
 
+  /** Configure LSE Drive Capability
+  */
+  HAL_PWR_EnableBkUpAccess();
+  __HAL_RCC_LSEDRIVE_CONFIG(RCC_LSEDRIVE_LOW);
+
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE|RCC_OSCILLATORTYPE_LSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+  RCC_OscInitStruct.LSEState = RCC_LSE_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {

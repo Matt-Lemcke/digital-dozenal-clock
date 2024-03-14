@@ -11,7 +11,7 @@
 
 #define ADC_BUF_LENGTH  10
 #define MAX_LIGHT_LEVEL 4095    // Max value on 12-bit ADC
-#define ALPHA           70      // Alpha value for moving avg. (out of 100)
+#define ALPHA           60      // Alpha value for moving avg. (out of 100)
 #define TRANSITION_BUFF 200
 
 ADC_HandleTypeDef *adc;
