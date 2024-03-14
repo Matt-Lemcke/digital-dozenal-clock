@@ -15,7 +15,6 @@ extern "C"{
 #endif
 
 I2C_HandleTypeDef *_ds3231_ui2c;
-
 static uint8_t Alarm2Seconds = 0;
 
 /**
@@ -479,6 +478,13 @@ void DS3231_SetTime(uint8_t  hour_24mode, uint8_t minute, uint8_t second){
     DS3231_SetSecond(second);
 }
 
+void DS3231_GetTime(uint8_t *hour_24mode, uint8_t *minute, uint8_t *second)
+{
+    *hour_24mode    = DS3231_GetHour();
+    *minute         = DS3231_GetMinute();
+    *second         = DS3231_GetSecond();
+}
+
 /**
  * @brief Enable alarm1 or alarm2
  * @param alarm_id Alarm ID, ALARM_ID(1) or TIMER_ID(2).
@@ -513,6 +519,13 @@ void DS3231_SetAlarm(uint8_t alarm_id, uint8_t hour_24mode, uint8_t minute, uint
         DS3231_SetAlarm2Hour(hour_24mode);
         DS3231_ClearAlarm2Flag();
     }
+}
+
+void DS3231_GetAlarm(uint8_t alarm_id, uint8_t *hour_24mode, uint8_t *minute, uint8_t *second)
+{
+    *second         = DS3231_GetAlarmSecond(alarm_id);
+    *minute         = DS3231_GetAlarmMinute(alarm_id);
+    *hour_24mode    = DS3231_GetAlarmHour(alarm_id);
 }
 
 /**

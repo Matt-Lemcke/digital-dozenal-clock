@@ -145,8 +145,10 @@ int8_t DS3231_GetTemperatureInteger();
 uint8_t DS3231_GetTemperatureFraction();
 
 void DS3231_SetTime(uint8_t hour_24mode, uint8_t minute, uint8_t second);
+void DS3231_GetTime(uint8_t *hour_24mode, uint8_t *minute, uint8_t *second);
 void DS3231_EnableAlarm(uint8_t alarm_id, bool enable);
 void DS3231_SetAlarm(uint8_t alarm_id, uint8_t hour_24mode, uint8_t minute, uint8_t second);
+void DS3231_GetAlarm(uint8_t alarm_id, uint8_t *hour_24mode, uint8_t *minute, uint8_t *second);
 uint8_t DS3231_GetAlarmHour(uint8_t alarm_id);
 uint8_t DS3231_GetAlarmMinute(uint8_t alarm_id);
 uint8_t DS3231_GetAlarmSecond(uint8_t alarm_id);

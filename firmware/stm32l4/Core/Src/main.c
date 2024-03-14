@@ -54,6 +54,8 @@
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
 
+//#define USE_EXTERNAL_RTC
+
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -63,7 +65,12 @@ DozClock    doz_clock;
 
 Display rgb_matrix;
 Buzzer  buzzer;
-Rtc     ds3231;
+
+#ifdef USE_EXTERNAL_RTC
+Rtc ds3231;
+#else
+Rtc rtc_internal;
+#endif
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -134,22 +141,35 @@ int main(void)
   rgb_matrix.hide           = HUB75_Hide;
   doz_clock.display = &rgb_matrix;
 
-  // RTC
+
+
+#ifdef USE_EXTERNAL_RTC
+  // External RTC
   DS3231_Init(&hi2c1);
-  ds3231.enableAlarm = DS3231_EnableAlarm;
-  ds3231.getAlarmHour = DS3231_GetAlarmHour;
-  ds3231.getAlarmMinute = DS3231_GetAlarmMinute;
-  ds3231.getAlarmSecond = DS3231_GetAlarmSecond;
-  ds3231.getDay = DS3231_GetDate;
-  ds3231.getHour = DS3231_GetHour;
-  ds3231.getMinute = DS3231_GetMinute;
-  ds3231.getMonth = DS3231_GetMonth;
-  ds3231.getSecond = DS3231_GetSecond;
-  ds3231.setAlarm = DS3231_SetAlarm;
-  ds3231.setDay = DS3231_SetDate;
-  ds3231.setMonth = DS3231_SetMonth;
-  ds3231.setRtcTime = DS3231_SetTime;
+  ds3231.enableAlarm    = DS3231_EnableAlarm;
+  ds3231.getAlarm       = DS3231_GetAlarm;
+  ds3231.getTime        = DS3231_GetTime;
+  ds3231.getDay         = DS3231_GetDate;
+  ds3231.getMonth       = DS3231_GetMonth;
+  ds3231.setAlarm       = DS3231_SetAlarm;
+  ds3231.setDay         = DS3231_SetDate;
+  ds3231.setMonth       = DS3231_SetMonth;
+  ds3231.setRtcTime     = DS3231_SetTime;
   doz_clock.rtc = &ds3231;
+#else
+  // Internal RTC
+  RTC_Init(&hrtc);
+  rtc_internal.enableAlarm  = RTC_EnableAlarm;
+  rtc_internal.getAlarm     = RTC_GetAlarm;
+  rtc_internal.getDay       = RTC_GetDay;
+  rtc_internal.getMonth     = RTC_GetMonth;
+  rtc_internal.getTime      = RTC_GetTime;
+  rtc_internal.setAlarm     = RTC_SetAlarm;
+  rtc_internal.setDay       = RTC_SetDay;
+  rtc_internal.setMonth     = RTC_SetMonth;
+  rtc_internal.setRtcTime   = RTC_SetTime;
+  doz_clock.rtc = &rtc_internal;
+#endif
 
   // Doz Clock
   doz_clock.error_handler = Error_Handler;
@@ -163,8 +183,6 @@ int main(void)
 
   // Start 6Hz timer
   HAL_TIM_Base_Start_IT(&htim7);
-
-  RTC_Init(&hrtc);
 
   /* USER CODE END 2 */
 
