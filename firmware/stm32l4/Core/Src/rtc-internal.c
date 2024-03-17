@@ -56,12 +56,14 @@ void RTC_SetTime(uint8_t hr, uint8_t min, uint8_t sec)
         sTime.Minutes = min;
         sTime.Seconds = sec;
         HAL_RTC_SetTime(hrtc, &sTime, RTC_FORMAT);
+//        HAL_Delay(2000);
     }
 }
 
 void RTC_GetTime(uint8_t *hr, uint8_t *min, uint8_t *sec)
 {
     HAL_RTC_GetTime(hrtc, &sTime, RTC_FORMAT);
+    HAL_RTC_GetDate(hrtc, &sDate, RTC_FORMAT);
     *hr = sTime.Hours;
     *min = sTime.Minutes;
     *sec = sTime.Seconds;

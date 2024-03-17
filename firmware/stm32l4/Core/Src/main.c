@@ -31,8 +31,8 @@
 #include "buzzer.h"
 #include "clock_types.h"
 #include "display.h"
-#include "doz_clock.h"
 #include "event_queue.h"
+#include "doz_clock.h"
 
 #include "adc-light-sens.h"
 #include "gpio-buttons.h"
@@ -273,7 +273,22 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 
 void HAL_GPIO_EXTI_Callback(uint16_t pin)
 {
-    Buttons_GpioCallback(pin);
+	#ifdef USE_EXTERNAL_RTC
+	if (pin != EXT_RTC_SQW_Pin)
+	{
+	    Buttons_GpioCallback(pin);
+	}
+	else
+	{
+	    if (DS3231_IsAlarm1Triggered()) {
+	    	EventQ_TriggerAlarmEvent(TIMER_TRIG);
+	    } else if (DS3231_IsAlarm2Triggered()) {
+	    	EventQ_TriggerAlarmEvent(ALARM_TRIG);
+	    }
+	}
+	#else
+	Buttons_GpioCallback(pin);
+	#endif
 }
 /* USER CODE END 4 */
 

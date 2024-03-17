@@ -10,7 +10,7 @@
 
 #include "clock_types.h"
 #include "gps.h"
-#include "rtc.h"
+#include "rtc_module.h"
 
 ClockStatus TimeTrack_Init();
 ClockStatus TimeTrack_SyncToRtc();

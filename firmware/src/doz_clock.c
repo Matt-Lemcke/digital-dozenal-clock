@@ -232,7 +232,8 @@ void Init_Entry(DozClock *ctx)
 void Init_Update(DozClock *ctx)
 {
     UNUSED(ctx);
-    Display_SetFormat(TRAD_24H);
+    Display_SetFormat(DOZ_DRN4);
+    curr_format = DOZ_DRN4;
     if (TimeTrack_SyncToRtc() != CLOCK_OK)
     {
         ctx->error_code = TIME_INIT;
@@ -404,8 +405,8 @@ void SetTimer_Exit(DozClock *ctx)
     timer_end_ms = (curr_set_timer_ms + ctx->time_ms) % TIME_24H_MS;
 
     msToRtcTime(timer_end_ms, &timerTime);
-    Rtc_EnableAlarm(TIMER, ctx->timer_set);
     Rtc_SetAlarm(&timerTime, TIMER);
+    Rtc_EnableAlarm(TIMER, ctx->timer_set);
 }
 void SetTime_Entry(DozClock *ctx)
 {
@@ -437,6 +438,7 @@ void SetTime_Update(DozClock *ctx)
                             //  (uint32_t) (ctx->digit_vals[4] * 25000) / 12.0;
                              (uint32_t) round((ctx->digit_vals[4] * 25000) / 12.0);
     } else {
+        // Set up user time in ms
         ctx->user_time_ms = (uint32_t) ctx->digit_vals[0] * 7200000 +
                              (uint32_t) ctx->digit_vals[1] * 600000 +
                              (uint32_t) ctx->digit_vals[2] * 50000 +
