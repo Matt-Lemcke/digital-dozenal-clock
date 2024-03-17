@@ -45,9 +45,10 @@ static TimeFormats curr_format;
 
 static uint8_t trad_index = 0, doz_index = 0;
 static uint8_t cancel_pressed = 0;
-static uint32_t user_alarm_ms_old, user_timer_ms_old;
+static uint32_t user_alarm_ms_old, user_timer_ms_old, time_ms_old;
 static uint8_t alarm_set_old, timer_set_old;
 static uint32_t timer_end_ms, curr_set_timer_ms = TIME_24H_MS;
+static uint32_t buzzer_countdown_ms;
 
 static RtcTime demo_reset = {
         .hr = 17,
@@ -481,11 +482,24 @@ static void AlarmTimerDispOn_Entry(DozClock *ctx)
         Rtc_EnableAlarm(TIMER, ctx->timer_set);
         Rtc_SetAlarm(&timerTime, TIMER);
     }
+
+    buzzer_countdown_ms = 0; // 30 seconds
+    time_ms_old = ctx->time_ms;
     Buzzer_Start();
 }
 static void AlarmTimerDispOn_Update(DozClock *ctx)
 {
     TimeTrack_GetTimeMs(&ctx->time_ms);
+
+    if (ctx->time_ms >= time_ms_old)
+        buzzer_countdown_ms += (ctx->time_ms - time_ms_old);
+    else
+        buzzer_countdown_ms += ctx->time_ms;
+    time_ms_old = ctx->time_ms;
+
+    if (buzzer_countdown_ms >= 30000) // Buzzer turns off after 30 seconds
+        transition(&s_idle_disp_on);
+
 }
 static void AlarmTimerDispOn_Exit(DozClock *ctx)
 {
@@ -509,11 +523,24 @@ static void AlarmTimerDispOff_Entry(DozClock *ctx)
         Rtc_EnableAlarm(TIMER, ctx->timer_set);
         Rtc_SetAlarm(&timerTime, TIMER);
     }
+
+    buzzer_countdown_ms = 0;
+    time_ms_old = ctx->time_ms;
     Buzzer_Start();
 }
 static void AlarmTimerDispOff_Update(DozClock *ctx)
 {
     TimeTrack_GetTimeMs(&ctx->time_ms);
+
+    if (ctx->time_ms >= time_ms_old)
+        buzzer_countdown_ms += (ctx->time_ms - time_ms_old);
+    else
+        buzzer_countdown_ms += ctx->time_ms;
+    time_ms_old = ctx->time_ms;
+
+    if (buzzer_countdown_ms >= 30000) // Buzzer turns off after 30 seconds
+        transition(&s_idle_disp_off);
+
 }
 static void AlarmTimerDispOff_Exit(DozClock *ctx)
 {

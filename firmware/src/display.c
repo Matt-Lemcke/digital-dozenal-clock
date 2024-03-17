@@ -715,7 +715,7 @@ static void displayTime(Bitmap *row_bitmap, uint32_t time_ms)
 
             uint8_t hr, min, sec;
             msToTrad(time_ms, &hr, &min, &sec);
-            if (g_fsm.ctx->time_format == TRAD_12H)
+            if (!(*g_fsm.ctx->clock_vars->timer_set) && g_fsm.curr_state->state_code != STATE_SETTIMER && g_fsm.ctx->time_format == TRAD_12H)
             {
                 if (hr >= 12) {
                     if (hr > 12)
