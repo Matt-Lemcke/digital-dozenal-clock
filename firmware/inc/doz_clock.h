@@ -31,8 +31,11 @@ typedef struct doz_clock_t
     bool timer_set;
     bool timer_triggered;
     bool show_error;
+    bool timer_alarm_displayed; // 0: timer, 1: alarm
     uint8_t digit_sel;
     uint8_t digit_vals[MAX_DIGITS];
+    uint8_t diurn_radix_pos;
+    uint8_t semi_diurn_radix_pos;
     ClockStatus error_code;
     uint32_t time_ms;
     uint32_t user_alarm_ms;

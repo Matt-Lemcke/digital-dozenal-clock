@@ -117,37 +117,43 @@ static DozClockState s_alarm_timer_disp_off =
 // FSM Event Functions
 void DozClock_Init(DozClock *ctx)
 {
-    clock_vars.alarm_set        = &ctx->alarm_set;
-    clock_vars.alarm_triggered  = &ctx->alarm_triggered;
-    clock_vars.timer_set        = &ctx->timer_set;
-    clock_vars.timer_triggered  = &ctx->timer_triggered;
-    clock_vars.show_error       = &ctx->show_error;
-    clock_vars.digit_sel        = &ctx->digit_sel;
-    clock_vars.digit_vals       = ctx->digit_vals;
-    clock_vars.error_code       = &ctx->error_code;
-    clock_vars.time_ms          = &ctx->time_ms;
-    clock_vars.user_alarm_ms    = &ctx->user_alarm_ms;
-    clock_vars.user_time_ms     = &ctx->user_time_ms;
-    clock_vars.user_timer_ms    = &ctx->user_timer_ms;
+    clock_vars.alarm_set                = &ctx->alarm_set;
+    clock_vars.alarm_triggered          = &ctx->alarm_triggered;
+    clock_vars.timer_set                = &ctx->timer_set;
+    clock_vars.timer_triggered          = &ctx->timer_triggered;
+    clock_vars.show_error               = &ctx->show_error;
+    clock_vars.digit_sel                = &ctx->digit_sel;
+    clock_vars.digit_vals               = ctx->digit_vals;
+    clock_vars.error_code               = &ctx->error_code;
+    clock_vars.time_ms                  = &ctx->time_ms;
+    clock_vars.user_alarm_ms            = &ctx->user_alarm_ms;
+    clock_vars.user_time_ms             = &ctx->user_time_ms;
+    clock_vars.user_timer_ms            = &ctx->user_timer_ms;
+    clock_vars.timer_alarm_displayed    = &ctx->timer_alarm_displayed;
+    clock_vars.diurn_radix_pos          = &ctx->diurn_radix_pos;
+    clock_vars.semi_diurn_radix_pos     = &ctx->semi_diurn_radix_pos;
 
-    *clock_vars.alarm_set        = 0;
-    *clock_vars.alarm_triggered  = 0;
-    *clock_vars.timer_set        = 0;
-    *clock_vars.timer_triggered  = 0;
-    *clock_vars.show_error       = 0;
-    *clock_vars.digit_sel        = 0;
-    clock_vars.digit_vals[0]     = 0;
-    clock_vars.digit_vals[1]     = 0;
-    clock_vars.digit_vals[2]     = 0;
-    clock_vars.digit_vals[3]     = 0;
-    clock_vars.digit_vals[4]     = 0;
-    clock_vars.digit_vals[5]     = 0;
-    clock_vars.digit_vals[6]     = 0;
-    *clock_vars.error_code       = 0;
-    *clock_vars.time_ms          = 0;
-    *clock_vars.user_alarm_ms    = 0;
-    *clock_vars.user_time_ms     = 0;
-    *clock_vars.user_timer_ms    = TIME_24H_MS;
+    *clock_vars.alarm_set               = 0;
+    *clock_vars.alarm_triggered         = 0;
+    *clock_vars.timer_set               = 0;
+    *clock_vars.timer_triggered         = 0;
+    *clock_vars.show_error              = 0;
+    *clock_vars.digit_sel               = 0;
+    clock_vars.digit_vals[0]            = 0;
+    clock_vars.digit_vals[1]            = 0;
+    clock_vars.digit_vals[2]            = 0;
+    clock_vars.digit_vals[3]            = 0;
+    clock_vars.digit_vals[4]            = 0;
+    clock_vars.digit_vals[5]            = 0;
+    clock_vars.digit_vals[6]            = 0;
+    *clock_vars.error_code              = 0;
+    *clock_vars.time_ms                 = 0;
+    *clock_vars.user_alarm_ms           = 0;
+    *clock_vars.user_time_ms            = 0;
+    *clock_vars.user_timer_ms           = TIME_24H_MS;
+    *clock_vars.timer_alarm_displayed   = DISPLAY_TIMER;
+    *clock_vars.diurn_radix_pos         = RADIX_POS3;
+    *clock_vars.semi_diurn_radix_pos    = RADIX_POS2;
 
     state_event_map_init();
 
@@ -284,6 +290,11 @@ void SetAlarm_Entry(DozClock *ctx)
     transition_digits(curr_format, ctx->user_alarm_ms, ctx->digit_vals);
     Rtc_EnableAlarm(ALARM, ctx->alarm_set);
     Display_SetAlarm();
+
+    // Disable timer
+    timer_set_old = ctx->timer_set;
+    ctx->timer_set = false;
+    Rtc_EnableAlarm(TIMER, ctx->timer_set);
 }
 void SetAlarm_Update(DozClock *ctx)
 {
@@ -324,6 +335,9 @@ void SetAlarm_Update(DozClock *ctx)
 }
 void SetAlarm_Exit(DozClock *ctx)
 {
+    ctx->timer_set = timer_set_old;
+    Rtc_EnableAlarm(TIMER, ctx->timer_set);
+
     if (cancel_pressed) {
         cancel_pressed = 0;
         ctx->user_alarm_ms = user_alarm_ms_old;
@@ -338,6 +352,8 @@ void SetAlarm_Exit(DozClock *ctx)
     msToRtcTime(ctx->user_alarm_ms, &alarmTime);
     Rtc_SetAlarm(&alarmTime, ALARM);
     Rtc_EnableAlarm(ALARM, ctx->alarm_set);
+
+    g_clock_fsm.ctx->timer_alarm_displayed = DISPLAY_ALARM;
 }
 void SetTimer_Entry(DozClock *ctx)
 {
@@ -358,6 +374,11 @@ void SetTimer_Entry(DozClock *ctx)
 
     Rtc_EnableAlarm(TIMER, ctx->timer_set);
     Display_SetTimer();
+
+    // Disable alarm
+    alarm_set_old = ctx->alarm_set;
+    ctx->alarm_set = false;
+    Rtc_EnableAlarm(ALARM, ctx->alarm_set);
 }
 void SetTimer_Update(DozClock *ctx)
 {
@@ -392,6 +413,9 @@ void SetTimer_Update(DozClock *ctx)
 }
 void SetTimer_Exit(DozClock *ctx)
 {
+    ctx->alarm_set = alarm_set_old;
+    Rtc_EnableAlarm(ALARM, ctx->alarm_set);
+
     RtcTime timerTime;
 
     if (cancel_pressed) {
@@ -400,6 +424,7 @@ void SetTimer_Exit(DozClock *ctx)
         ctx->timer_set = timer_set_old;
     } else {
         ctx->timer_set = true;
+        g_clock_fsm.ctx->timer_alarm_displayed = DISPLAY_TIMER;
     }
 
     curr_set_timer_ms = ctx->user_timer_ms;
@@ -416,6 +441,14 @@ void SetTime_Entry(DozClock *ctx)
 
     transition_digits(curr_format, ctx->user_time_ms, ctx->digit_vals);
     Display_SetTime();
+
+    // Disable alarm and timer
+    alarm_set_old = ctx->alarm_set;
+    timer_set_old = ctx->timer_set;
+    ctx->alarm_set = false;
+    ctx->timer_set = false;
+    Rtc_EnableAlarm(ALARM, ctx->alarm_set);
+    Rtc_EnableAlarm(TIMER, ctx->timer_set);
 }
 void SetTime_Update(DozClock *ctx)
 {
@@ -451,6 +484,11 @@ void SetTime_Update(DozClock *ctx)
 }
 void SetTime_Exit(DozClock *ctx)
 {
+    ctx->alarm_set = alarm_set_old;
+    ctx->timer_set = timer_set_old;
+    Rtc_EnableAlarm(ALARM, ctx->alarm_set);
+    Rtc_EnableAlarm(TIMER, ctx->timer_set);
+
     if (cancel_pressed) {
         cancel_pressed = 0;
         return;
@@ -470,20 +508,19 @@ static void AlarmTimerDispOn_Entry(DozClock *ctx)
     if (ctx->alarm_triggered) {
         ctx->alarm_triggered = false;
         ctx->alarm_set = false;
+
+        if (ctx->timer_alarm_displayed == DISPLAY_ALARM && ctx->timer_set)
+            ctx->timer_alarm_displayed = DISPLAY_TIMER;
     } else if (ctx->timer_triggered) {
         ctx->timer_triggered = false;
         ctx->timer_set = false;
         ctx->user_timer_ms = curr_set_timer_ms;
-        
-        RtcTime timerTime;
-        timer_end_ms = (ctx->user_timer_ms + ctx->time_ms) % TIME_24H_MS;
 
-        msToRtcTime(timer_end_ms, &timerTime);
-        Rtc_EnableAlarm(TIMER, ctx->timer_set);
-        Rtc_SetAlarm(&timerTime, TIMER);
+        if (ctx->timer_alarm_displayed == DISPLAY_TIMER && ctx->alarm_set)
+            ctx->timer_alarm_displayed = DISPLAY_ALARM;
     }
 
-    buzzer_countdown_ms = 0; // 30 seconds
+    buzzer_countdown_ms = 0;
     time_ms_old = ctx->time_ms;
     Buzzer_Start();
 }
@@ -511,17 +548,16 @@ static void AlarmTimerDispOff_Entry(DozClock *ctx)
     if (ctx->alarm_triggered) {
         ctx->alarm_triggered = false;
         ctx->alarm_set = false;
+
+        if (ctx->timer_alarm_displayed == DISPLAY_ALARM && ctx->timer_set)
+            ctx->timer_alarm_displayed = DISPLAY_TIMER;
     } else if (ctx->timer_triggered) {
         ctx->timer_triggered = false;
         ctx->timer_set = false;
         ctx->user_timer_ms = curr_set_timer_ms;
-        
-        RtcTime timerTime;
-        timer_end_ms = (ctx->user_timer_ms + ctx->time_ms) % TIME_24H_MS;
 
-        msToRtcTime(timer_end_ms, &timerTime);
-        Rtc_EnableAlarm(TIMER, ctx->timer_set);
-        Rtc_SetAlarm(&timerTime, TIMER);
+        if (ctx->timer_alarm_displayed == DISPLAY_TIMER && ctx->alarm_set)
+            ctx->timer_alarm_displayed = DISPLAY_ALARM;
     }
 
     buzzer_countdown_ms = 0;
@@ -650,6 +686,7 @@ static void toggle_alarm_set(void);
 static void toggle_timer_set(void);
 static void toggle_doz_timer(void);
 static void toggle_trad_timer(void);
+static void toggle_timer_alarm_displayed(void);
 static void transition_idle_disp_off(void);
 static void transition_idle_disp_on(void);
 static void transition_set_alarm(void);
@@ -674,6 +711,8 @@ static void vol_up_short(void);
 static void vol_up_long(void);
 static void vol_down_short(void);
 static void vol_down_long(void);
+static void radix_pos_left(void);
+static void radix_pos_right(void);
 
 // Helper functions
 static void digit_value_increase(TimeFormats timeFormat, uint8_t *val, uint8_t sel);
@@ -701,9 +740,12 @@ static void state_event_map_init()
     state_event_map[STATE_IDLE_DISP_ON][E_VOLDOWN_LONG]             = vol_down_long;
     state_event_map[STATE_IDLE_DISP_ON][E_ALARM_TRIG]               = transition_alarm_disp_on;
     state_event_map[STATE_IDLE_DISP_ON][E_TIMER_TRIG]               = transition_timer_disp_on;
+    state_event_map[STATE_IDLE_DISP_ON][E_LEFT_SHORT]               = radix_pos_left;
+    state_event_map[STATE_IDLE_DISP_ON][E_RIGHT_SHORT]              = radix_pos_right;
+    state_event_map[STATE_IDLE_DISP_ON][E_UP_SHORT]                 = toggle_timer_alarm_displayed;
+    state_event_map[STATE_IDLE_DISP_ON][E_DOWN_SHORT]               = toggle_timer_alarm_displayed;
 
     // IDLE OFF
-    state_event_map[STATE_IDLE_DISP_OFF][E_DISPLAY_SHORT]           = toggle_mode;
     state_event_map[STATE_IDLE_DISP_OFF][E_DISPLAY_LONG]            = transition_idle_disp_on;
     state_event_map[STATE_IDLE_DISP_OFF][E_ROOM_DARK]               = set_low_brightness;
     state_event_map[STATE_IDLE_DISP_OFF][E_ROOM_LIGHT]              = set_high_brightness;
@@ -884,17 +926,27 @@ static void toggle_alarm_set(void)
 {
     g_clock_fsm.ctx->alarm_set = !g_clock_fsm.ctx->alarm_set;
     Rtc_EnableAlarm(ALARM, g_clock_fsm.ctx->alarm_set);
+
+    if (g_clock_fsm.ctx->alarm_set && g_clock_fsm.ctx->timer_alarm_displayed == DISPLAY_TIMER && !g_clock_fsm.ctx->timer_set)
+        g_clock_fsm.ctx->timer_alarm_displayed = DISPLAY_ALARM;
+    else if (!g_clock_fsm.ctx->alarm_set && g_clock_fsm.ctx->timer_alarm_displayed == DISPLAY_ALARM && g_clock_fsm.ctx->timer_set)
+        g_clock_fsm.ctx->timer_alarm_displayed = DISPLAY_TIMER;
 }
 static void toggle_timer_set(void)
 {
     g_clock_fsm.ctx->timer_set = !g_clock_fsm.ctx->timer_set;
-    if (g_clock_fsm.ctx->timer_set)
-    {
+    if (g_clock_fsm.ctx->timer_set) {
         RtcTime timerTime;
         timer_end_ms = (g_clock_fsm.ctx->user_timer_ms + g_clock_fsm.ctx->time_ms) % TIME_24H_MS;
         msToRtcTime(timer_end_ms, &timerTime);
         Rtc_SetAlarm(&timerTime, TIMER);
+
+        if (g_clock_fsm.ctx->timer_alarm_displayed == DISPLAY_ALARM && !g_clock_fsm.ctx->alarm_set)
+            g_clock_fsm.ctx->timer_alarm_displayed = DISPLAY_TIMER;
+    } else if (g_clock_fsm.ctx->timer_alarm_displayed == DISPLAY_TIMER && g_clock_fsm.ctx->alarm_set) {
+        g_clock_fsm.ctx->timer_alarm_displayed = DISPLAY_ALARM;
     }
+    
     Rtc_EnableAlarm(TIMER, g_clock_fsm.ctx->timer_set);
 }
 static void toggle_trad_mode(void) 
@@ -914,6 +966,7 @@ static void toggle_doz_mode(void)
 { 
     doz_index = (doz_index + 1) % 3;
     curr_format = doz_format_list[doz_index];
+
     if (g_clock_fsm.curr_state->state_code == STATE_SET_TIME) {
         g_clock_fsm.ctx->digit_sel = 0;
         transition_digits(curr_format, g_clock_fsm.ctx->user_time_ms, g_clock_fsm.ctx->digit_vals);
@@ -921,6 +974,10 @@ static void toggle_doz_mode(void)
         g_clock_fsm.ctx->digit_sel = 0;
         transition_digits(curr_format, g_clock_fsm.ctx->user_alarm_ms, g_clock_fsm.ctx->digit_vals);
     }
+
+    if (curr_format == DOZ_DRN4 && g_clock_fsm.ctx->diurn_radix_pos == RADIX_POS4)
+        g_clock_fsm.ctx->diurn_radix_pos = RADIX_POS3;
+
     Display_SetFormat(curr_format);
 }
 static void toggle_doz_timer(void)
@@ -944,6 +1001,13 @@ static void toggle_trad_timer(void)
 static void toggle_mode(void)
 {
     Display_ToggleMode();
+}
+static void toggle_timer_alarm_displayed(void)
+{
+    if (g_clock_fsm.ctx->timer_alarm_displayed == DISPLAY_ALARM && g_clock_fsm.ctx->timer_set)
+        g_clock_fsm.ctx->timer_alarm_displayed = DISPLAY_TIMER;
+    else if (g_clock_fsm.ctx->timer_alarm_displayed == DISPLAY_TIMER && g_clock_fsm.ctx->alarm_set)
+        g_clock_fsm.ctx->timer_alarm_displayed = DISPLAY_ALARM;
 }
 static void rtc_demo_reset(void)
 {
@@ -975,6 +1039,24 @@ static void vol_down_long(void)
 {
     Buzzer_SetVolumeMin();
     g_clock_fsm.ctx->buzzer->volume = MIN_VOLUME;
+}
+static void radix_pos_left(void)
+{
+    if (curr_format == DOZ_DRN4)
+        g_clock_fsm.ctx->diurn_radix_pos = (g_clock_fsm.ctx->diurn_radix_pos + 3 - 1) % 3;
+    else if (curr_format == DOZ_DRN5)
+        g_clock_fsm.ctx->diurn_radix_pos = (g_clock_fsm.ctx->diurn_radix_pos + 4 - 1) % 4;
+    else if (curr_format == DOZ_SEMI)
+        g_clock_fsm.ctx->semi_diurn_radix_pos = (g_clock_fsm.ctx->semi_diurn_radix_pos + 4 - 1) % 4;
+}
+static void radix_pos_right(void)
+{
+    if (curr_format == DOZ_DRN4)
+        g_clock_fsm.ctx->diurn_radix_pos = (g_clock_fsm.ctx->diurn_radix_pos + 1) % 3;
+    else if (curr_format == DOZ_DRN5)
+        g_clock_fsm.ctx->diurn_radix_pos = (g_clock_fsm.ctx->diurn_radix_pos + 1) % 4;
+    else if (curr_format == DOZ_SEMI)
+        g_clock_fsm.ctx->semi_diurn_radix_pos = (g_clock_fsm.ctx->semi_diurn_radix_pos + 1) % 4;
 }
 
 static void digit_value_increase(TimeFormats timeFormat, uint8_t *val, uint8_t sel)

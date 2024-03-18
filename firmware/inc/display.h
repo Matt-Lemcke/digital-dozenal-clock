@@ -23,9 +23,15 @@
 // Row 2 Display Indeces
 #define SEMICOLON1_ROW2_DISPLAY_INDEX    20
 #define SEMICOLON2_ROW2_DISPLAY_INDEX    42
-#define RADIX_DRN4_ROW2_DISPLAY_INDEX    41
-#define RADIX_DRN5_ROW2_DISPLAY_INDEX    36
-#define RADIX_SEMI_ROW2_DISPLAY_INDEX    26
+
+#define RADIX_POS1_ROW2_5DIGIT_DISPLAY_INDEX    16
+#define RADIX_POS2_ROW2_5DIGIT_DISPLAY_INDEX    26
+#define RADIX_POS3_ROW2_5DIGIT_DISPLAY_INDEX    36
+#define RADIX_POS4_ROW2_5DIGIT_DISPLAY_INDEX    46
+
+#define RADIX_POS1_ROW2_4DIGIT_DISPLAY_INDEX    21
+#define RADIX_POS2_ROW2_4DIGIT_DISPLAY_INDEX    31
+#define RADIX_POS3_ROW2_4DIGIT_DISPLAY_INDEX    41
 
 #define TRAD_DIGIT_1_ROW2_DISPLAY_INDEX     1
 #define TRAD_DIGIT_2_ROW2_DISPLAY_INDEX     11
@@ -37,27 +43,33 @@
 #define DRN4_DIGIT_1_ROW2_DISPLAY_INDEX     11
 #define DRN4_DIGIT_2_ROW2_DISPLAY_INDEX     21
 #define DRN4_DIGIT_3_ROW2_DISPLAY_INDEX     31
-#define DRN4_DIGIT_4_ROW2_DISPLAY_INDEX     45
+#define DRN4_DIGIT_4_ROW2_DISPLAY_INDEX     41
 
 #define DRN5_DIGIT_1_ROW2_DISPLAY_INDEX     6
 #define DRN5_DIGIT_2_ROW2_DISPLAY_INDEX     16
 #define DRN5_DIGIT_3_ROW2_DISPLAY_INDEX     26
-#define DRN5_DIGIT_4_ROW2_DISPLAY_INDEX     40
-#define DRN5_DIGIT_5_ROW2_DISPLAY_INDEX     50
+#define DRN5_DIGIT_4_ROW2_DISPLAY_INDEX     36
+#define DRN5_DIGIT_5_ROW2_DISPLAY_INDEX     46
 
 #define SEMI_DIGIT_1_ROW2_DISPLAY_INDEX     6
 #define SEMI_DIGIT_2_ROW2_DISPLAY_INDEX     16
-#define SEMI_DIGIT_3_ROW2_DISPLAY_INDEX     30
-#define SEMI_DIGIT_4_ROW2_DISPLAY_INDEX     40
-#define SEMI_DIGIT_5_ROW2_DISPLAY_INDEX     50
+#define SEMI_DIGIT_3_ROW2_DISPLAY_INDEX     26
+#define SEMI_DIGIT_4_ROW2_DISPLAY_INDEX     36
+#define SEMI_DIGIT_5_ROW2_DISPLAY_INDEX     46
 
 // Row 3 Display Indeces
 #define SEMICOLON1_ROW3_DISPLAY_INDEX   24
 #define SEMICOLON2_ROW3_DISPLAY_INDEX   38
-#define RADIX_DRN4_ROW3_DISPLAY_INDEX   37
-#define RADIX_DRN5_ROW3_DISPLAY_INDEX   34
-#define RADIX_SEMI_ROW3_DISPLAY_INDEX   28
 #define AM_PM_ROW3_DISPLAY_INDEX        52
+
+#define RADIX_POS1_ROW3_5DIGIT_DISPLAY_INDEX    22
+#define RADIX_POS2_ROW3_5DIGIT_DISPLAY_INDEX    28
+#define RADIX_POS3_ROW3_5DIGIT_DISPLAY_INDEX    34
+#define RADIX_POS4_ROW3_5DIGIT_DISPLAY_INDEX    40
+
+#define RADIX_POS1_ROW3_4DIGIT_DISPLAY_INDEX    25
+#define RADIX_POS2_ROW3_4DIGIT_DISPLAY_INDEX    31
+#define RADIX_POS3_ROW3_4DIGIT_DISPLAY_INDEX    37
 
 #define TRAD_DIGIT_1_ROW3_DISPLAY_INDEX     12
 #define TRAD_DIGIT_2_ROW3_DISPLAY_INDEX     18
@@ -69,24 +81,27 @@
 #define DRN4_DIGIT_1_ROW3_DISPLAY_INDEX     19
 #define DRN4_DIGIT_2_ROW3_DISPLAY_INDEX     25
 #define DRN4_DIGIT_3_ROW3_DISPLAY_INDEX     31
-#define DRN4_DIGIT_4_ROW3_DISPLAY_INDEX     39
+#define DRN4_DIGIT_4_ROW3_DISPLAY_INDEX     37
 
 #define DRN5_DIGIT_1_ROW3_DISPLAY_INDEX     16
 #define DRN5_DIGIT_2_ROW3_DISPLAY_INDEX     22
 #define DRN5_DIGIT_3_ROW3_DISPLAY_INDEX     28
-#define DRN5_DIGIT_4_ROW3_DISPLAY_INDEX     36
-#define DRN5_DIGIT_5_ROW3_DISPLAY_INDEX     42
+#define DRN5_DIGIT_4_ROW3_DISPLAY_INDEX     34
+#define DRN5_DIGIT_5_ROW3_DISPLAY_INDEX     40
 
 #define SEMI_DIGIT_1_ROW3_DISPLAY_INDEX     16
 #define SEMI_DIGIT_2_ROW3_DISPLAY_INDEX     22
-#define SEMI_DIGIT_3_ROW3_DISPLAY_INDEX     30
-#define SEMI_DIGIT_4_ROW3_DISPLAY_INDEX     36
-#define SEMI_DIGIT_5_ROW3_DISPLAY_INDEX     42
+#define SEMI_DIGIT_3_ROW3_DISPLAY_INDEX     28
+#define SEMI_DIGIT_4_ROW3_DISPLAY_INDEX     34
+#define SEMI_DIGIT_5_ROW3_DISPLAY_INDEX     40
 
 #define NUM_SHOWTIME_STATES 4
 
 #define LARGE_BITMAP_SIZE 96
 #define SMALL_BITMAP_SIZE 56
+
+#define ROW2_RADIX_OFFSET   4
+#define ROW3_RADIX_OFFSET   2
 
 typedef enum brightness_levels_t
 {
@@ -111,6 +126,22 @@ typedef enum row_number_t
     ROW_3 = 2
 } RowNumber;
 
+typedef enum radix_pos_t
+{
+    RADIX_POS1,
+    RADIX_POS2,
+    RADIX_POS3,
+    RADIX_POS4,
+
+    NUM_RADIX_POS
+} RadixPos;
+
+typedef enum timer_alarm_displayed_t
+{
+    DISPLAY_TIMER,
+    DISPLAY_ALARM
+} TimerAlarmDisplayed;
+
 typedef struct extern_vars_t
 {
     uint32_t    *time_ms;
@@ -119,12 +150,15 @@ typedef struct extern_vars_t
     uint32_t    *user_timer_ms;
     uint8_t     *digit_sel;
     uint8_t     *digit_vals;
+    uint8_t     *diurn_radix_pos;
+    uint8_t     *semi_diurn_radix_pos;
     ClockStatus *error_code;
     bool        *alarm_set;
     bool        *timer_set;
     bool        *alarm_triggered;
     bool        *timer_triggered;
     bool        *show_error;
+    bool        *timer_alarm_displayed;
 } ExternVars;
 
 typedef struct display_t
