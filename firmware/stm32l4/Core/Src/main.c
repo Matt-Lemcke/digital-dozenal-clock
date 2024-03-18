@@ -179,7 +179,7 @@ int main(void)
   Buttons_Init();
 
   // Light sensor
-  LightSens_Init(&hadc1, &htim6, 1800);
+  LightSens_Init(&hadc1, &htim6, 1000);
 
   // Start 6Hz timer
   HAL_TIM_Base_Start_IT(&htim7);
@@ -238,7 +238,7 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSE;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
 
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
   {

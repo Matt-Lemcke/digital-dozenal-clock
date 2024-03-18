@@ -8,7 +8,7 @@
 #include "hub75-driver.h"
 #include "tim.h"
 
-#define MIN_PWM_CCR 2500
+#define MIN_PWM_CCR 8000
 #define MAX_PWM_CCR 22500
 #define BRIGHTNESS_TO_CCR(x)    MAX_PWM_CCR - (MAX_PWM_CCR-MIN_PWM_CCR)/MAX_BRIGHTNESS*x
 
