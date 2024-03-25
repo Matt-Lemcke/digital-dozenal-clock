@@ -23,7 +23,6 @@ GpsTime gps_time = { 0 };
 static uint8_t rtcTimesEqual(RtcTime *time_a, RtcTime *time_b);
 static uint32_t rtcTimeToMs(RtcTime *time);
 static uint32_t gpsTimeToMs(GpsTime *time);
-static void msToRtcTime(uint32_t time_ms, RtcTime *time);
 
 ClockStatus TimeTrack_Init()
 {

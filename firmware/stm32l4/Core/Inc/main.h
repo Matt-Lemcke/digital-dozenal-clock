@@ -58,6 +58,9 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define EXT_RTC_SQW_Pin GPIO_PIN_5
+#define EXT_RTC_SQW_GPIO_Port GPIOA
+#define EXT_RTC_SQW_EXTI_IRQn EXTI9_5_IRQn
 #define BTN1_IN_Pin GPIO_PIN_0
 #define BTN1_IN_GPIO_Port GPIOB
 #define BTN1_IN_EXTI_IRQn EXTI0_IRQn
@@ -110,6 +113,7 @@ void Error_Handler(void);
 #define DISP_B_GPIO_Port GPIOB
 #define DISP_A_Pin GPIO_PIN_9
 #define DISP_A_GPIO_Port GPIOB
+
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

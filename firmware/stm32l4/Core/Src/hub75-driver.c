@@ -8,7 +8,7 @@
 #include "hub75-driver.h"
 #include "tim.h"
 
-#define MIN_PWM_CCR 2500
+#define MIN_PWM_CCR 8000
 #define MAX_PWM_CCR 22500
 #define BRIGHTNESS_TO_CCR(x)    MAX_PWM_CCR - (MAX_PWM_CCR-MIN_PWM_CCR)/MAX_BRIGHTNESS*x
 
@@ -38,6 +38,7 @@ static inline void reset_latch(void);
 
 static void set_oe_pwm_ccr(uint16_t ccr);
 static void copy_to_buffer(Bitmap_Region *region);
+static void hold_oe_high(void);
 
 /*
     Private variables
@@ -46,7 +47,9 @@ static SPI_HandleTypeDef    *hspi;
 static TIM_HandleTypeDef    *htim;
 static uint32_t             htim_channel;
 
-static uint8_t row_id = 0;
+static uint8_t  row_id      = 0;
+static uint16_t  last_ccr   = MIN_PWM_CCR;
+static bool     display_on  = false;
 
 /*
  * Bitmap buffer format:
@@ -120,20 +123,23 @@ void HUB75_Init(SPI_HandleTypeDef *spi, TIM_HandleTypeDef *tim, uint32_t channel
 
     // Set pmw duty cycle to min
     set_oe_pwm_ccr(MIN_PWM_CCR);
+
+    __HAL_TIM_ENABLE_IT(htim, TIM_IT_UPDATE);
+    HAL_TIM_PWM_Start_IT(htim, htim_channel);
 }
 
 void HUB75_DisplayOn(void)
 {
     // Enable PWM timer
-    __HAL_TIM_ENABLE_IT(htim, TIM_IT_UPDATE);
-    HAL_TIM_PWM_Start_IT(htim, htim_channel);
+    display_on = true;
+    set_oe_pwm_ccr(last_ccr);
 }
 
 void HUB75_DisplayOff(void)
 {
     // Disable PWM timer
-    __HAL_TIM_DISABLE_IT(htim, TIM_IT_UPDATE);
-    HAL_TIM_PWM_Stop_IT(htim, htim_channel);
+    display_on = false;
+    hold_oe_high();
 }
 
 void HUB75_SetDisplayBrightness(uint8_t brightness)
@@ -232,7 +238,16 @@ void set_oe_pwm_ccr(uint16_t ccr)
     {
         ccr = MAX_PWM_CCR;
     }
-    htim->Instance->CCR1 = ccr;
+    if (display_on)
+    {
+        htim->Instance->CCR1 = ccr;
+    }
+    last_ccr = ccr;
+}
+
+void hold_oe_high(void)
+{
+    htim->Instance->CCR1 = htim->Instance->ARR;
 }
 
 void copy_to_buffer(Bitmap_Region *region)

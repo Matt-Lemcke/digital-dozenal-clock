@@ -491,10 +491,10 @@ void DS3231_GetTime(uint8_t *hour_24mode, uint8_t *minute, uint8_t *second)
  * @param enable Enable, true or false
  */
 void DS3231_EnableAlarm(uint8_t alarm_id, bool enable) {
-    if (alarm_id == ALARM_ID) {
+    if (alarm_id == TIMER_ID) {
         DS3231_EnableAlarm1(enable);
         DS3231_ClearAlarm1Flag();
-    } else if (alarm_id == TIMER_ID) {
+    } else if (alarm_id == ALARM_ID) {
         DS3231_EnableAlarm2(enable);
         DS3231_ClearAlarm2Flag();
     }
@@ -508,12 +508,12 @@ void DS3231_EnableAlarm(uint8_t alarm_id, bool enable) {
  * @param second Second, 0 to 59.
  */
 void DS3231_SetAlarm(uint8_t alarm_id, uint8_t hour_24mode, uint8_t minute, uint8_t second) {
-    if (alarm_id == ALARM_ID) {
+    if (alarm_id == TIMER_ID) {
         DS3231_SetAlarm1Second(second);
         DS3231_SetAlarm1Minute(minute);
         DS3231_SetAlarm1Hour(hour_24mode);
         DS3231_ClearAlarm1Flag();
-    } else if (alarm_id == TIMER_ID) {
+    } else if (alarm_id == ALARM_ID) {
         Alarm2Seconds = second;
         DS3231_SetAlarm2Minute(minute);
         DS3231_SetAlarm2Hour(hour_24mode);
@@ -534,9 +534,9 @@ void DS3231_GetAlarm(uint8_t alarm_id, uint8_t *hour_24mode, uint8_t *minute, ui
  * @return Hour in 24h format, 0 to 23.
  */
 uint8_t DS3231_GetAlarmHour(uint8_t alarm_id) {
-    if (alarm_id == ALARM_ID) {
+    if (alarm_id == TIMER_ID) {
         return DS3231_DecodeBCD(DS3231_GetRegByte(DS3231_A1_HOUR) & 0x3f);
-    } else if (alarm_id == TIMER_ID) {
+    } else if (alarm_id == ALARM_ID) {
         return DS3231_DecodeBCD(DS3231_GetRegByte(DS3231_A2_HOUR) & 0x3f);
     }
     return 0;
@@ -548,9 +548,9 @@ uint8_t DS3231_GetAlarmHour(uint8_t alarm_id) {
  * @return Minute, 0 to 59.
  */
 uint8_t DS3231_GetAlarmMinute(uint8_t alarm_id) {
-    if (alarm_id == ALARM_ID) {
+    if (alarm_id == TIMER_ID) {
         return DS3231_DecodeBCD(DS3231_GetRegByte(DS3231_A1_MINUTE) & 0x7f);
-    } else if (alarm_id == TIMER_ID) {
+    } else if (alarm_id == ALARM_ID) {
         return DS3231_DecodeBCD(DS3231_GetRegByte(DS3231_A2_MINUTE) & 0x7f);
     }
     return 0;
@@ -562,9 +562,9 @@ uint8_t DS3231_GetAlarmMinute(uint8_t alarm_id) {
  * @return Second, 0 to 59.
  */
 uint8_t DS3231_GetAlarmSecond(uint8_t alarm_id) {
-    if (alarm_id == ALARM_ID) {
+    if (alarm_id == TIMER_ID) {
         return DS3231_DecodeBCD(DS3231_GetRegByte(DS3231_A1_SECOND) & 0x7f);
-    } else if (alarm_id == TIMER_ID) {
+    } else if (alarm_id == ALARM_ID) {
         return Alarm2Seconds;
     }
     return 0;

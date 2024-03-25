@@ -78,6 +78,8 @@ typedef enum eventIdType
     E_VOLUP_SHORT,
     E_VOLDOWN_SHORT,
     E_CANCEL_SHORT,
+
+    NUM_EVENTS
 } EventId;
 
 ClockStatus EventQ_Init();
