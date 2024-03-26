@@ -697,7 +697,7 @@ void msToSemiDiurn(uint32_t time_ms, uint8_t *digit1, uint8_t *digit2, uint8_t *
     increments /= 12;
     *digit2 = increments % 12;
     increments /= 12;
-    *digit1 = increments % 12;
+    *digit1 = increments % 2;
 }
 
 

@@ -154,19 +154,19 @@ TEST(DisplayModule, U32_DisplayOffWhileSetAlarm)
     mock().checkExpectations();
 }
 
-// TEST(DisplayModule, U33_DiurnalConversionValidInput)
-// {
-//     // Production code
-//     uint8_t digit1, digit2, digit3, digit4, digit5;
-//     msToDiurn(74120000, &digit1, &digit2, &digit3, &digit4, &digit5);
+TEST(DisplayModule, U33_DiurnalConversionValidInput)
+{
+    // Production code
+    uint8_t digit1, digit2, digit3, digit4, digit5;
+    msToDiurn(74120000, &digit1, &digit2, &digit3, &digit4, &digit5);
 
-//     // Checks
-//     CHECK_EQUAL(10, digit1);
-//     CHECK_EQUAL(3, digit2);
-//     CHECK_EQUAL(6, digit3);
-//     CHECK_EQUAL(4, digit4);
-//     CHECK_EQUAL(9, digit5);
-// }
+    // Checks
+    CHECK_EQUAL(10, digit1);
+    CHECK_EQUAL(3, digit2);
+    CHECK_EQUAL(6, digit3);
+    CHECK_EQUAL(4, digit4);
+    CHECK_EQUAL(10, digit5);
+}
 
 TEST(DisplayModule, U34_DiurnalConversionInvalidInput)
 {
@@ -182,33 +182,33 @@ TEST(DisplayModule, U34_DiurnalConversionInvalidInput)
     CHECK(digit5 < 12);
 }
 
-// TEST(DisplayModule, U35_SemiDiurnalConversionValidInput)
-// {
-//     // Production code
-//     uint8_t digit1, digit2, digit3, digit4, digit5;
-//     msToSemiDiurn(74120000, &digit1, &digit2, &digit3, &digit4, &digit5);
+TEST(DisplayModule, U35_SemiDiurnalConversionValidInput)
+{
+    // Production code
+    uint8_t digit1, digit2, digit3, digit4, digit5;
+    msToSemiDiurn(74120000, &digit1, &digit2, &digit3, &digit4, &digit5);
 
-//     // Checks
-//     CHECK_EQUAL(1, digit1);
-//     CHECK_EQUAL(8, digit2);
-//     CHECK_EQUAL(7, digit3);
-//     CHECK_EQUAL(0, digit4);
-//     CHECK_EQUAL(9, digit5);
-// }
+    // Checks
+    CHECK_EQUAL(1, digit1);
+    CHECK_EQUAL(8, digit2);
+    CHECK_EQUAL(7, digit3);
+    CHECK_EQUAL(0, digit4);
+    CHECK_EQUAL(10, digit5);
+}
 
-// TEST(DisplayModule, U36_SemiDiurnalConversionInvalidInput)
-// {
-//     // Production code
-//     uint8_t digit1, digit2, digit3, digit4, digit5;
-//     msToSemiDiurn(97200000, &digit1, &digit2, &digit3, &digit4, &digit5);
+TEST(DisplayModule, U36_SemiDiurnalConversionInvalidInput)
+{
+    // Production code
+    uint8_t digit1, digit2, digit3, digit4, digit5;
+    msToSemiDiurn(97100000, &digit1, &digit2, &digit3, &digit4, &digit5);
 
-//     // Checks
-//     CHECK(digit1 < 2);
-//     CHECK(digit2 < 12);
-//     CHECK(digit3 < 12);
-//     CHECK(digit4 < 12);
-//     CHECK(digit5 < 12);
-// }
+    // Checks
+    CHECK(digit1 < 2);
+    CHECK(digit2 < 12);
+    CHECK(digit3 < 12);
+    CHECK(digit4 < 12);
+    CHECK(digit5 < 12);
+}
 
 TEST(DisplayModule, U37_TradConversionValidInput)
 {
