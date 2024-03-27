@@ -1,6 +1,6 @@
 #include "buzzer.h"
 
-Buzzer *g_buzzer;
+static Buzzer *g_buzzer;
 
 ClockStatus Buzzer_Init(Buzzer *self)
 {
@@ -13,7 +13,7 @@ ClockStatus Buzzer_Init(Buzzer *self)
         || g_buzzer->setDutyCycle == NULL) {
         return CLOCK_FAIL;
     }
-    Buzzer_SetVolumeMin(g_buzzer);
+    Buzzer_SetVolumeMin();
     return CLOCK_OK;
 }
 
