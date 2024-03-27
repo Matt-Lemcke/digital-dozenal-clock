@@ -697,7 +697,7 @@ void msToSemiDiurn(uint32_t time_ms, uint8_t *digit1, uint8_t *digit2, uint8_t *
     increments /= 12;
     *digit2 = increments % 12;
     increments /= 12;
-    *digit1 = increments % 12;
+    *digit1 = increments % 2;
 }
 
 
@@ -758,7 +758,7 @@ static void state_event_map_init()
     state_event_map[STATE_IDLE_DISP_ON][E_TIMER_LONG]               = transition_set_timer;
     state_event_map[STATE_IDLE_DISP_ON][E_ROOM_DARK]                = set_low_brightness;
     state_event_map[STATE_IDLE_DISP_ON][E_ROOM_LIGHT]               = set_high_brightness;
-    state_event_map[STATE_IDLE_DISP_ON][E_CANCEL_LONG]              = rtc_demo_reset;
+    // state_event_map[STATE_IDLE_DISP_ON][E_CANCEL_LONG]              = rtc_demo_reset;
     state_event_map[STATE_IDLE_DISP_ON][E_VOLUP_SHORT]              = vol_up_short;
     state_event_map[STATE_IDLE_DISP_ON][E_VOLUP_LONG]               = vol_up_long;
     state_event_map[STATE_IDLE_DISP_ON][E_VOLDOWN_SHORT]            = vol_down_short;

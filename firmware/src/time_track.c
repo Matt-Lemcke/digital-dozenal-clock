@@ -17,8 +17,8 @@ uint8_t gps_lost = 0;
 uint16_t n = 0;
 
 uint32_t time_ms = 0;
-RtcTime rtc_time = { 0 }, prev_rtc_time = { 0 };
-GpsTime gps_time = { 0 };
+static RtcTime rtc_time = { 0 }, prev_rtc_time = { 0 };
+static GpsTime gps_time = { 0 };
 
 static uint8_t rtcTimesEqual(RtcTime *time_a, RtcTime *time_b);
 static uint32_t rtcTimeToMs(RtcTime *time);
@@ -96,7 +96,7 @@ ClockStatus TimeTrack_Update()
 
 ClockStatus TimeTrack_PeriodicCallback(uint32_t period_ms)
 {
-    time_ms += period_ms;
+    time_ms = (time_ms + period_ms) % TIME_24H_MS;
     check_rtc = 1;
     return CLOCK_OK;
 }

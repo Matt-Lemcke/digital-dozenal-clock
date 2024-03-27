@@ -1,6 +1,6 @@
 #include "gps.h"
 
-Gps *g_gps;
+static Gps *g_gps;
 
 ClockStatus Gps_Init(Gps *self)
 {

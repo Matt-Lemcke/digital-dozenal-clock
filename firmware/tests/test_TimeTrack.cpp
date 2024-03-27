@@ -14,19 +14,9 @@ Rtc testRtc;
 /*
     Mock Functions
 */
-uint8_t getHour(void)
+void getTime(uint8_t *hour_24mode, uint8_t *minute, uint8_t *second)
 {
-    return mock().actualCall("getHour").returnIntValue();   
-}
-
-uint8_t getMinute(void)
-{
-    return mock().actualCall("getMinute").returnIntValue();   
-}
-
-uint8_t getSecond(void)
-{
-    return mock().actualCall("getSecond").returnIntValue();   
+    mock().actualCall("getTime").withOutputParameter("hour_24mode", hour_24mode).withOutputParameter("minute", minute).withOutputParameter("second", second);
 }
 
 /*
@@ -37,9 +27,7 @@ TEST_GROUP(TimeTrackAlgorithm)
 {
     void setup()
     {
-        // testRtc.getHour = getHour;
-        // testRtc.getMinute = getMinute;
-        // testRtc.getSecond = getSecond;
+        testRtc.getTime = getTime;
         Rtc_Init(&testRtc);
     }
 
@@ -55,140 +43,269 @@ TEST_GROUP(TimeTrackAlgorithm)
 
 // Display Init Test Group
 
-// TEST(TimeTrackAlgorithm, U11_SyncToRtc)
-// {
-//     // Setup mock function calls
-//     mock().expectNCalls(2,"getHour").andReturnValue(8);
-//     mock().expectNCalls(2,"getMinute").andReturnValue(0);
-//     mock().expectNCalls(2,"getSecond").andReturnValue(0);
+TEST(TimeTrackAlgorithm, U11_SyncToRtc)
+{
 
-//     // Production code
-//     uint32_t Output_ms;
-//     TimeTrack_Init();
-//     TimeTrack_SyncToRtc();
-//     TimeTrack_GetTimeMs(&Output_ms);
+    uint8_t *hr = (uint8_t *)malloc(sizeof(uint8_t));
+    uint8_t *min = (uint8_t *)malloc(sizeof(uint8_t));
+    uint8_t *sec = (uint8_t *)malloc(sizeof(uint8_t));
 
-//     // Checks
-//     CHECK_EQUAL(28800000, Output_ms);
-// }
+    // Setup mock function calls
+    *hr = 8;
+    *min = 0;
+    *sec = 0;
 
-// TEST(TimeTrackAlgorithm, U12_RtcIncrement)
-// {
-//     // Setup mock function calls
-//     mock().expectNCalls(2,"getHour").andReturnValue(8);
-//     mock().expectNCalls(2,"getMinute").andReturnValue(0);
-//     mock().expectNCalls(2,"getSecond").andReturnValue(0);
+    mock().expectNCalls(2,"getTime")
+        .withOutputParameterReturning("hour_24mode", hr, sizeof(hr))
+        .withOutputParameterReturning("minute", min, sizeof(min))
+        .withOutputParameterReturning("second", sec, sizeof(sec));
 
-//     mock().expectNCalls(1,"getHour").andReturnValue(8);
-//     mock().expectNCalls(1,"getMinute").andReturnValue(0);
-//     mock().expectNCalls(1,"getSecond").andReturnValue(1);
+    // Production code
+    uint32_t Output_ms;
+    TimeTrack_Init();
+    TimeTrack_SyncToRtc();
+    TimeTrack_GetTimeMs(&Output_ms);
+
+    free(hr);
+    free(min);
+    free(sec);
+
+    // Checks
+    CHECK_EQUAL(28800000, Output_ms);
+}
+
+TEST(TimeTrackAlgorithm, U12_RtcIncrement)
+{
+
+    uint8_t *hr = (uint8_t *)malloc(sizeof(uint8_t));
+    uint8_t *min = (uint8_t *)malloc(sizeof(uint8_t));
+    uint8_t *sec = (uint8_t *)malloc(sizeof(uint8_t));
+    uint8_t *sec2 = (uint8_t *)malloc(sizeof(uint8_t));
+
+    // Setup mock function calls
+    *hr = 8;
+    *min = 0;
+    *sec = 0;
+    mock().expectNCalls(2,"getTime")
+        .withOutputParameterReturning("hour_24mode", hr, sizeof(hr))
+        .withOutputParameterReturning("minute", min, sizeof(min))
+        .withOutputParameterReturning("second", sec, sizeof(sec));
+
+    *sec2 = 1;
+    mock().expectNCalls(1,"getTime")
+        .withOutputParameterReturning("hour_24mode", hr, sizeof(hr))
+        .withOutputParameterReturning("minute", min, sizeof(min))
+        .withOutputParameterReturning("second", sec2, sizeof(sec2));
     
-//     // Production code
-//     uint32_t Output_ms1, Output_ms2; 
-//     TimeTrack_Init();
-//     TimeTrack_PeriodicCallback(0);
-//     TimeTrack_Update();
-//     TimeTrack_GetTimeMs(&Output_ms1);
-//     TimeTrack_PeriodicCallback(0);
-//     TimeTrack_Update();
-//     TimeTrack_GetTimeMs(&Output_ms2);
+    // Production code
+    uint32_t Output_ms1, Output_ms2; 
+    TimeTrack_Init();
+    TimeTrack_PeriodicCallback(0);
+    TimeTrack_Update();
+    TimeTrack_GetTimeMs(&Output_ms1);
+    TimeTrack_PeriodicCallback(0);
+    TimeTrack_Update();
+    TimeTrack_GetTimeMs(&Output_ms2);
 
-//     // Checks
-//     CHECK_EQUAL(28800000, Output_ms1);
-//     CHECK_EQUAL(28801000, Output_ms2);
-// }
+    free(hr);
+    free(min);
+    free(sec);
+    free(sec2);
 
-// TEST(TimeTrackAlgorithm, U13_RtcRollover)
-// {
-//     // Setup mock function calls
-//     mock().expectNCalls(2,"getHour").andReturnValue(23);
-//     mock().expectNCalls(2,"getMinute").andReturnValue(59);
-//     mock().expectNCalls(2,"getSecond").andReturnValue(59);
+    // Checks
+    CHECK_EQUAL(28800000, Output_ms1);
+    CHECK_EQUAL(28801000, Output_ms2);
+}
 
-//     mock().expectNCalls(1,"getHour").andReturnValue(0);
-//     mock().expectNCalls(1,"getMinute").andReturnValue(0);
-//     mock().expectNCalls(1,"getSecond").andReturnValue(0);
+TEST(TimeTrackAlgorithm, U13_RtcRollover)
+{
+
+    uint8_t *hr = (uint8_t *)malloc(sizeof(uint8_t));
+    uint8_t *min = (uint8_t *)malloc(sizeof(uint8_t));
+    uint8_t *sec = (uint8_t *)malloc(sizeof(uint8_t));
+
+    uint8_t *hr2 = (uint8_t *)malloc(sizeof(uint8_t));
+    uint8_t *min2 = (uint8_t *)malloc(sizeof(uint8_t));
+    uint8_t *sec2 = (uint8_t *)malloc(sizeof(uint8_t));
+
+    // Setup mock function calls
+    *hr = 23;
+    *min = 59;
+    *sec = 59;
+    mock().expectNCalls(2,"getTime")
+        .withOutputParameterReturning("hour_24mode", hr, sizeof(hr))
+        .withOutputParameterReturning("minute", min, sizeof(min))
+        .withOutputParameterReturning("second", sec, sizeof(sec));
+
+    *hr2 = 0;
+    *min2 = 0;
+    *sec2 = 0;
+    mock().expectNCalls(1,"getTime")
+        .withOutputParameterReturning("hour_24mode", hr2, sizeof(hr2))
+        .withOutputParameterReturning("minute", min2, sizeof(min2))
+        .withOutputParameterReturning("second", sec2, sizeof(sec2));
     
-//     // Production code
-//     uint32_t Output_ms1, Output_ms2; 
-//     TimeTrack_Init();
-//     TimeTrack_PeriodicCallback(0);
-//     TimeTrack_Update();
-//     TimeTrack_GetTimeMs(&Output_ms1);
-//     TimeTrack_PeriodicCallback(0);
-//     TimeTrack_Update();
-//     TimeTrack_GetTimeMs(&Output_ms2);
+    // Production code
+    uint32_t Output_ms1, Output_ms2; 
+    TimeTrack_Init();
+    TimeTrack_PeriodicCallback(0);
+    TimeTrack_Update();
+    TimeTrack_GetTimeMs(&Output_ms1);
+    TimeTrack_PeriodicCallback(0);
+    TimeTrack_Update();
+    TimeTrack_GetTimeMs(&Output_ms2);
 
-//     // Checks
-//     CHECK_EQUAL(86399000, Output_ms1);
-//     CHECK_EQUAL(0, Output_ms2);
-// }
+    free(hr);
+    free(min);
+    free(sec);
+    free(hr2);
+    free(min2);
+    free(sec2);
 
-// TEST(TimeTrackAlgorithm, U15_UpdatesWithRtcConstant)
-// {
-//     // Setup mock function calls
-//     mock().expectNCalls(2,"getHour").andReturnValue(8);
-//     mock().expectNCalls(2,"getMinute").andReturnValue(0);
-//     mock().expectNCalls(2,"getSecond").andReturnValue(0);
+    // Checks
+    CHECK_EQUAL(86399000, Output_ms1);
+    CHECK_EQUAL(0, Output_ms2);
+}
+
+TEST(TimeTrackAlgorithm, U15_UpdatesWithRtcConstant)
+{
+
+    uint8_t *hr = (uint8_t *)malloc(sizeof(uint8_t));
+    uint8_t *min = (uint8_t *)malloc(sizeof(uint8_t));
+    uint8_t *sec = (uint8_t *)malloc(sizeof(uint8_t));
+
+    // Setup mock function calls
+    *hr = 8;
+    *min = 0;
+    *sec = 0;
+    mock().expectNCalls(2,"getTime")
+        .withOutputParameterReturning("hour_24mode", hr, sizeof(hr))
+        .withOutputParameterReturning("minute", min, sizeof(min))
+        .withOutputParameterReturning("second", sec, sizeof(sec));
     
-//     // Production code
-//     uint32_t Output_ms1, Output_ms2; 
-//     TimeTrack_Init();
-//     TimeTrack_GetTimeMs(&Output_ms1);
-//     TimeTrack_PeriodicCallback(100);
-//     TimeTrack_Update();
-//     TimeTrack_GetTimeMs(&Output_ms2);
+    // Production code
+    uint32_t Output_ms1, Output_ms2; 
+    TimeTrack_Init();
+    TimeTrack_GetTimeMs(&Output_ms1);
+    TimeTrack_PeriodicCallback(100);
+    TimeTrack_GetTimeMs(&Output_ms2);
 
+    free(hr);
+    free(min);
+    free(sec);
 
-//     // Checks
-//     CHECK_EQUAL(28800000, Output_ms1);
-//     CHECK_EQUAL(28800100, Output_ms2);
-// }
+    // Checks
+    CHECK_EQUAL(28800000, Output_ms1);
+    CHECK_EQUAL(28800100, Output_ms2);
+}
 
-// TEST(TimeTrackAlgorithm, U16_UpdatesWithRtcIncrements)
-// {
-//     // Setup mock function calls
-//     mock().expectNCalls(1,"getHour").andReturnValue(8);
-//     mock().expectNCalls(1,"getMinute").andReturnValue(0);
-//     mock().expectNCalls(1,"getSecond").andReturnValue(0);
+TEST(TimeTrackAlgorithm, U16_UpdatesWithRtcIncrements)
+{
 
-//     mock().expectNCalls(1,"getHour").andReturnValue(8);
-//     mock().expectNCalls(1,"getMinute").andReturnValue(0);
-//     mock().expectNCalls(1,"getSecond").andReturnValue(1);
+    uint8_t *hr = (uint8_t *)malloc(sizeof(uint8_t));
+    uint8_t *min = (uint8_t *)malloc(sizeof(uint8_t));
+    uint8_t *sec = (uint8_t *)malloc(sizeof(uint8_t));
+
+    uint8_t *sec2 = (uint8_t *)malloc(sizeof(uint8_t));
+
+    // Setup mock function calls
+    *hr = 8;
+    *min = 0;
+    *sec = 0;
+    mock().expectNCalls(1,"getTime")
+        .withOutputParameterReturning("hour_24mode", hr, sizeof(hr))
+        .withOutputParameterReturning("minute", min, sizeof(min))
+        .withOutputParameterReturning("second", sec, sizeof(sec));
+
+    *sec2 = 1;
+    mock().expectNCalls(1,"getTime")
+        .withOutputParameterReturning("hour_24mode", hr, sizeof(hr))
+        .withOutputParameterReturning("minute", min, sizeof(min))
+        .withOutputParameterReturning("second", sec2, sizeof(sec2));
     
-//     // Production code
-//     uint32_t Output_ms1, Output_ms2; 
-//     TimeTrack_Init();
-//     TimeTrack_GetTimeMs(&Output_ms1);
-//     TimeTrack_PeriodicCallback(0);
-//     TimeTrack_Update();
-//     TimeTrack_PeriodicCallback(100);
-//     TimeTrack_GetTimeMs(&Output_ms2);
+    // Production code
+    uint32_t Output_ms1, Output_ms2; 
+    TimeTrack_Init();
+    TimeTrack_GetTimeMs(&Output_ms1);
+    TimeTrack_PeriodicCallback(0);
+    TimeTrack_Update();
+    TimeTrack_PeriodicCallback(100);
+    TimeTrack_GetTimeMs(&Output_ms2);
 
-//     // Checks
-//     CHECK_EQUAL(28800000, Output_ms1);
-//     CHECK_EQUAL(28801100, Output_ms2);
-// }
+    free(hr);
+    free(min);
+    free(sec);
+    free(sec2);
 
-// // TEST(TimeTrackAlgorithm, U17_UpdatesRollover)
-// // {
-// //     // Setup mock function calls
-// //     mock().expectNCalls(3,"getHour").andReturnValue(23);
-// //     mock().expectNCalls(3,"getMinute").andReturnValue(59);
-// //     mock().expectNCalls(3,"getSecond").andReturnValue(59);
+    // Checks
+    CHECK_EQUAL(28800000, Output_ms1);
+    CHECK_EQUAL(28801100, Output_ms2);
+}
+
+TEST(TimeTrackAlgorithm, U17_UpdatesRollover)
+{
+
+    uint8_t *hr = (uint8_t *)malloc(sizeof(uint8_t));
+    uint8_t *min = (uint8_t *)malloc(sizeof(uint8_t));
+    uint8_t *sec = (uint8_t *)malloc(sizeof(uint8_t));
+
+    uint8_t *hr2 = (uint8_t *)malloc(sizeof(uint8_t));
+    uint8_t *min2 = (uint8_t *)malloc(sizeof(uint8_t));
+    uint8_t *sec2 = (uint8_t *)malloc(sizeof(uint8_t));
+
+    uint8_t *hr3 = (uint8_t *)malloc(sizeof(uint8_t));
+    uint8_t *min3 = (uint8_t *)malloc(sizeof(uint8_t));
+    uint8_t *sec3 = (uint8_t *)malloc(sizeof(uint8_t));
+
+    // Setup mock function calls
+    *hr = 23;
+    *min = 59;
+    *sec = 59;
+    mock().expectNCalls(1,"getTime")
+        .withOutputParameterReturning("hour_24mode", hr, sizeof(hr))
+        .withOutputParameterReturning("minute", min, sizeof(min))
+        .withOutputParameterReturning("second", sec, sizeof(sec));
+
+    *hr2 = 0;
+    *min2 = 0;
+    *sec2 = 0;
+    mock().expectNCalls(1,"getTime")
+        .withOutputParameterReturning("hour_24mode", hr2, sizeof(hr2))
+        .withOutputParameterReturning("minute", min2, sizeof(min2))
+        .withOutputParameterReturning("second", sec2, sizeof(sec2));
+
+    *hr3 = 0;
+    *min3 = 0;
+    *sec3 = 1;
+    mock().expectNCalls(1,"getTime")
+        .withOutputParameterReturning("hour_24mode", hr3, sizeof(hr3))
+        .withOutputParameterReturning("minute", min3, sizeof(min3))
+        .withOutputParameterReturning("second", sec3, sizeof(sec3));
     
-// //     // Production code
-// //     uint32_t Output_ms1, Output_ms2; 
-// //     TimeTrack_Init();
-// //     TimeTrack_PeriodicCallback(999);
-// //     TimeTrack_Update();
-// //     TimeTrack_GetTimeMs(&Output_ms1);
-// //     TimeTrack_PeriodicCallback(999);
-// //     TimeTrack_Update();
-// //     TimeTrack_GetTimeMs(&Output_ms2);
+    // Production code
+    uint32_t Output_ms1, Output_ms2, Output_ms3; 
+    TimeTrack_Init();
+    TimeTrack_PeriodicCallback(999);
+    TimeTrack_GetTimeMs(&Output_ms1);
+    TimeTrack_Update();
+    TimeTrack_PeriodicCallback(999);
+    TimeTrack_GetTimeMs(&Output_ms2);
+    TimeTrack_Update();
+    TimeTrack_PeriodicCallback(999);
+    TimeTrack_GetTimeMs(&Output_ms3);
 
+    free(hr);
+    free(min);
+    free(sec);
+    free(hr2);
+    free(min2);
+    free(sec2);
+    free(hr3);
+    free(min3);
+    free(sec3);
 
-// //     // Checks
-// //     CHECK_EQUAL(86399999, Output_ms1);
-// //     CHECK_EQUAL(1998, Output_ms2);
-// // }
+    // Checks
+    CHECK_EQUAL(86399999, Output_ms1);
+    CHECK_EQUAL(999, Output_ms2);
+    CHECK_EQUAL(1999, Output_ms3);
+}

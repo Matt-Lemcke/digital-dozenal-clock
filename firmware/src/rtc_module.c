@@ -1,6 +1,6 @@
 #include <rtc_module.h>
 
-Rtc *g_rtc;
+static Rtc *g_rtc;
 
 ClockStatus Rtc_Init(Rtc *self)
 {
