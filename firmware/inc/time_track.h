@@ -12,6 +12,8 @@
 #include "gps.h"
 #include "rtc_module.h"
 
+#define TIME_24H_MS      86400000
+
 ClockStatus TimeTrack_Init();
 ClockStatus TimeTrack_SyncToRtc();
 ClockStatus TimeTrack_Update();
