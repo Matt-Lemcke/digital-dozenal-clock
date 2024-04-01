@@ -182,17 +182,21 @@ static const uint8_t row2_semi_digit_indices[5] = {
     SEMI_DIGIT_5_ROW2_DISPLAY_INDEX
 };
 
-static const uint8_t row2_4digit_radix_pos[3] = {
+static const uint8_t row2_4digit_radix_pos[5] = {
+    RADIX_POS0_ROW2_4DIGIT_DISPLAY_INDEX,
     RADIX_POS1_ROW2_4DIGIT_DISPLAY_INDEX,
     RADIX_POS2_ROW2_4DIGIT_DISPLAY_INDEX,
-    RADIX_POS3_ROW2_4DIGIT_DISPLAY_INDEX
+    RADIX_POS3_ROW2_4DIGIT_DISPLAY_INDEX,
+    RADIX_POS4_ROW2_4DIGIT_DISPLAY_INDEX
 };
 
-static const uint8_t row2_5digit_radix_pos[4] = {
+static const uint8_t row2_5digit_radix_pos[6] = {
+    RADIX_POS0_ROW2_5DIGIT_DISPLAY_INDEX,
     RADIX_POS1_ROW2_5DIGIT_DISPLAY_INDEX,
     RADIX_POS2_ROW2_5DIGIT_DISPLAY_INDEX,
     RADIX_POS3_ROW2_5DIGIT_DISPLAY_INDEX,
-    RADIX_POS4_ROW2_5DIGIT_DISPLAY_INDEX
+    RADIX_POS4_ROW2_5DIGIT_DISPLAY_INDEX,
+    RADIX_POS5_ROW2_5DIGIT_DISPLAY_INDEX
 };
 
 static const uint8_t row3_trad_digit_indices[7] = {
@@ -228,17 +232,21 @@ static const uint8_t row3_semi_digit_indices[5] = {
     SEMI_DIGIT_5_ROW3_DISPLAY_INDEX
 };
 
-static const uint8_t row3_4digit_radix_pos[3] = {
+static const uint8_t row3_4digit_radix_pos[5] = {
+    RADIX_POS0_ROW3_4DIGIT_DISPLAY_INDEX,
     RADIX_POS1_ROW3_4DIGIT_DISPLAY_INDEX,
     RADIX_POS2_ROW3_4DIGIT_DISPLAY_INDEX,
-    RADIX_POS3_ROW3_4DIGIT_DISPLAY_INDEX
+    RADIX_POS3_ROW3_4DIGIT_DISPLAY_INDEX,
+    RADIX_POS4_ROW3_4DIGIT_DISPLAY_INDEX
 };
 
-static const uint8_t row3_5digit_radix_pos[4] = {
+static const uint8_t row3_5digit_radix_pos[6] = {
+    RADIX_POS0_ROW3_5DIGIT_DISPLAY_INDEX,
     RADIX_POS1_ROW3_5DIGIT_DISPLAY_INDEX,
     RADIX_POS2_ROW3_5DIGIT_DISPLAY_INDEX,
     RADIX_POS3_ROW3_5DIGIT_DISPLAY_INDEX,
-    RADIX_POS4_ROW3_5DIGIT_DISPLAY_INDEX
+    RADIX_POS4_ROW3_5DIGIT_DISPLAY_INDEX,
+    RADIX_POS5_ROW3_5DIGIT_DISPLAY_INDEX
 };
 
 /*
@@ -519,15 +527,15 @@ static void SetTime_Update(Display *ctx)
         } 
         else if (ctx->time_format == DOZ_DRN5) 
         {
-            blinkDigit(&row2_bitmap, row2_drn5_digit_indices[*ctx->clock_vars->digit_sel] + (((*ctx->clock_vars->digit_sel > *ctx->clock_vars->diurn_radix_pos) ? ROW2_RADIX_OFFSET : 0)), false);
+            blinkDigit(&row2_bitmap, row2_drn5_digit_indices[*ctx->clock_vars->digit_sel] + (((*ctx->clock_vars->digit_sel >= *ctx->clock_vars->diurn_radix_pos) ? ROW2_RADIX_OFFSET : 0)), false);
         }
         else if (ctx->time_format == DOZ_SEMI) 
         {
-            blinkDigit(&row2_bitmap, row2_semi_digit_indices[*ctx->clock_vars->digit_sel] + (((*ctx->clock_vars->digit_sel > *ctx->clock_vars->semi_diurn_radix_pos) ? ROW2_RADIX_OFFSET : 0)), false);
+            blinkDigit(&row2_bitmap, row2_semi_digit_indices[*ctx->clock_vars->digit_sel] + (((*ctx->clock_vars->digit_sel >= *ctx->clock_vars->semi_diurn_radix_pos) ? ROW2_RADIX_OFFSET : 0)), false);
         }
         else if (ctx->time_format == DOZ_DRN4) 
         {
-            blinkDigit(&row2_bitmap, row2_drn4_digit_indices[*ctx->clock_vars->digit_sel] + (((*ctx->clock_vars->digit_sel > *ctx->clock_vars->diurn_radix_pos) ? ROW2_RADIX_OFFSET : 0)), false);
+            blinkDigit(&row2_bitmap, row2_drn4_digit_indices[*ctx->clock_vars->digit_sel] + (((*ctx->clock_vars->digit_sel >= *ctx->clock_vars->diurn_radix_pos) ? ROW2_RADIX_OFFSET : 0)), false);
         }
     }
 
@@ -570,7 +578,7 @@ static void SetTimer_Update(Display *ctx)
     } 
     else if (ctx->time_format == DOZ_DRN5) 
     {
-        blinkDigit(&row3_bitmap, row3_drn5_digit_indices[*ctx->clock_vars->digit_sel] + (((*ctx->clock_vars->digit_sel > *ctx->clock_vars->diurn_radix_pos) ? ROW3_RADIX_OFFSET : 0)), false);
+        blinkDigit(&row3_bitmap, row3_drn5_digit_indices[*ctx->clock_vars->digit_sel] + (((*ctx->clock_vars->digit_sel >= *ctx->clock_vars->diurn_radix_pos) ? ROW3_RADIX_OFFSET : 0)), false);
     }
 
     ctx->setBitmap(row1_bitmap.num, row1_bitmap.p_bitmap);
@@ -612,15 +620,15 @@ static void SetAlarm_Update(Display *ctx)
     } 
     else if (ctx->time_format == DOZ_DRN5) 
     {
-        blinkDigit(&row3_bitmap, row3_drn5_digit_indices[*ctx->clock_vars->digit_sel] + (((*ctx->clock_vars->digit_sel > *ctx->clock_vars->diurn_radix_pos) ? ROW3_RADIX_OFFSET : 0)), false);
+        blinkDigit(&row3_bitmap, row3_drn5_digit_indices[*ctx->clock_vars->digit_sel] + (((*ctx->clock_vars->digit_sel >= *ctx->clock_vars->diurn_radix_pos) ? ROW3_RADIX_OFFSET : 0)), false);
     }
     else if (ctx->time_format == DOZ_SEMI) 
     {
-        blinkDigit(&row3_bitmap, row3_semi_digit_indices[*ctx->clock_vars->digit_sel] + (((*ctx->clock_vars->digit_sel > *ctx->clock_vars->semi_diurn_radix_pos) ? ROW3_RADIX_OFFSET : 0)), false);
+        blinkDigit(&row3_bitmap, row3_semi_digit_indices[*ctx->clock_vars->digit_sel] + (((*ctx->clock_vars->digit_sel >= *ctx->clock_vars->semi_diurn_radix_pos) ? ROW3_RADIX_OFFSET : 0)), false);
     }
     else if (ctx->time_format == DOZ_DRN4) 
     {
-        blinkDigit(&row3_bitmap, row3_drn4_digit_indices[*ctx->clock_vars->digit_sel] + (((*ctx->clock_vars->digit_sel > *ctx->clock_vars->diurn_radix_pos) ? ROW3_RADIX_OFFSET : 0)), false);
+        blinkDigit(&row3_bitmap, row3_drn4_digit_indices[*ctx->clock_vars->digit_sel] + (((*ctx->clock_vars->digit_sel >= *ctx->clock_vars->diurn_radix_pos) ? ROW3_RADIX_OFFSET : 0)), false);
     }
 
     ctx->setBitmap(row1_bitmap.num, row1_bitmap.p_bitmap);
@@ -700,11 +708,11 @@ static void displayTime(Bitmap *row_bitmap, uint32_t time_ms)
             uint8_t digit1, digit2, digit3, digit4, digit5;
             msToDiurn(time_ms, &digit1, &digit2, &digit3, &digit4, &digit5);
 
-            displayChar(row_bitmap, DRN5_DIGIT_1_ROW2_DISPLAY_INDEX, large_numbers[digit1], LARGE_DIGIT_ROWS);
+            displayChar(row_bitmap, DRN5_DIGIT_1_ROW2_DISPLAY_INDEX + ((*g_fsm.ctx->clock_vars->diurn_radix_pos < RADIX_POS1) ? ROW2_RADIX_OFFSET : 0), large_numbers[digit1], LARGE_DIGIT_ROWS);
             displayChar(row_bitmap, DRN5_DIGIT_2_ROW2_DISPLAY_INDEX + ((*g_fsm.ctx->clock_vars->diurn_radix_pos < RADIX_POS2) ? ROW2_RADIX_OFFSET : 0), large_numbers[digit2], LARGE_DIGIT_ROWS);
             displayChar(row_bitmap, DRN5_DIGIT_3_ROW2_DISPLAY_INDEX + ((*g_fsm.ctx->clock_vars->diurn_radix_pos < RADIX_POS3) ? ROW2_RADIX_OFFSET : 0), large_numbers[digit3], LARGE_DIGIT_ROWS);
             displayChar(row_bitmap, DRN5_DIGIT_4_ROW2_DISPLAY_INDEX + ((*g_fsm.ctx->clock_vars->diurn_radix_pos < RADIX_POS4) ? ROW2_RADIX_OFFSET : 0), large_numbers[digit4], LARGE_DIGIT_ROWS);
-            displayChar(row_bitmap, DRN5_DIGIT_5_ROW2_DISPLAY_INDEX + ROW2_RADIX_OFFSET, large_numbers[digit5], LARGE_DIGIT_ROWS);
+            displayChar(row_bitmap, DRN5_DIGIT_5_ROW2_DISPLAY_INDEX + ((*g_fsm.ctx->clock_vars->diurn_radix_pos < RADIX_POS5) ? ROW2_RADIX_OFFSET : 0), large_numbers[digit5], LARGE_DIGIT_ROWS);
         }
         else if (g_fsm.ctx->time_format == DOZ_SEMI)
         {
@@ -717,7 +725,7 @@ static void displayTime(Bitmap *row_bitmap, uint32_t time_ms)
             displayChar(row_bitmap, SEMI_DIGIT_2_ROW2_DISPLAY_INDEX + ((*g_fsm.ctx->clock_vars->semi_diurn_radix_pos < RADIX_POS2) ? ROW2_RADIX_OFFSET : 0), large_numbers[digit2], LARGE_DIGIT_ROWS);
             displayChar(row_bitmap, SEMI_DIGIT_3_ROW2_DISPLAY_INDEX + ((*g_fsm.ctx->clock_vars->semi_diurn_radix_pos < RADIX_POS3) ? ROW2_RADIX_OFFSET : 0), large_numbers[digit3], LARGE_DIGIT_ROWS);
             displayChar(row_bitmap, SEMI_DIGIT_4_ROW2_DISPLAY_INDEX + ((*g_fsm.ctx->clock_vars->semi_diurn_radix_pos < RADIX_POS4) ? ROW2_RADIX_OFFSET : 0), large_numbers[digit4], LARGE_DIGIT_ROWS);
-            displayChar(row_bitmap, SEMI_DIGIT_5_ROW2_DISPLAY_INDEX + ROW2_RADIX_OFFSET, large_numbers[digit5], LARGE_DIGIT_ROWS);
+            displayChar(row_bitmap, SEMI_DIGIT_5_ROW2_DISPLAY_INDEX + ((*g_fsm.ctx->clock_vars->semi_diurn_radix_pos < RADIX_POS5) ? ROW2_RADIX_OFFSET : 0), large_numbers[digit5], LARGE_DIGIT_ROWS);
         }
         else if (g_fsm.ctx->time_format == DOZ_DRN4)
         {
@@ -726,10 +734,10 @@ static void displayTime(Bitmap *row_bitmap, uint32_t time_ms)
             uint8_t digit1, digit2, digit3, digit4, digit5;
             msToDiurn(time_ms, &digit1, &digit2, &digit3, &digit4, &digit5);
 
-            displayChar(row_bitmap, DRN4_DIGIT_1_ROW2_DISPLAY_INDEX, large_numbers[digit1], LARGE_DIGIT_ROWS);
+            displayChar(row_bitmap, DRN4_DIGIT_1_ROW2_DISPLAY_INDEX + ((*g_fsm.ctx->clock_vars->diurn_radix_pos < RADIX_POS1) ? ROW2_RADIX_OFFSET : 0), large_numbers[digit1], LARGE_DIGIT_ROWS);
             displayChar(row_bitmap, DRN4_DIGIT_2_ROW2_DISPLAY_INDEX + ((*g_fsm.ctx->clock_vars->diurn_radix_pos < RADIX_POS2) ? ROW2_RADIX_OFFSET : 0), large_numbers[digit2], LARGE_DIGIT_ROWS);
             displayChar(row_bitmap, DRN4_DIGIT_3_ROW2_DISPLAY_INDEX + ((*g_fsm.ctx->clock_vars->diurn_radix_pos < RADIX_POS3) ? ROW2_RADIX_OFFSET : 0), large_numbers[digit3], LARGE_DIGIT_ROWS);
-            displayChar(row_bitmap, DRN4_DIGIT_4_ROW2_DISPLAY_INDEX + ROW2_RADIX_OFFSET, large_numbers[digit4], LARGE_DIGIT_ROWS);
+            displayChar(row_bitmap, DRN4_DIGIT_4_ROW2_DISPLAY_INDEX + ((*g_fsm.ctx->clock_vars->diurn_radix_pos < RADIX_POS4) ? ROW2_RADIX_OFFSET : 0), large_numbers[digit4], LARGE_DIGIT_ROWS);
         }
 
     } 
@@ -769,11 +777,11 @@ static void displayTime(Bitmap *row_bitmap, uint32_t time_ms)
             uint8_t digit1, digit2, digit3, digit4, digit5;
             msToDiurn(time_ms, &digit1, &digit2, &digit3, &digit4, &digit5);
 
-            displayChar(row_bitmap, DRN5_DIGIT_1_ROW3_DISPLAY_INDEX, small_numbers[digit1], SMALL_DIGIT_ROWS);
+            displayChar(row_bitmap, DRN5_DIGIT_1_ROW3_DISPLAY_INDEX + ((*g_fsm.ctx->clock_vars->diurn_radix_pos < RADIX_POS1) ? ROW3_RADIX_OFFSET : 0), small_numbers[digit1], SMALL_DIGIT_ROWS);
             displayChar(row_bitmap, DRN5_DIGIT_2_ROW3_DISPLAY_INDEX + ((*g_fsm.ctx->clock_vars->diurn_radix_pos < RADIX_POS2) ? ROW3_RADIX_OFFSET : 0), small_numbers[digit2], SMALL_DIGIT_ROWS);
             displayChar(row_bitmap, DRN5_DIGIT_3_ROW3_DISPLAY_INDEX + ((*g_fsm.ctx->clock_vars->diurn_radix_pos < RADIX_POS3) ? ROW3_RADIX_OFFSET : 0), small_numbers[digit3], SMALL_DIGIT_ROWS);
             displayChar(row_bitmap, DRN5_DIGIT_4_ROW3_DISPLAY_INDEX + ((*g_fsm.ctx->clock_vars->diurn_radix_pos < RADIX_POS4) ? ROW3_RADIX_OFFSET : 0), small_numbers[digit4], SMALL_DIGIT_ROWS);
-            displayChar(row_bitmap, DRN5_DIGIT_5_ROW3_DISPLAY_INDEX + ROW3_RADIX_OFFSET, small_numbers[digit5], SMALL_DIGIT_ROWS);
+            displayChar(row_bitmap, DRN5_DIGIT_5_ROW3_DISPLAY_INDEX + ((*g_fsm.ctx->clock_vars->diurn_radix_pos < RADIX_POS5) ? ROW3_RADIX_OFFSET : 0), small_numbers[digit5], SMALL_DIGIT_ROWS);
 
         }
         else if (g_fsm.ctx->time_format == DOZ_SEMI)
@@ -787,7 +795,7 @@ static void displayTime(Bitmap *row_bitmap, uint32_t time_ms)
             displayChar(row_bitmap, SEMI_DIGIT_2_ROW3_DISPLAY_INDEX + ((*g_fsm.ctx->clock_vars->semi_diurn_radix_pos < RADIX_POS2) ? ROW3_RADIX_OFFSET : 0), small_numbers[digit2], SMALL_DIGIT_ROWS);
             displayChar(row_bitmap, SEMI_DIGIT_3_ROW3_DISPLAY_INDEX + ((*g_fsm.ctx->clock_vars->semi_diurn_radix_pos < RADIX_POS3) ? ROW3_RADIX_OFFSET : 0), small_numbers[digit3], SMALL_DIGIT_ROWS);
             displayChar(row_bitmap, SEMI_DIGIT_4_ROW3_DISPLAY_INDEX + ((*g_fsm.ctx->clock_vars->semi_diurn_radix_pos < RADIX_POS4) ? ROW3_RADIX_OFFSET : 0), small_numbers[digit4], SMALL_DIGIT_ROWS);
-            displayChar(row_bitmap, SEMI_DIGIT_5_ROW3_DISPLAY_INDEX + ROW3_RADIX_OFFSET, small_numbers[digit5], SMALL_DIGIT_ROWS);
+            displayChar(row_bitmap, SEMI_DIGIT_5_ROW3_DISPLAY_INDEX + ((*g_fsm.ctx->clock_vars->semi_diurn_radix_pos < RADIX_POS5) ? ROW3_RADIX_OFFSET : 0), small_numbers[digit5], SMALL_DIGIT_ROWS);
         }
         else if (g_fsm.ctx->time_format == DOZ_DRN4)
         {
@@ -797,10 +805,10 @@ static void displayTime(Bitmap *row_bitmap, uint32_t time_ms)
             uint8_t digit1, digit2, digit3, digit4, digit5;
             msToDiurn(time_ms, &digit1, &digit2, &digit3, &digit4, &digit5);
 
-            displayChar(row_bitmap, DRN4_DIGIT_1_ROW3_DISPLAY_INDEX, small_numbers[digit1], SMALL_DIGIT_ROWS);
+            displayChar(row_bitmap, DRN4_DIGIT_1_ROW3_DISPLAY_INDEX + ((*g_fsm.ctx->clock_vars->diurn_radix_pos < RADIX_POS1) ? ROW3_RADIX_OFFSET : 0), small_numbers[digit1], SMALL_DIGIT_ROWS);
             displayChar(row_bitmap, DRN4_DIGIT_2_ROW3_DISPLAY_INDEX + ((*g_fsm.ctx->clock_vars->diurn_radix_pos < RADIX_POS2) ? ROW3_RADIX_OFFSET : 0), small_numbers[digit2], SMALL_DIGIT_ROWS);
             displayChar(row_bitmap, DRN4_DIGIT_3_ROW3_DISPLAY_INDEX + ((*g_fsm.ctx->clock_vars->diurn_radix_pos < RADIX_POS3) ? ROW3_RADIX_OFFSET : 0), small_numbers[digit3], SMALL_DIGIT_ROWS);
-            displayChar(row_bitmap, DRN4_DIGIT_4_ROW3_DISPLAY_INDEX + ROW3_RADIX_OFFSET, small_numbers[digit4], SMALL_DIGIT_ROWS);
+            displayChar(row_bitmap, DRN4_DIGIT_4_ROW3_DISPLAY_INDEX + ((*g_fsm.ctx->clock_vars->diurn_radix_pos < RADIX_POS4) ? ROW3_RADIX_OFFSET : 0), small_numbers[digit4], SMALL_DIGIT_ROWS);
 
         }
     }
