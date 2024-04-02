@@ -159,15 +159,16 @@ int main(void)
 #else
   // Internal RTC
   RTC_Init(&hrtc);
-  rtc_internal.enableAlarm  = RTC_EnableAlarm;
-  rtc_internal.getAlarm     = RTC_GetAlarm;
-  rtc_internal.getDay       = RTC_GetDay;
-  rtc_internal.getMonth     = RTC_GetMonth;
-  rtc_internal.getTime      = RTC_GetTime;
-  rtc_internal.setAlarm     = RTC_SetAlarm;
-  rtc_internal.setDay       = RTC_SetDay;
-  rtc_internal.setMonth     = RTC_SetMonth;
-  rtc_internal.setRtcTime   = RTC_SetTime;
+  rtc_internal.enableAlarm      = RTC_EnableAlarm;
+  rtc_internal.getAlarm         = RTC_GetAlarm;
+  rtc_internal.getDay           = RTC_GetDay;
+  rtc_internal.getMonth         = RTC_GetMonth;
+  rtc_internal.getTime          = RTC_GetTime;
+  rtc_internal.setAlarm         = RTC_SetAlarm;
+  rtc_internal.setDay           = RTC_SetDay;
+  rtc_internal.setMonth         = RTC_SetMonth;
+  rtc_internal.setRtcTime       = RTC_SetTime;
+  rtc_internal.getAlarmStatus   = RTC_CheckAlarmSaved;
   doz_clock.rtc = &rtc_internal;
 #endif
 

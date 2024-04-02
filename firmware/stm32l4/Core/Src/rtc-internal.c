@@ -11,7 +11,9 @@
 #define RTC_FORMAT  RTC_FORMAT_BIN
 
 #define STATUS_BACKUP_REG   RTC_BKP_DR1
+#define ALARM_BACKUP_REG    RTC_BKP_DR2
 #define VALID_STATUS_CODE   0x00FF00FF
+#define ALARM_SAVED_CODE    0xDEADBEEF
 
 static RTC_HandleTypeDef *hrtc;
 static RTC_TimeTypeDef sTime = {0};
@@ -46,6 +48,9 @@ void RTC_Init(RTC_HandleTypeDef *rtc)
     HAL_RTC_SetDate(hrtc, &sDate, RTC_FORMAT);
     HAL_RTC_SetAlarm(hrtc, &sAlarm, RTC_FORMAT);
     HAL_RTC_SetAlarm(hrtc, &sTimer, RTC_FORMAT);
+
+    // Calibration test
+    HAL_RTCEx_SetSmoothCalib(hrtc, RTC_SMOOTHCALIB_PERIOD_32SEC, RTC_SMOOTHCALIB_PLUSPULSES_RESET, 0x1F0);
 }
 
 void RTC_SetTime(uint8_t hr, uint8_t min, uint8_t sec)
@@ -151,10 +156,14 @@ void RTC_EnableAlarm(uint8_t id, bool enable)
     case ALARM_ID:
         if (enable)
         {
+            // Write valid save status for alarm
+            HAL_RTCEx_BKUPWrite(hrtc, ALARM_BACKUP_REG, ALARM_SAVED_CODE);
             HAL_RTC_SetAlarm_IT(hrtc, &sAlarm, RTC_FORMAT);
         }
         else
         {
+            // Remove save status for alarm
+            HAL_RTCEx_BKUPWrite(hrtc, ALARM_BACKUP_REG, 0x0);
             HAL_RTC_DeactivateAlarm(hrtc, sAlarm.Alarm);
         }
         break;
@@ -184,6 +193,18 @@ bool RTC_CheckDataSaved(RTC_HandleTypeDef *rtc)
     }
     return true;
 }
+
+bool RTC_CheckAlarmSaved(uint8_t id)
+{
+    // ALARM_BACKUP_REG is reset to 0x0 if backup battery power is lost
+    if (id == ALARM_ID && HAL_RTCEx_BKUPRead(hrtc, ALARM_BACKUP_REG) == ALARM_SAVED_CODE)
+    {
+        // Power wasn't lost an saved alarm value is valid
+        return true;
+    }
+    return false;
+}
+
 
 void HAL_RTC_AlarmAEventCallback(RTC_HandleTypeDef *rtc)
 {

@@ -47,7 +47,7 @@ typedef struct rtc_t
         uint8_t *min,
         uint8_t *sec);
     void (*enableAlarm)(uint8_t id, bool enable);
-    uint8_t (*getAlarmStatus)(uint8_t id);
+    bool (*getAlarmStatus)(uint8_t id);
 
 
 }Rtc;

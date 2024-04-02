@@ -25,5 +25,6 @@ void RTC_GetAlarm(uint8_t id, uint8_t *hr, uint8_t *min, uint8_t *sec);
 void RTC_EnableAlarm(uint8_t id, bool enable);
 
 bool RTC_CheckDataSaved(RTC_HandleTypeDef *rtc);
+bool RTC_CheckAlarmSaved(uint8_t id);
 
 #endif /* INC_RTC_INTERNAL_H_ */
