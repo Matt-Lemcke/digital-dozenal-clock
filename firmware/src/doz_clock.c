@@ -43,7 +43,7 @@ static TimeFormats trad_format_list[] = {TRAD_24H, TRAD_12H};
 static TimeFormats doz_format_list[] = {DOZ_SEMI, DOZ_DRN4, DOZ_DRN5};
 static TimeFormats curr_format;
 
-static uint8_t trad_index = 0, doz_index = 0;
+static uint8_t trad_index = 0, doz_index = 1;
 static uint8_t cancel_pressed = 0;
 static uint32_t user_alarm_ms_old, user_timer_ms_old, time_ms_old;
 static uint8_t alarm_set_old, timer_set_old;
@@ -57,6 +57,8 @@ static RtcTime demo_reset = {
         .min = 22,
         .sec = 0
 };
+
+static RtcTime alarm_time;
 
 // State definitions
 static DozClockState s_init =
@@ -251,6 +253,13 @@ void Init_Update(DozClock *ctx)
     TimeTrack_GetTimeMs(&ctx->time_ms);
 
     Rtc_GetAlarmStatus(ALARM, &ctx->alarm_set);
+    if (ctx->alarm_set)
+    {
+        Rtc_GetAlarm(&alarm_time, ALARM);
+        ctx->user_alarm_ms = (uint32_t) (alarm_time.sec) * 1000 +   // sec
+                             (uint32_t) (alarm_time.min) * 60000 +  // min
+                             (uint32_t) (alarm_time.hr) * 3600000;  // hour
+    }
 
     transition(&s_idle_disp_on);
 }
@@ -325,7 +334,7 @@ void SetAlarm_Update(DozClock *ctx)
                         + ctx->digit_vals[3]*pow(12,1)
                         + ctx->digit_vals[4];
 
-        ctx->user_alarm_ms = round(increments*2083.3333);
+        ctx->user_alarm_ms = round(increments*2083.33333333);
 
     } else { // DOZ_DRN4 || DOZ_DRN5
 
@@ -333,9 +342,9 @@ void SetAlarm_Update(DozClock *ctx)
                         + ctx->digit_vals[1]*pow(12,3)
                         + ctx->digit_vals[2]*pow(12,2)
                         + ctx->digit_vals[3]*pow(12,1)
-                        + ctx->digit_vals[4];
+                        + ((curr_format == DOZ_DRN5) ? ctx->digit_vals[4] : 0);
 
-        ctx->user_alarm_ms = round(increments*347.2222);
+        ctx->user_alarm_ms = round(increments*347.22222222);
 
     }
 }
@@ -408,7 +417,7 @@ void SetTimer_Update(DozClock *ctx)
                         + ctx->digit_vals[3]*pow(12,1)
                         + ctx->digit_vals[4];
 
-        ctx->user_timer_ms = round(increments*2083.3333);
+        ctx->user_timer_ms = round(increments*2083.33333333);
 
     } else { // DOZ_DRN4 || DOZ_DRN5
 
@@ -416,9 +425,9 @@ void SetTimer_Update(DozClock *ctx)
                         + ctx->digit_vals[1]*pow(12,3)
                         + ctx->digit_vals[2]*pow(12,2)
                         + ctx->digit_vals[3]*pow(12,1)
-                        + ctx->digit_vals[4];
+                        + ((curr_format == DOZ_DRN5) ? ctx->digit_vals[4] : 0);
 
-        ctx->user_timer_ms = round(increments*347.2222);
+        ctx->user_timer_ms = round(increments*347.22222222);
 
     } 
 }
@@ -483,7 +492,7 @@ void SetTime_Update(DozClock *ctx)
                         + ctx->digit_vals[3]*pow(12,1)
                         + ctx->digit_vals[4];
 
-        ctx->user_time_ms = round(increments*2083.3333);
+        ctx->user_time_ms = round(increments*2083.33333333);
 
     } else { // DOZ_DRN4 || DOZ_DRN5
 
@@ -491,9 +500,9 @@ void SetTime_Update(DozClock *ctx)
                         + ctx->digit_vals[1]*pow(12,3)
                         + ctx->digit_vals[2]*pow(12,2)
                         + ctx->digit_vals[3]*pow(12,1)
-                        + ctx->digit_vals[4];
+                        + ((curr_format == DOZ_DRN5) ? ctx->digit_vals[4] : 0);
 
-        ctx->user_time_ms = round(increments*347.2222);
+        ctx->user_time_ms = round(increments*347.22222222);
 
     } 
 }
@@ -674,7 +683,7 @@ void msToTrad(uint32_t time_ms, uint8_t *hr_24, uint8_t *min, uint8_t *sec)
 
 void msToDiurn(uint32_t time_ms, uint8_t *digit1, uint8_t *digit2, uint8_t *digit3, uint8_t *digit4, uint8_t *digit5)
 {
-    increments = (uint32_t) round(time_ms / 347.2222);
+    increments = (uint32_t) round(time_ms / 347.22222222);
 
     *digit5 = increments % 12;
     increments /= 12;
@@ -689,7 +698,7 @@ void msToDiurn(uint32_t time_ms, uint8_t *digit1, uint8_t *digit2, uint8_t *digi
 
 void msToSemiDiurn(uint32_t time_ms, uint8_t *digit1, uint8_t *digit2, uint8_t *digit3, uint8_t *digit4, uint8_t *digit5)
 {
-    increments = (uint32_t) round(time_ms / 2083.3333);
+    increments = (uint32_t) round(time_ms / 2083.33333333);
 
     *digit5 = increments % 12;
     increments /= 12;
@@ -981,6 +990,7 @@ static void toggle_trad_mode(void)
     if (curr_format == trad_format_list[trad_index])
         trad_index = (trad_index + 1) % 2;
     curr_format = trad_format_list[trad_index];
+
     if (g_clock_fsm.curr_state->state_code == STATE_SET_TIME) {
         g_clock_fsm.ctx->digit_sel = 0;
         transition_digits(curr_format, g_clock_fsm.ctx->user_time_ms, g_clock_fsm.ctx->digit_vals);
