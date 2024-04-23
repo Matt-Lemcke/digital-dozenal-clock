@@ -32,6 +32,9 @@ void RTC_Init(RTC_HandleTypeDef *rtc)
     sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
     sTime.StoreOperation = RTC_STOREOPERATION_RESET;
 
+    HAL_RTC_GetAlarm(hrtc, &sAlarm, sAlarm.Alarm, RTC_FORMAT);
+    HAL_RTC_GetAlarm(hrtc, &sTimer, sTimer.Alarm, RTC_FORMAT);
+
     sAlarm.AlarmMask = RTC_ALARMMASK_DATEWEEKDAY;   // What the alarm ignores
     sAlarm.Alarm = RTC_ALARM_A;
     sAlarm.AlarmTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
@@ -41,9 +44,6 @@ void RTC_Init(RTC_HandleTypeDef *rtc)
     sTimer.Alarm = RTC_ALARM_B;
     sTimer.AlarmTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
     sTimer.AlarmTime.StoreOperation = RTC_STOREOPERATION_RESET;
-
-    HAL_RTC_GetAlarm(hrtc, &sAlarm, sAlarm.Alarm, RTC_FORMAT);
-    HAL_RTC_GetAlarm(hrtc, &sTimer, sTimer.Alarm, RTC_FORMAT);
 
     HAL_RTC_SetTime(hrtc, &sTime, RTC_FORMAT);
     HAL_RTC_SetDate(hrtc, &sDate, RTC_FORMAT);
