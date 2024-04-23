@@ -13,6 +13,8 @@
 #define ALARM_ID   1
 #define TIMER_ID   2
 
+#define MAX_CALIBRATION_OFFSET  0x1FF
+
 void RTC_Init(RTC_HandleTypeDef *rtc);
 void RTC_SetTime(uint8_t hr, uint8_t min, uint8_t sec);
 void RTC_GetTime(uint8_t *hr, uint8_t *min, uint8_t *sec);
@@ -23,6 +25,7 @@ uint8_t RTC_GetMonth(void);
 void RTC_SetAlarm(uint8_t id, uint8_t hr, uint8_t min, uint8_t sec);
 void RTC_GetAlarm(uint8_t id, uint8_t *hr, uint8_t *min, uint8_t *sec);
 void RTC_EnableAlarm(uint8_t id, bool enable);
+void RTC_SetCalibration(int32_t calib);
 
 bool RTC_CheckDataSaved(RTC_HandleTypeDef *rtc);
 bool RTC_CheckAlarmSaved(uint8_t id);

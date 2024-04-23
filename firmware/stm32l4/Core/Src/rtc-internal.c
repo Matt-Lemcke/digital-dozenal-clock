@@ -49,9 +49,6 @@ void RTC_Init(RTC_HandleTypeDef *rtc)
     HAL_RTC_SetDate(hrtc, &sDate, RTC_FORMAT);
     HAL_RTC_SetAlarm(hrtc, &sAlarm, RTC_FORMAT);
     HAL_RTC_SetAlarm(hrtc, &sTimer, RTC_FORMAT);
-
-    // Calibration test
-    HAL_RTCEx_SetSmoothCalib(hrtc, RTC_SMOOTHCALIB_PERIOD_32SEC, RTC_SMOOTHCALIB_PLUSPULSES_RESET, 0x1F0);
 }
 
 void RTC_SetTime(uint8_t hr, uint8_t min, uint8_t sec)
@@ -180,6 +177,20 @@ void RTC_EnableAlarm(uint8_t id, bool enable)
         break;
     default:
         break;
+    }
+}
+
+void RTC_SetCalibration(int32_t calib)
+{
+    uint32_t plus_pulse = RTC_SMOOTHCALIB_PLUSPULSES_RESET;
+    if (calib < 0)
+    {
+        plus_pulse = RTC_SMOOTHCALIB_PLUSPULSES_SET;
+        calib *= -1;
+    }
+    if (calib < MAX_CALIBRATION_OFFSET)
+    {
+        HAL_RTCEx_SetSmoothCalib(hrtc, RTC_SMOOTHCALIB_PERIOD_32SEC, plus_pulse, (uint32_t)calib);
     }
 }
 
