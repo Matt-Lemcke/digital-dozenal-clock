@@ -26,6 +26,7 @@ void RTC_SetAlarm(uint8_t id, uint8_t hr, uint8_t min, uint8_t sec);
 void RTC_GetAlarm(uint8_t id, uint8_t *hr, uint8_t *min, uint8_t *sec);
 void RTC_EnableAlarm(uint8_t id, bool enable);
 void RTC_SetCalibration(int32_t calib);
+int32_t RTC_GetCalibration(void);
 
 bool RTC_CheckDataSaved(RTC_HandleTypeDef *rtc);
 bool RTC_CheckAlarmSaved(uint8_t id);
