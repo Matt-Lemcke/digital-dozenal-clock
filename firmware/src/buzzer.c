@@ -8,9 +8,9 @@ ClockStatus Buzzer_Init(Buzzer *self)
     g_buzzer->is_active = false;
     g_buzzer->volume = MIN_VOLUME;
 
-    if (g_buzzer->startPwm == NULL
-        || g_buzzer->stopPwm == NULL
-        || g_buzzer->setDutyCycle == NULL) {
+    if (g_buzzer->start == NULL
+        || g_buzzer->stop == NULL
+        || g_buzzer->setOutputLevel == NULL) {
         return CLOCK_FAIL;
     }
     Buzzer_SetVolumeMin();
@@ -20,7 +20,7 @@ ClockStatus Buzzer_Init(Buzzer *self)
 ClockStatus Buzzer_Start()
 {
     if (!g_buzzer->is_active) {
-        g_buzzer->startPwm();
+        g_buzzer->start();
         g_buzzer->is_active = true;
     }
     return CLOCK_OK;
@@ -29,7 +29,7 @@ ClockStatus Buzzer_Start()
 ClockStatus Buzzer_Stop()
 {
     if (g_buzzer->is_active) {
-        g_buzzer->stopPwm();
+        g_buzzer->stop();
         g_buzzer->is_active = false;
     }
     return CLOCK_OK;
@@ -41,9 +41,9 @@ ClockStatus Buzzer_SetVolume(uint8_t vol)
         return CLOCK_FAIL;
     }
     g_buzzer->volume = vol;
-    if (g_buzzer->is_active) {g_buzzer->stopPwm();}
-    g_buzzer->setDutyCycle(g_buzzer->volume*DC_COEFF);
-    if (g_buzzer->is_active) {g_buzzer->startPwm();}
+    if (g_buzzer->is_active) {g_buzzer->stop();}
+    g_buzzer->setOutputLevel(g_buzzer->volume);
+    if (g_buzzer->is_active) {g_buzzer->start();}
 
     return CLOCK_OK;
 }

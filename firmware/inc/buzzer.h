@@ -5,16 +5,15 @@
 
 #define MAX_VOLUME  100
 #define MIN_VOLUME  10
-#define DC_COEFF    1     // **Calibrate
 
 typedef struct buzzer_t
 {
     bool is_active;
     uint8_t volume;
 
-    void (*startPwm)(void);
-    void (*stopPwm)(void);
-    void (*setDutyCycle)(uint32_t dc);
+    void (*start)(void);
+    void (*stop)(void);
+    void (*setOutputLevel)(uint32_t dc);
 }Buzzer;
 
 ClockStatus Buzzer_Init(Buzzer *self);
