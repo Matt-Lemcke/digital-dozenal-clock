@@ -87,3 +87,14 @@ ClockStatus Rtc_EnableAlarm(AlarmId id, AlarmStatus enable)
 
     return CLOCK_OK;
 }
+
+ClockStatus Rtc_GetAlarmStatus(AlarmId id, bool *status)
+{
+    if (g_rtc->getAlarmStatus == NULL) {
+        return CLOCK_FAIL;
+    }
+
+    *status = g_rtc->getAlarmStatus(id);
+
+    return CLOCK_OK;
+}

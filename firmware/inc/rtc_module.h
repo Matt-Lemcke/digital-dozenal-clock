@@ -47,6 +47,7 @@ typedef struct rtc_t
         uint8_t *min,
         uint8_t *sec);
     void (*enableAlarm)(uint8_t id, bool enable);
+    bool (*getAlarmStatus)(uint8_t id);
 
 
 }Rtc;
@@ -58,5 +59,6 @@ ClockStatus Rtc_GetTime(RtcTime *time);
 ClockStatus Rtc_SetAlarm(RtcTime *time, AlarmId id);
 ClockStatus Rtc_GetAlarm(RtcTime *time, AlarmId id);
 ClockStatus Rtc_EnableAlarm(AlarmId id, AlarmStatus enable);
+ClockStatus Rtc_GetAlarmStatus(AlarmId id, bool *status);
 
 #endif /* FIRMWARE_INC_RTC_H_ */

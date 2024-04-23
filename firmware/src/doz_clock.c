@@ -43,7 +43,7 @@ static TimeFormats trad_format_list[] = {TRAD_24H, TRAD_12H};
 static TimeFormats doz_format_list[] = {DOZ_SEMI, DOZ_DRN4, DOZ_DRN5};
 static TimeFormats curr_format;
 
-static uint8_t trad_index = 0, doz_index = 0;
+static uint8_t trad_index = 0, doz_index = 1;
 static uint8_t cancel_pressed = 0;
 static uint32_t user_alarm_ms_old, user_timer_ms_old, time_ms_old;
 static uint8_t alarm_set_old, timer_set_old;
@@ -57,6 +57,11 @@ static RtcTime demo_reset = {
         .min = 22,
         .sec = 0
 };
+
+static RtcTime alarm_time;
+
+static uint32_t curr_timer_ms, curr_time_ms, curr_alarm_ms;
+static bool digits_changed = false;
 
 // State definitions
 static DozClockState s_init =
@@ -240,20 +245,29 @@ void Init_Entry(DozClock *ctx)
 }
 void Init_Update(DozClock *ctx)
 {
-    UNUSED(ctx);
     Display_SetFormat(DOZ_DRN4);
     curr_format = DOZ_DRN4;
+
     if (TimeTrack_SyncToRtc() != CLOCK_OK)
     {
         ctx->error_code = TIME_INIT;
         ctx->error_handler();
     }
     TimeTrack_GetTimeMs(&ctx->time_ms);
+
+    Rtc_GetAlarmStatus(ALARM, &ctx->alarm_set);
+    if (ctx->alarm_set)
+    {
+        Rtc_GetAlarm(&alarm_time, ALARM);
+        ctx->user_alarm_ms = (uint32_t) (alarm_time.sec) * 1000 +   // sec
+                             (uint32_t) (alarm_time.min) * 60000 +  // min
+                             (uint32_t) (alarm_time.hr) * 3600000;  // hour
+    }
+
     transition(&s_idle_disp_on);
 }
 void Init_Exit(DozClock *ctx)
 {
-    UNUSED(ctx);
     TimeTrack_GetTimeMs(&ctx->time_ms);
     Display_On();
 }
@@ -288,6 +302,8 @@ void SetAlarm_Entry(DozClock *ctx)
     alarm_set_old = ctx->alarm_set;
     ctx->digit_sel = 0;
     ctx->alarm_set = false;
+    curr_alarm_ms = ctx->user_alarm_ms;
+    digits_changed = false;
 
     transition_digits(curr_format, ctx->user_alarm_ms, ctx->digit_vals);
     Rtc_EnableAlarm(ALARM, ctx->alarm_set);
@@ -301,40 +317,47 @@ void SetAlarm_Entry(DozClock *ctx)
 void SetAlarm_Update(DozClock *ctx)
 {
     TimeTrack_GetTimeMs(&ctx->time_ms);
-    if (curr_format == TRAD_24H || curr_format == TRAD_12H) {
 
-        ctx->user_alarm_ms = (uint32_t) (10*ctx->digit_vals[4] + ctx->digit_vals[5]) * 1000 +   // sec
-                             (uint32_t) (10*ctx->digit_vals[2] + ctx->digit_vals[3]) * 60000;   // min
+    if (!digits_changed) {
+        ctx->user_alarm_ms = curr_alarm_ms;
+    } else {
+        if (curr_format == TRAD_24H || curr_format == TRAD_12H) {
 
-        if (curr_format == TRAD_24H) {
-            ctx->user_alarm_ms += (uint32_t) (10*ctx->digit_vals[0] + ctx->digit_vals[1]) * 3600000;
-        } else { // TRAD_12H
-            if (ctx->digit_vals[6] == 1 && (10*ctx->digit_vals[0] + ctx->digit_vals[1]) != 12) // PM && hour != 12
-                ctx->user_alarm_ms += (uint32_t) (10*ctx->digit_vals[0] + ctx->digit_vals[1] + 12) * 3600000;
-            else
+            ctx->user_alarm_ms = (uint32_t) (10*ctx->digit_vals[4] + ctx->digit_vals[5]) * 1000 +   // sec
+                                (uint32_t) (10*ctx->digit_vals[2] + ctx->digit_vals[3]) * 60000;   // min
+
+            if (curr_format == TRAD_24H) {
                 ctx->user_alarm_ms += (uint32_t) (10*ctx->digit_vals[0] + ctx->digit_vals[1]) * 3600000;
+            } else { // TRAD_12H
+                if (ctx->digit_vals[6] == 1 && (10*ctx->digit_vals[0] + ctx->digit_vals[1]) != 12) // PM && hour != 12
+                    ctx->user_alarm_ms += (uint32_t) (10*ctx->digit_vals[0] + ctx->digit_vals[1] + 12) * 3600000;
+                else
+                    ctx->user_alarm_ms += (uint32_t) (10*ctx->digit_vals[0] + ctx->digit_vals[1]) * 3600000;
+            }
+
+        } else if (curr_format == DOZ_SEMI) {
+
+            increments = ctx->digit_vals[0]*pow(12,4) 
+                            + ctx->digit_vals[1]*pow(12,3)
+                            + ctx->digit_vals[2]*pow(12,2)
+                            + ctx->digit_vals[3]*pow(12,1)
+                            + ctx->digit_vals[4];
+
+            ctx->user_alarm_ms = round(increments*2083.33333333);
+
+        } else { // DOZ_DRN4 || DOZ_DRN5
+
+            increments = ctx->digit_vals[0]*pow(12,4) 
+                            + ctx->digit_vals[1]*pow(12,3)
+                            + ctx->digit_vals[2]*pow(12,2)
+                            + ctx->digit_vals[3]*pow(12,1)
+                            + ((curr_format == DOZ_DRN5) ? ctx->digit_vals[4] : 0);
+
+            ctx->user_alarm_ms = round(increments*347.22222222);
+
         }
 
-    } else if (curr_format == DOZ_SEMI) {
-
-        increments = ctx->digit_vals[0]*pow(12,4) 
-                        + ctx->digit_vals[1]*pow(12,3)
-                        + ctx->digit_vals[2]*pow(12,2)
-                        + ctx->digit_vals[3]*pow(12,1)
-                        + ctx->digit_vals[4];
-
-        ctx->user_alarm_ms = round(increments*2083.3333);
-
-    } else { // DOZ_DRN4 || DOZ_DRN5
-
-        increments = ctx->digit_vals[0]*pow(12,4) 
-                        + ctx->digit_vals[1]*pow(12,3)
-                        + ctx->digit_vals[2]*pow(12,2)
-                        + ctx->digit_vals[3]*pow(12,1)
-                        + ctx->digit_vals[4];
-
-        ctx->user_alarm_ms = round(increments*347.2222);
-
+        curr_alarm_ms = ctx->user_alarm_ms;
     }
 }
 void SetAlarm_Exit(DozClock *ctx)
@@ -375,6 +398,8 @@ void SetTimer_Entry(DozClock *ctx)
         ctx->digit_vals[i] = 0;
     ctx->user_timer_ms = 0;
     ctx->timer_set = false;
+    curr_timer_ms = 0;
+    digits_changed = false;
 
     Rtc_EnableAlarm(TIMER, ctx->timer_set);
     Display_SetTimer();
@@ -387,38 +412,45 @@ void SetTimer_Entry(DozClock *ctx)
 void SetTimer_Update(DozClock *ctx)
 {
     TimeTrack_GetTimeMs(&ctx->time_ms);
-    if (curr_format == TRAD_24H || curr_format == TRAD_12H) {
-        ctx->user_timer_ms = (uint32_t) (10*ctx->digit_vals[4] + ctx->digit_vals[5]) * 1000 +
-                             (uint32_t) (10*ctx->digit_vals[2] + ctx->digit_vals[3]) * 60000;
-        if (curr_format == TRAD_24H) {
-            ctx->user_timer_ms += (uint32_t) (10*ctx->digit_vals[0] + ctx->digit_vals[1]) * 3600000;
-        } else { // TRAD_12H
-            if (ctx->digit_vals[6] == 1 && (10*ctx->digit_vals[0] + ctx->digit_vals[1]) != 12) // PM && hour != 12
-                ctx->user_timer_ms += (uint32_t) (10*ctx->digit_vals[0] + ctx->digit_vals[1] + 12) * 3600000;
-            else
+
+    if (!digits_changed) {
+        ctx->user_timer_ms = curr_timer_ms;
+    } else {
+        if (curr_format == TRAD_24H || curr_format == TRAD_12H) {
+            ctx->user_timer_ms = (uint32_t) (10*ctx->digit_vals[4] + ctx->digit_vals[5]) * 1000 +
+                                (uint32_t) (10*ctx->digit_vals[2] + ctx->digit_vals[3]) * 60000;
+            if (curr_format == TRAD_24H) {
                 ctx->user_timer_ms += (uint32_t) (10*ctx->digit_vals[0] + ctx->digit_vals[1]) * 3600000;
+            } else { // TRAD_12H
+                if (ctx->digit_vals[6] == 1 && (10*ctx->digit_vals[0] + ctx->digit_vals[1]) != 12) // PM && hour != 12
+                    ctx->user_timer_ms += (uint32_t) (10*ctx->digit_vals[0] + ctx->digit_vals[1] + 12) * 3600000;
+                else
+                    ctx->user_timer_ms += (uint32_t) (10*ctx->digit_vals[0] + ctx->digit_vals[1]) * 3600000;
+            }
+        } else if (curr_format == DOZ_SEMI) {
+
+            increments = ctx->digit_vals[0]*pow(12,4) 
+                            + ctx->digit_vals[1]*pow(12,3)
+                            + ctx->digit_vals[2]*pow(12,2)
+                            + ctx->digit_vals[3]*pow(12,1)
+                            + ctx->digit_vals[4];
+
+            ctx->user_timer_ms = round(increments*2083.33333333);
+
+        } else { // DOZ_DRN4 || DOZ_DRN5
+
+            increments = ctx->digit_vals[0]*pow(12,4) 
+                            + ctx->digit_vals[1]*pow(12,3)
+                            + ctx->digit_vals[2]*pow(12,2)
+                            + ctx->digit_vals[3]*pow(12,1)
+                            + ((curr_format == DOZ_DRN5) ? ctx->digit_vals[4] : 0);
+
+            ctx->user_timer_ms = round(increments*347.22222222);
+
         }
-    } else if (curr_format == DOZ_SEMI) {
-
-        increments = ctx->digit_vals[0]*pow(12,4) 
-                        + ctx->digit_vals[1]*pow(12,3)
-                        + ctx->digit_vals[2]*pow(12,2)
-                        + ctx->digit_vals[3]*pow(12,1)
-                        + ctx->digit_vals[4];
-
-        ctx->user_timer_ms = round(increments*2083.3333);
-
-    } else { // DOZ_DRN4 || DOZ_DRN5
-
-        increments = ctx->digit_vals[0]*pow(12,4) 
-                        + ctx->digit_vals[1]*pow(12,3)
-                        + ctx->digit_vals[2]*pow(12,2)
-                        + ctx->digit_vals[3]*pow(12,1)
-                        + ctx->digit_vals[4];
-
-        ctx->user_timer_ms = round(increments*347.2222);
-
-    } 
+        
+        curr_timer_ms = ctx->user_timer_ms;
+    }
 }
 void SetTimer_Exit(DozClock *ctx)
 {
@@ -447,6 +479,8 @@ void SetTime_Entry(DozClock *ctx)
 {
     ctx->digit_sel = 0;
     ctx->user_time_ms = ctx->time_ms;
+    curr_time_ms = ctx->time_ms;
+    digits_changed = false;
 
     transition_digits(curr_format, ctx->user_time_ms, ctx->digit_vals);
     Display_SetTime();
@@ -462,38 +496,45 @@ void SetTime_Entry(DozClock *ctx)
 void SetTime_Update(DozClock *ctx)
 {
     TimeTrack_GetTimeMs(&ctx->time_ms);
-    if (curr_format == TRAD_24H || curr_format == TRAD_12H) {
-        ctx->user_time_ms = (uint32_t) (10*ctx->digit_vals[4] + ctx->digit_vals[5]) * 1000 +
-                             (uint32_t) (10*ctx->digit_vals[2] + ctx->digit_vals[3]) * 60000;
-        if (curr_format == TRAD_24H) {
-            ctx->user_time_ms += (uint32_t) (10*ctx->digit_vals[0] + ctx->digit_vals[1]) * 3600000;
-        } else { // TRAD_12H
-            if (ctx->digit_vals[6] == 1 && (10*ctx->digit_vals[0] + ctx->digit_vals[1]) != 12) // PM && hour != 12
-                ctx->user_time_ms += (uint32_t) (10*ctx->digit_vals[0] + ctx->digit_vals[1] + 12) * 3600000;
-            else
+
+    if (!digits_changed) {
+        ctx->user_time_ms = curr_time_ms;
+    } else {
+        if (curr_format == TRAD_24H || curr_format == TRAD_12H) {
+            ctx->user_time_ms = (uint32_t) (10*ctx->digit_vals[4] + ctx->digit_vals[5]) * 1000 +
+                                (uint32_t) (10*ctx->digit_vals[2] + ctx->digit_vals[3]) * 60000;
+            if (curr_format == TRAD_24H) {
                 ctx->user_time_ms += (uint32_t) (10*ctx->digit_vals[0] + ctx->digit_vals[1]) * 3600000;
+            } else { // TRAD_12H
+                if (ctx->digit_vals[6] == 1 && (10*ctx->digit_vals[0] + ctx->digit_vals[1]) != 12) // PM && hour != 12
+                    ctx->user_time_ms += (uint32_t) (10*ctx->digit_vals[0] + ctx->digit_vals[1] + 12) * 3600000;
+                else
+                    ctx->user_time_ms += (uint32_t) (10*ctx->digit_vals[0] + ctx->digit_vals[1]) * 3600000;
+            }
+        } else if (curr_format == DOZ_SEMI) {
+
+            increments = ctx->digit_vals[0]*pow(12,4) 
+                            + ctx->digit_vals[1]*pow(12,3)
+                            + ctx->digit_vals[2]*pow(12,2)
+                            + ctx->digit_vals[3]*pow(12,1)
+                            + ctx->digit_vals[4];
+
+            ctx->user_time_ms = round(increments*2083.33333333);
+
+        } else { // DOZ_DRN4 || DOZ_DRN5
+
+            increments = ctx->digit_vals[0]*pow(12,4) 
+                            + ctx->digit_vals[1]*pow(12,3)
+                            + ctx->digit_vals[2]*pow(12,2)
+                            + ctx->digit_vals[3]*pow(12,1)
+                            + ((curr_format == DOZ_DRN5) ? ctx->digit_vals[4] : 0);
+
+            ctx->user_time_ms = round(increments*347.22222222);
+
         }
-    } else if (curr_format == DOZ_SEMI) {
 
-        increments = ctx->digit_vals[0]*pow(12,4) 
-                        + ctx->digit_vals[1]*pow(12,3)
-                        + ctx->digit_vals[2]*pow(12,2)
-                        + ctx->digit_vals[3]*pow(12,1)
-                        + ctx->digit_vals[4];
-
-        ctx->user_time_ms = round(increments*2083.3333);
-
-    } else { // DOZ_DRN4 || DOZ_DRN5
-
-        increments = ctx->digit_vals[0]*pow(12,4) 
-                        + ctx->digit_vals[1]*pow(12,3)
-                        + ctx->digit_vals[2]*pow(12,2)
-                        + ctx->digit_vals[3]*pow(12,1)
-                        + ctx->digit_vals[4];
-
-        ctx->user_time_ms = round(increments*347.2222);
-
-    } 
+        curr_time_ms = ctx->user_time_ms;
+    }
 }
 void SetTime_Exit(DozClock *ctx)
 {
@@ -672,7 +713,7 @@ void msToTrad(uint32_t time_ms, uint8_t *hr_24, uint8_t *min, uint8_t *sec)
 
 void msToDiurn(uint32_t time_ms, uint8_t *digit1, uint8_t *digit2, uint8_t *digit3, uint8_t *digit4, uint8_t *digit5)
 {
-    increments = (uint32_t) round(time_ms / 347.2222);
+    increments = (uint32_t) round(time_ms / 347.22222222);
 
     *digit5 = increments % 12;
     increments /= 12;
@@ -687,7 +728,7 @@ void msToDiurn(uint32_t time_ms, uint8_t *digit1, uint8_t *digit2, uint8_t *digi
 
 void msToSemiDiurn(uint32_t time_ms, uint8_t *digit1, uint8_t *digit2, uint8_t *digit3, uint8_t *digit4, uint8_t *digit5)
 {
-    increments = (uint32_t) round(time_ms / 2083.3333);
+    increments = (uint32_t) round(time_ms / 2083.33333333);
 
     *digit5 = increments % 12;
     increments /= 12;
@@ -873,10 +914,12 @@ static void set_state_left_short(void)
 }
 static void set_state_up_short(void)
 {
+    digits_changed = true;
     digit_value_increase(curr_format, &g_clock_fsm.ctx->digit_vals[g_clock_fsm.ctx->digit_sel], g_clock_fsm.ctx->digit_sel);
 }
 static void set_state_down_short(void)
 {
+    digits_changed = true;
     digit_value_decrease(curr_format, &g_clock_fsm.ctx->digit_vals[g_clock_fsm.ctx->digit_sel], g_clock_fsm.ctx->digit_sel);
 }
 static void set_low_brightness(void)
@@ -966,7 +1009,7 @@ static void toggle_timer_set(void)
         msToRtcTime(timer_end_ms, &timerTime);
         Rtc_SetAlarm(&timerTime, TIMER);
 
-        if (g_clock_fsm.ctx->timer_alarm_displayed == DISPLAY_ALARM && !g_clock_fsm.ctx->alarm_set)
+        if (g_clock_fsm.ctx->timer_alarm_displayed == DISPLAY_ALARM)
             g_clock_fsm.ctx->timer_alarm_displayed = DISPLAY_TIMER;
     } else if (g_clock_fsm.ctx->timer_alarm_displayed == DISPLAY_TIMER && g_clock_fsm.ctx->alarm_set) {
         g_clock_fsm.ctx->timer_alarm_displayed = DISPLAY_ALARM;
@@ -975,9 +1018,11 @@ static void toggle_timer_set(void)
     Rtc_EnableAlarm(TIMER, g_clock_fsm.ctx->timer_set);
 }
 static void toggle_trad_mode(void) 
-{ 
-    trad_index = (trad_index + 1) % 2;
+{
+    if (curr_format == trad_format_list[trad_index])
+        trad_index = (trad_index + 1) % 2;
     curr_format = trad_format_list[trad_index];
+
     if (g_clock_fsm.curr_state->state_code == STATE_SET_TIME) {
         g_clock_fsm.ctx->digit_sel = 0;
         transition_digits(curr_format, g_clock_fsm.ctx->user_time_ms, g_clock_fsm.ctx->digit_vals);
@@ -985,11 +1030,14 @@ static void toggle_trad_mode(void)
         g_clock_fsm.ctx->digit_sel = 0;
         transition_digits(curr_format, g_clock_fsm.ctx->user_alarm_ms, g_clock_fsm.ctx->digit_vals);
     }
+    digits_changed = false;
+
     Display_SetFormat(curr_format);
 }
 static void toggle_doz_mode(void) 
-{ 
-    doz_index = (doz_index + 1) % 3;
+{
+    if (curr_format == doz_format_list[doz_index])
+        doz_index = (doz_index + 1) % 3;
     curr_format = doz_format_list[doz_index];
 
     if (g_clock_fsm.curr_state->state_code == STATE_SET_TIME) {
@@ -999,9 +1047,10 @@ static void toggle_doz_mode(void)
         g_clock_fsm.ctx->digit_sel = 0;
         transition_digits(curr_format, g_clock_fsm.ctx->user_alarm_ms, g_clock_fsm.ctx->digit_vals);
     }
+    digits_changed = false;
 
-    if (curr_format == DOZ_DRN4 && g_clock_fsm.ctx->diurn_radix_pos == RADIX_POS4)
-        g_clock_fsm.ctx->diurn_radix_pos = RADIX_POS3;
+    if (curr_format == DOZ_DRN4 && g_clock_fsm.ctx->diurn_radix_pos == RADIX_POS5)
+        g_clock_fsm.ctx->diurn_radix_pos = RADIX_POS4;
 
     Display_SetFormat(curr_format);
 }
@@ -1012,6 +1061,8 @@ static void toggle_doz_timer(void)
         g_clock_fsm.ctx->digit_sel = 0;
         transition_digits(curr_format, g_clock_fsm.ctx->user_timer_ms, g_clock_fsm.ctx->digit_vals);
     }
+    digits_changed = false;
+
     Display_SetFormat(curr_format);
 }
 static void toggle_trad_timer(void)
@@ -1021,6 +1072,8 @@ static void toggle_trad_timer(void)
         g_clock_fsm.ctx->digit_sel = 0;
         transition_digits(curr_format, g_clock_fsm.ctx->user_timer_ms, g_clock_fsm.ctx->digit_vals);
     }
+    digits_changed = false;
+
     Display_SetFormat(curr_format);
 }
 static void toggle_mode(void)
@@ -1068,20 +1121,20 @@ static void vol_down_long(void)
 static void radix_pos_left(void)
 {
     if (curr_format == DOZ_DRN4)
-        g_clock_fsm.ctx->diurn_radix_pos = (g_clock_fsm.ctx->diurn_radix_pos + 3 - 1) % 3;
+        g_clock_fsm.ctx->diurn_radix_pos = (g_clock_fsm.ctx->diurn_radix_pos + 5 - 1) % 5;
     else if (curr_format == DOZ_DRN5)
-        g_clock_fsm.ctx->diurn_radix_pos = (g_clock_fsm.ctx->diurn_radix_pos + 4 - 1) % 4;
+        g_clock_fsm.ctx->diurn_radix_pos = (g_clock_fsm.ctx->diurn_radix_pos + 6 - 1) % 6;
     else if (curr_format == DOZ_SEMI)
-        g_clock_fsm.ctx->semi_diurn_radix_pos = (g_clock_fsm.ctx->semi_diurn_radix_pos + 4 - 1) % 4;
+        g_clock_fsm.ctx->semi_diurn_radix_pos = (g_clock_fsm.ctx->semi_diurn_radix_pos <= 1) ? 5 : (g_clock_fsm.ctx->semi_diurn_radix_pos - 1);
 }
 static void radix_pos_right(void)
 {
     if (curr_format == DOZ_DRN4)
-        g_clock_fsm.ctx->diurn_radix_pos = (g_clock_fsm.ctx->diurn_radix_pos + 1) % 3;
+        g_clock_fsm.ctx->diurn_radix_pos = (g_clock_fsm.ctx->diurn_radix_pos + 1) % 5;
     else if (curr_format == DOZ_DRN5)
-        g_clock_fsm.ctx->diurn_radix_pos = (g_clock_fsm.ctx->diurn_radix_pos + 1) % 4;
+        g_clock_fsm.ctx->diurn_radix_pos = (g_clock_fsm.ctx->diurn_radix_pos + 1) % 6;
     else if (curr_format == DOZ_SEMI)
-        g_clock_fsm.ctx->semi_diurn_radix_pos = (g_clock_fsm.ctx->semi_diurn_radix_pos + 1) % 4;
+        g_clock_fsm.ctx->semi_diurn_radix_pos = (g_clock_fsm.ctx->semi_diurn_radix_pos >= 5) ? 1 : (g_clock_fsm.ctx->semi_diurn_radix_pos + 1);
 }
 
 static void digit_value_increase(TimeFormats timeFormat, uint8_t *val, uint8_t sel)
