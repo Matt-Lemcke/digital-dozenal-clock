@@ -19,6 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "adc.h"
+#include "dac.h"
 #include "dma.h"
 #include "i2c.h"
 #include "rtc.h"
@@ -35,6 +36,7 @@
 #include "doz_clock.h"
 
 #include "adc-light-sens.h"
+#include "dac-buzzer.h"
 #include "gpio-buttons.h"
 #include "hub75-driver.h"
 #include "i2c-rtc.h"
@@ -55,6 +57,7 @@
 /* USER CODE BEGIN PM */
 
 //#define USE_EXTERNAL_RTC
+#define USE_DAC_BUZZER
 
 /* USER CODE END PM */
 
@@ -90,6 +93,7 @@ void SystemClock_Config(void);
   */
 int main(void)
 {
+
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
@@ -121,14 +125,25 @@ int main(void)
   MX_I2C1_Init();
   MX_TIM1_Init();
   MX_RTC_Init();
+  MX_DAC1_Init();
+  MX_TIM16_Init();
   /* USER CODE BEGIN 2 */
 
-  // Buzzer
-  PKM22E_Init(&htim1, TIM_CHANNEL_1);
-  buzzer.setDutyCycle   = PKM22E_SetDutyCyle;
-  buzzer.startPwm       = PKM22E_StartPwm;
-  buzzer.stopPwm        = PKM22E_StopPwm;
+#ifdef USE_DAC_BUZZER
+  // DAC Buzzer
+  PKM22E_DAC_Init(&htim16, &hdac1, DAC_CHANNEL_2);
+  buzzer.setOutputLevel = PKM22E_DAC_OutputLevel;
+  buzzer.start          = PKM22E_DAC_Start;
+  buzzer.stop           = PKM22E_DAC_Stop;
   doz_clock.buzzer = &buzzer;
+#else
+  // PWM Buzzer
+  PKM22E_PWM_Init(&htim1, TIM_CHANNEL_1);
+  buzzer.setOutputLevel = PKM22E_PWM_OutputLevel;
+  buzzer.start          = PKM22E_PWM_Start;
+  buzzer.stop           = PKM22E_PWM_Stop;
+  doz_clock.buzzer = &buzzer;
+#endif
 
   // Display
   HUB75_Init(&hspi1, &htim2, TIM_CHANNEL_1);
@@ -140,7 +155,6 @@ int main(void)
   rgb_matrix.show           = HUB75_Show;
   rgb_matrix.hide           = HUB75_Hide;
   doz_clock.display = &rgb_matrix;
-
 
 
 #ifdef USE_EXTERNAL_RTC
@@ -264,6 +278,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
         Buttons_TimerCallback(167);
         DozClock_TimerCallback();
     }
+#ifdef USE_DAC_BUZZER
+    else if (htim == &htim16)
+    {
+        PKM22E_DAC_FreqTimerCallback();
+    }
+#endif
 }
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)

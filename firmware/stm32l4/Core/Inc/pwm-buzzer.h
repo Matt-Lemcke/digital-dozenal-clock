@@ -10,13 +10,13 @@
 
 #include "main.h"
 
-#define DC_MAX  100
-#define DC_MIN  0
+#define OUTPUT_MAX  100
+#define OUTPUT_MIN  0
 
-void PKM22E_Init(TIM_HandleTypeDef *htim, uint32_t channel);
-void PKM22E_SetDutyCyle(uint32_t dc);
-void PKM22E_StartPwm(void);
-void PKM22E_StopPwm(void);
+void PKM22E_PWM_Init(TIM_HandleTypeDef *htim, uint32_t channel);
+void PKM22E_PWM_OutputLevel(uint32_t level);
+void PKM22E_PWM_Start(void);
+void PKM22E_PWM_Stop(void);
 
 
 #endif /* INC_PWM_BUZZER_H_ */
