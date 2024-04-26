@@ -158,6 +158,7 @@ typedef struct extern_vars_t
     uint32_t    *user_time_ms;
     uint32_t    *user_alarm_ms;
     uint32_t    *user_timer_ms;
+    int32_t     *rtc_calib;
     uint8_t     *digit_sel;
     uint8_t     *digit_vals;
     uint8_t     *diurn_radix_pos;
@@ -200,7 +201,8 @@ typedef enum display_state_code_t
     STATE_SHOWTIME2,
     STATE_SETTIME,
     STATE_SETTIMER,
-    STATE_SETALARM
+    STATE_SETALARM,
+    STATE_SETCALIB,
 } DisplayStateCode;
 
 typedef struct display_state_t
@@ -229,4 +231,5 @@ void Display_SetAlarm(void);
 void Display_ShowTime(void);
 void Display_SetFormat(TimeFormats format);
 void Display_SetBrightness(BrightnessLevels brightness);
+void Display_SetCalib(void);
 #endif  // FIRMWARE_INC_DISPLAY_H_

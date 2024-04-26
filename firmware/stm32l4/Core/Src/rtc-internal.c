@@ -183,7 +183,7 @@ void RTC_EnableAlarm(uint8_t id, bool enable)
     }
 }
 
-void RTC_SetCalibration(int32_t calib)
+bool RTC_SetCalibration(int32_t calib)
 {
     uint32_t plus_pulse = RTC_SMOOTHCALIB_PLUSPULSES_RESET;
     if (calib < 0)
@@ -194,7 +194,9 @@ void RTC_SetCalibration(int32_t calib)
     if (calib < MAX_CALIBRATION_OFFSET)
     {
         HAL_RTCEx_SetSmoothCalib(hrtc, RTC_SMOOTHCALIB_PERIOD_32SEC, plus_pulse, (uint32_t)calib);
+        return 1;
     }
+    return 0;
 }
 
 int32_t RTC_GetCalibration(void)

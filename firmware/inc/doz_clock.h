@@ -40,6 +40,7 @@ typedef struct doz_clock_t
     uint32_t user_alarm_ms;
     uint32_t user_time_ms;
     uint32_t user_timer_ms;
+    int32_t  rtc_calib;
 
     void (*error_handler)(void);
 } DozClock;
@@ -53,6 +54,7 @@ typedef enum doz_clock_state_code_t {
     STATE_IDLE_DISP_OFF,
     STATE_ALARM_TIMER_DISP_ON,
     STATE_ALARM_TIMER_DISP_OFF,
+    STATE_SET_CALIB,
     NUM_STATES
 } DozClockStateCode;
 

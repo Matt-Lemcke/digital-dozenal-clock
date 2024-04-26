@@ -7,13 +7,15 @@
 #define SMALL_DIGIT_ROWS  7
 #define LARGE_DIGIT_ROWS  12
 
-#define LARGE_NUMS_LENGTH 15
+#define LARGE_NUMS_LENGTH 17
 #define SMALL_NUMS_LENGTH 15
 #define SMALL_SYMB_LENGTH 9
 
 #define RADIX_INDEX         12
 #define SEMICOLON_INDEX     13
 #define BLANK_INDEX         14
+#define PLUS_INDEX          15
+#define MINUS_INDEX         16
 
 #define D_INDEX             0
 #define S_INDEX             1
@@ -248,6 +250,36 @@ static unsigned char large_numbers[LARGE_NUMS_LENGTH][LARGE_DIGIT_ROWS] = {
         0b00000000,
         0b00000000,
         0b00000000,
+        0b00000000,
+        0b00000000,
+        0b00000000,
+        0b00000000,
+        0b00000000
+    },
+    {
+        // +
+        0b00000000,
+        0b00000000,
+        0b00011000,
+        0b00011000,
+        0b00011000,
+        0b11111111,
+        0b11111111,
+        0b00011000,
+        0b00011000,
+        0b00011000,
+        0b00000000,
+        0b00000000
+    },
+    {
+        // -
+        0b00000000,
+        0b00000000,
+        0b00000000,
+        0b00000000,
+        0b00000000,
+        0b11111111,
+        0b11111111,
         0b00000000,
         0b00000000,
         0b00000000,
@@ -505,7 +537,7 @@ static unsigned char small_symbols[SMALL_SYMB_LENGTH][SMALL_DIGIT_ROWS] = {
         0b10000000,
         0b00000000,
         0b10000000
-    },
+    }
 };
 
 #endif  // FIRMWARE_INC_BITMAPS_H_
