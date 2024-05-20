@@ -34,6 +34,8 @@ static void SetTimer_Entry(Display *ctx);
 static void SetTimer_Update(Display *ctx);
 static void SetAlarm_Entry(Display *ctx);
 static void SetAlarm_Update(Display *ctx);
+static void SetCalib_Entry(Display *ctx);
+static void SetCalib_Update(Display *ctx);
 
 static void transition(DisplayState *next);
 
@@ -44,6 +46,7 @@ static void displayTime(Bitmap *row_bitmap, uint32_t time_ms);
 static void blinkDigit(Bitmap *row_bitmap, uint8_t char_index, bool symbol);
 static void updateBitmap(Bitmap *row_bitmap, uint8_t index, uint8_t digit[], uint8_t digitSize, bool blank);
 static uint8_t checkDeadZones(uint8_t digit[], uint8_t digitSize);
+static void displayCalib(Bitmap *row_bitmap, int32_t calib);
 /*
     State definitions
 */
@@ -108,6 +111,14 @@ static DisplayState s_set_alarm =
     .state_code = STATE_SETALARM,
     .entry = SetAlarm_Entry,
     .update = SetAlarm_Update,
+    .exit = Default_Exit,
+};
+
+static DisplayState s_set_calib = 
+{
+    .state_code = STATE_SETCALIB,
+    .entry = SetCalib_Entry,
+    .update = SetCalib_Update,
     .exit = Default_Exit,
 };
 
@@ -370,7 +381,8 @@ void Display_ShowTime(void)
     // Check if currently in a valid Set state
     if (g_fsm.curr_state->state_code == STATE_SETALARM
         || g_fsm.curr_state->state_code == STATE_SETTIMER
-        || g_fsm.curr_state->state_code == STATE_SETTIME)
+        || g_fsm.curr_state->state_code == STATE_SETTIME
+        || g_fsm.curr_state->state_code == STATE_SETCALIB)
     {
         transition(show_time_states[show_time_index]);
     }
@@ -388,6 +400,16 @@ void Display_SetBrightness(BrightnessLevels brightness)
 {
     g_fsm.ctx->brightness = brightness;
     g_fsm.ctx->setBrightness(g_fsm.ctx->brightness);
+}
+
+void Display_SetCalib(void)
+{
+    // Check if currently in a ShowTime state
+    if (g_fsm.curr_state->state_code ==
+        show_time_states[show_time_index]->state_code)
+    {
+        transition(&s_set_calib);
+    }
 }
 
 /*
@@ -635,6 +657,26 @@ static void SetAlarm_Update(Display *ctx)
     ctx->setBitmap(row2_bitmap.num, row2_bitmap.p_bitmap);
     ctx->setBitmap(row3_bitmap.num, row3_bitmap.p_bitmap);
 
+}
+
+static void SetCalib_Entry(Display *ctx)
+{
+    ctx->show(ROW_1);
+    ctx->show(ROW_2);
+    ctx->show(ROW_3);
+}
+
+static void SetCalib_Update(Display *ctx)
+{
+    memset(row1_bitmap.p_bitmap, 0, row1_bitmap.bitmap_size);
+    memset(row3_bitmap.p_bitmap, 0, row3_bitmap.bitmap_size);
+
+    memset(row2_bitmap.p_bitmap, 0, row2_bitmap.bitmap_size);
+    displayCalib(&row2_bitmap, *g_fsm.ctx->clock_vars->rtc_calib);
+
+    ctx->setBitmap(row1_bitmap.num, row1_bitmap.p_bitmap);
+    ctx->setBitmap(row2_bitmap.num, row2_bitmap.p_bitmap);
+    ctx->setBitmap(row3_bitmap.num, row3_bitmap.p_bitmap);
 }
 
 void transition(DisplayState *next)
@@ -923,4 +965,28 @@ static uint8_t checkDeadZones(uint8_t digit[], uint8_t digitSize) {
         ++numDeadZones;
     }
     return numDeadZones;
+}
+
+static void displayCalib(Bitmap *row_bitmap, int32_t calib)
+{
+    if (row_bitmap->num == ROW_2)
+    {
+        if (calib > 0)
+        {
+            displayChar(row_bitmap, DRN5_DIGIT_1_ROW2_DISPLAY_INDEX, large_numbers[PLUS_INDEX], LARGE_DIGIT_ROWS);
+        }
+        else if (calib < 0)
+        {
+            displayChar(row_bitmap, DRN5_DIGIT_1_ROW2_DISPLAY_INDEX, large_numbers[MINUS_INDEX], LARGE_DIGIT_ROWS);
+            calib *= -1;
+        }
+        else
+        {
+            displayChar(row_bitmap, DRN5_DIGIT_1_ROW2_DISPLAY_INDEX, large_numbers[BLANK_INDEX], LARGE_DIGIT_ROWS);
+        }
+        displayChar(row_bitmap, DRN5_DIGIT_2_ROW2_DISPLAY_INDEX, large_numbers[calib/1000], LARGE_DIGIT_ROWS);
+        displayChar(row_bitmap, DRN5_DIGIT_3_ROW2_DISPLAY_INDEX, large_numbers[(calib%1000)/100], LARGE_DIGIT_ROWS);
+        displayChar(row_bitmap, DRN5_DIGIT_4_ROW2_DISPLAY_INDEX, large_numbers[(calib%100)/10], LARGE_DIGIT_ROWS);
+        displayChar(row_bitmap, DRN5_DIGIT_5_ROW2_DISPLAY_INDEX, large_numbers[calib%10], LARGE_DIGIT_ROWS);
+    }
 }

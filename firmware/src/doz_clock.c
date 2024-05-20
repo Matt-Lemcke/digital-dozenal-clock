@@ -26,6 +26,9 @@ static void AlarmTimerDispOn_Exit(DozClock *ctx);
 static void AlarmTimerDispOff_Entry(DozClock *ctx);
 static void AlarmTimerDispOff_Update(DozClock *ctx);
 static void AlarmTimerDispOff_Exit(DozClock *ctx);
+static void SetCalib_Entry(DozClock *ctx);
+static void SetCalib_Update(DozClock *ctx);
+static void SetCalib_Exit(DozClock *ctx);
 
 static void transition(DozClockState *next);
 static void process_event();
@@ -120,6 +123,13 @@ static DozClockState s_alarm_timer_disp_off =
     .update     = AlarmTimerDispOff_Update,
     .exit       = AlarmTimerDispOff_Exit,
 };
+static DozClockState s_set_calib =
+{
+    .state_code = STATE_SET_CALIB,
+    .entry      = SetCalib_Entry,
+    .update     = SetCalib_Update,
+    .exit       = SetCalib_Exit,
+};
 
 // FSM Event Functions
 void DozClock_Init(DozClock *ctx)
@@ -139,6 +149,7 @@ void DozClock_Init(DozClock *ctx)
     clock_vars.timer_alarm_displayed    = &ctx->timer_alarm_displayed;
     clock_vars.diurn_radix_pos          = &ctx->diurn_radix_pos;
     clock_vars.semi_diurn_radix_pos     = &ctx->semi_diurn_radix_pos;
+    clock_vars.rtc_calib                = &ctx->rtc_calib;
 
     *clock_vars.alarm_set               = 0;
     *clock_vars.alarm_triggered         = 0;
@@ -366,7 +377,6 @@ void SetAlarm_Exit(DozClock *ctx)
     Rtc_EnableAlarm(TIMER, ctx->timer_set);
 
     if (cancel_pressed) {
-        cancel_pressed = 0;
         ctx->user_alarm_ms = user_alarm_ms_old;
         ctx->alarm_set = alarm_set_old;
         Rtc_EnableAlarm(ALARM, ctx->alarm_set);
@@ -460,7 +470,6 @@ void SetTimer_Exit(DozClock *ctx)
     RtcTime timerTime;
 
     if (cancel_pressed) {
-        cancel_pressed = 0;
         ctx->user_timer_ms = user_timer_ms_old;
         ctx->timer_set = timer_set_old;
     } else {
@@ -544,7 +553,6 @@ void SetTime_Exit(DozClock *ctx)
     Rtc_EnableAlarm(TIMER, ctx->timer_set);
 
     if (cancel_pressed) {
-        cancel_pressed = 0;
         return;
     }
 
@@ -636,6 +644,25 @@ static void AlarmTimerDispOff_Exit(DozClock *ctx)
 {
     UNUSED(ctx);
     Buzzer_Stop();
+}
+
+static void SetCalib_Entry(DozClock *ctx)
+{
+    if (Rtc_GetCalibration(&ctx->rtc_calib) != CLOCK_OK)
+    {
+        transition(&s_idle_disp_on);
+    }
+    Display_SetCalib();
+}
+
+static void SetCalib_Update(DozClock *ctx)
+{
+    UNUSED(ctx);
+}
+
+static void SetCalib_Exit(DozClock *ctx)
+{
+    UNUSED(ctx);
 }
 
 // Helper functions
@@ -779,6 +806,12 @@ static void vol_down_short(void);
 static void vol_down_long(void);
 static void radix_pos_left(void);
 static void radix_pos_right(void);
+static void start_calibration(void);
+static void save_calibration(void);
+static void calib_increase(void);
+static void calib_large_increase(void);
+static void calib_decrease(void);
+static void calib_large_decrease(void);
 
 // Helper functions
 static void digit_value_increase(TimeFormats timeFormat, uint8_t *val, uint8_t sel);
@@ -799,7 +832,7 @@ static void state_event_map_init()
     state_event_map[STATE_IDLE_DISP_ON][E_TIMER_LONG]               = transition_set_timer;
     state_event_map[STATE_IDLE_DISP_ON][E_ROOM_DARK]                = set_low_brightness;
     state_event_map[STATE_IDLE_DISP_ON][E_ROOM_LIGHT]               = set_high_brightness;
-    // state_event_map[STATE_IDLE_DISP_ON][E_CANCEL_LONG]              = rtc_demo_reset;
+    state_event_map[STATE_IDLE_DISP_ON][E_CANCEL_LONG]              = start_calibration;
     state_event_map[STATE_IDLE_DISP_ON][E_VOLUP_SHORT]              = vol_up_short;
     state_event_map[STATE_IDLE_DISP_ON][E_VOLUP_LONG]               = vol_up_long;
     state_event_map[STATE_IDLE_DISP_ON][E_VOLDOWN_SHORT]            = vol_down_short;
@@ -888,6 +921,25 @@ static void state_event_map_init()
     state_event_map[STATE_ALARM_TIMER_DISP_OFF][E_VOLUP_LONG]       = vol_up_long;
     state_event_map[STATE_ALARM_TIMER_DISP_OFF][E_VOLDOWN_SHORT]    = vol_down_short;
     state_event_map[STATE_ALARM_TIMER_DISP_OFF][E_VOLDOWN_LONG]     = vol_down_long;
+
+    // SET CALIB
+    state_event_map[STATE_SET_CALIB][E_CANCEL_SHORT]                = save_calibration;
+    state_event_map[STATE_SET_CALIB][E_CANCEL_LONG]                 = save_calibration;
+    state_event_map[STATE_SET_CALIB][E_ALARM_LONG]                  = save_calibration;
+    state_event_map[STATE_SET_CALIB][E_TIMER_LONG]                  = save_calibration;
+    state_event_map[STATE_SET_CALIB][E_TRAD_LONG]                   = save_calibration;
+    state_event_map[STATE_SET_CALIB][E_DOZ_LONG]                    = save_calibration;
+    state_event_map[STATE_SET_CALIB][E_UP_SHORT]                    = calib_increase;
+    state_event_map[STATE_SET_CALIB][E_DOWN_SHORT]                  = calib_decrease;
+    state_event_map[STATE_SET_CALIB][E_UP_LONG]                     = calib_large_increase;
+    state_event_map[STATE_SET_CALIB][E_DOWN_LONG]                   = calib_large_decrease;
+    state_event_map[STATE_SET_CALIB][E_VOLUP_SHORT]                 = vol_up_short;
+    state_event_map[STATE_SET_CALIB][E_VOLUP_LONG]                  = vol_up_long;
+    state_event_map[STATE_SET_CALIB][E_VOLDOWN_SHORT]               = vol_down_short;
+    state_event_map[STATE_SET_CALIB][E_VOLDOWN_LONG]                = vol_down_long;
+    state_event_map[STATE_SET_CALIB][E_ROOM_DARK]                   = set_low_brightness;
+    state_event_map[STATE_SET_CALIB][E_ROOM_LIGHT]                  = set_high_brightness;
+    
 }
 
 static void set_state_right_short(void)
@@ -1095,6 +1147,7 @@ static void cancel_set_state(void)
 {
     cancel_pressed = 1;
     transition(&s_idle_disp_on);
+    cancel_pressed = 0;
 }
 static void vol_up_short(void)
 {
@@ -1135,6 +1188,48 @@ static void radix_pos_right(void)
         g_clock_fsm.ctx->diurn_radix_pos = (g_clock_fsm.ctx->diurn_radix_pos + 1) % 6;
     else if (curr_format == DOZ_SEMI)
         g_clock_fsm.ctx->semi_diurn_radix_pos = (g_clock_fsm.ctx->semi_diurn_radix_pos >= 5) ? 1 : (g_clock_fsm.ctx->semi_diurn_radix_pos + 1);
+}
+
+static void start_calibration(void)
+{
+    transition(&s_set_calib);
+}
+
+static void save_calibration(void)
+{
+    transition(&s_idle_disp_on);
+}
+
+static void calib_increase(void)
+{
+    if (Rtc_SetCalibration(g_clock_fsm.ctx->rtc_calib + 1) == CLOCK_OK)
+    {
+        g_clock_fsm.ctx->rtc_calib += 1;
+    }
+}
+
+static void calib_decrease(void)
+{
+    if (Rtc_SetCalibration(g_clock_fsm.ctx->rtc_calib - 1) == CLOCK_OK)
+    {
+        g_clock_fsm.ctx->rtc_calib -= 1;
+    }
+}
+
+static void calib_large_increase(void)
+{
+    if (Rtc_SetCalibration(g_clock_fsm.ctx->rtc_calib + 10) == CLOCK_OK)
+    {
+        g_clock_fsm.ctx->rtc_calib += 10;
+    }
+}
+
+static void calib_large_decrease(void)
+{
+    if (Rtc_SetCalibration(g_clock_fsm.ctx->rtc_calib - 10) == CLOCK_OK)
+    {
+        g_clock_fsm.ctx->rtc_calib -= 10;
+    }
 }
 
 static void digit_value_increase(TimeFormats timeFormat, uint8_t *val, uint8_t sel)

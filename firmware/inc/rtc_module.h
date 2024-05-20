@@ -48,7 +48,9 @@ typedef struct rtc_t
         uint8_t *sec);
     void (*enableAlarm)(uint8_t id, bool enable);
     bool (*getAlarmStatus)(uint8_t id);
-
+    bool (*setCalibration)(int32_t calib);
+    int32_t (*getCalibration)(void);
+    int32_t max_calib;
 
 }Rtc;
 
@@ -60,5 +62,7 @@ ClockStatus Rtc_SetAlarm(RtcTime *time, AlarmId id);
 ClockStatus Rtc_GetAlarm(RtcTime *time, AlarmId id);
 ClockStatus Rtc_EnableAlarm(AlarmId id, AlarmStatus enable);
 ClockStatus Rtc_GetAlarmStatus(AlarmId id, bool *status);
+ClockStatus Rtc_SetCalibration(int32_t val);
+ClockStatus Rtc_GetCalibration(int32_t *val);
 
 #endif /* FIRMWARE_INC_RTC_H_ */

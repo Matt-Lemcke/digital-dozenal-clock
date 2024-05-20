@@ -98,3 +98,23 @@ ClockStatus Rtc_GetAlarmStatus(AlarmId id, bool *status)
 
     return CLOCK_OK;
 }
+
+ClockStatus Rtc_SetCalibration(int32_t val)
+{
+    if (g_rtc->setCalibration == NULL || g_rtc->setCalibration(val) == 0)
+    {
+        return CLOCK_FAIL;
+    }
+    return CLOCK_OK;
+}
+
+ClockStatus Rtc_GetCalibration(int32_t *val)
+{
+    if (g_rtc->getCalibration == NULL)
+    {
+        *val = 0;
+        return CLOCK_FAIL;
+    }
+    *val = g_rtc->getCalibration();
+    return CLOCK_OK;
+}

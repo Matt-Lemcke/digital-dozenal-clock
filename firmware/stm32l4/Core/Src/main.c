@@ -183,6 +183,9 @@ int main(void)
   rtc_internal.setMonth         = RTC_SetMonth;
   rtc_internal.setRtcTime       = RTC_SetTime;
   rtc_internal.getAlarmStatus   = RTC_CheckAlarmSaved;
+  rtc_internal.setCalibration   = RTC_SetCalibration;
+  rtc_internal.getCalibration   = RTC_GetCalibration;
+  rtc_internal.max_calib        = MAX_CALIBRATION_OFFSET;
   doz_clock.rtc = &rtc_internal;
 #endif
 

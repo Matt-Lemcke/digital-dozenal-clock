@@ -15,6 +15,9 @@
 #define VALID_STATUS_CODE   0x00FF00FF
 #define ALARM_SAVED_CODE    0xDEADBEEF
 
+#define CALR_CALP   (hrtc->Instance->CALR & (1<<15))
+#define CALR_CALM   (hrtc->Instance->CALR & 0x1FF)
+
 static RTC_HandleTypeDef *hrtc;
 static RTC_TimeTypeDef sTime = {0};
 static RTC_DateTypeDef sDate = {0};
@@ -50,9 +53,6 @@ void RTC_Init(RTC_HandleTypeDef *rtc)
     HAL_RTC_SetDate(hrtc, &sDate, RTC_FORMAT);
     HAL_RTC_SetAlarm(hrtc, &sAlarm, RTC_FORMAT);
     HAL_RTC_SetAlarm(hrtc, &sTimer, RTC_FORMAT);
-
-    // Calibration test
-    HAL_RTCEx_SetSmoothCalib(hrtc, RTC_SMOOTHCALIB_PERIOD_32SEC, RTC_SMOOTHCALIB_PLUSPULSES_RESET, 0x1F0);
 }
 
 void RTC_SetTime(uint8_t hr, uint8_t min, uint8_t sec)
@@ -182,6 +182,32 @@ void RTC_EnableAlarm(uint8_t id, bool enable)
     default:
         break;
     }
+}
+
+bool RTC_SetCalibration(int32_t calib)
+{
+    uint32_t plus_pulse = RTC_SMOOTHCALIB_PLUSPULSES_RESET;
+    if (calib < 0)
+    {
+        plus_pulse = RTC_SMOOTHCALIB_PLUSPULSES_SET;
+        calib *= -1;
+    }
+    if (calib < MAX_CALIBRATION_OFFSET)
+    {
+        HAL_RTCEx_SetSmoothCalib(hrtc, RTC_SMOOTHCALIB_PERIOD_32SEC, plus_pulse, (uint32_t)calib);
+        return 1;
+    }
+    return 0;
+}
+
+int32_t RTC_GetCalibration(void)
+{
+    int32_t calib = 1;
+    if (CALR_CALP)
+    {
+        calib = -1;
+    }
+    return calib * CALR_CALM;
 }
 
 bool RTC_CheckDataSaved(RTC_HandleTypeDef *rtc)
