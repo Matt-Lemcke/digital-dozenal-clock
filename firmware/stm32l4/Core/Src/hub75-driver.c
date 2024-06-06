@@ -39,6 +39,7 @@ static inline void reset_latch(void);
 static void set_oe_pwm_ccr(uint16_t ccr);
 static void copy_to_buffer(Bitmap_Region *region);
 static void hold_oe_high(void);
+static void clear_shift_registers(void);
 
 /*
     Private variables
@@ -110,16 +111,7 @@ void HUB75_Init(SPI_HandleTypeDef *spi, TIM_HandleTypeDef *tim, uint32_t channel
     memset(bitmap_buffer, 0, BITMAP_SIZE);
 
     // Clear the display memory
-    uint8_t zeros[BUFFER_ROW_SIZE];
-    memset(zeros, 0, BUFFER_ROW_SIZE);
-    reset_latch();
-    for(int i = 0; i < 4; i++)
-    {
-        HAL_SPI_Transmit(hspi, zeros, BUFFER_ROW_SIZE, 500);
-    }
-    set_latch();
-    set_row_address(0);
-    reset_latch();
+    clear_shift_registers();
 
     // Set pmw duty cycle to min
     set_oe_pwm_ccr(MIN_PWM_CCR);
@@ -194,14 +186,17 @@ void HUB75_Hide(uint8_t region_id)
 
 void HUB75_PwmStartPulse(void)
 {
-    // Triggers when OE is HIGH (display off)
-    set_latch();                // Latch data written in last call
-    set_row_address(row_id);    // Go to row address of last call
-    reset_latch();              // Unlatch
+    if (display_on)
+    {
+        // Triggers when OE is HIGH (display off)
+        set_latch();                // Latch data written in last call
+        set_row_address(row_id);    // Go to row address of last call
+        reset_latch();              // Unlatch
 
-    row_id = (row_id + 1) % MAX_SCAN_ROWS;  // Move to next row
+        row_id = (row_id + 1) % MAX_SCAN_ROWS;  // Move to next row
 
-    HAL_SPI_Transmit_DMA(hspi, bitmap_buffer + row_id*BUFFER_ROW_SIZE*2, BUFFER_ROW_SIZE*2);    // Write data for next call
+        HAL_SPI_Transmit_DMA(hspi, bitmap_buffer + row_id*BUFFER_ROW_SIZE*2, BUFFER_ROW_SIZE*2);    // Write data for next call
+    }
 }
 
 /*
@@ -213,7 +208,7 @@ inline void set_row_address(uint8_t row_num)
     HAL_GPIO_WritePin(DISP_B_GPIO_Port, DISP_B_Pin, row_num & (1<<1));
     HAL_GPIO_WritePin(DISP_C_GPIO_Port, DISP_C_Pin, row_num & (1<<2));
     HAL_GPIO_WritePin(DISP_D_GPIO_Port, DISP_D_Pin, row_num & (1<<3));
-    HAL_GPIO_WritePin(DISP_E_GPIO_Port, DISP_E_Pin, 0); // Always 1 for 32 row display
+    HAL_GPIO_WritePin(DISP_E_GPIO_Port, DISP_E_Pin, 0); // Always 0 for 32 row display
 }
 
 inline void reset_latch(void)
@@ -248,6 +243,21 @@ void set_oe_pwm_ccr(uint16_t ccr)
 void hold_oe_high(void)
 {
     htim->Instance->CCR1 = htim->Instance->ARR;
+}
+
+void clear_shift_registers(void)
+{
+    // Clear the display memory
+    uint8_t zeros[BUFFER_ROW_SIZE];
+    memset(zeros, 0, BUFFER_ROW_SIZE);
+    reset_latch();
+    for(int i = 0; i < 4; i++)
+    {
+        HAL_SPI_Transmit(hspi, zeros, BUFFER_ROW_SIZE, 500);
+    }
+    set_latch();
+    set_row_address(0);
+    reset_latch();
 }
 
 void copy_to_buffer(Bitmap_Region *region)
