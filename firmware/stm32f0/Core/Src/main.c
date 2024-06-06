@@ -200,7 +200,11 @@ int main(void)
   {
     DozClock_Update();
 
+      utc = GPS_get_utc_time();
+      status = GPS_get_gps_connected();
+      HAL_Delay(500);
     /* USER CODE END WHILE */
+
 
     /* USER CODE BEGIN 3 */
   }

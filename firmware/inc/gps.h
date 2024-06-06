@@ -11,7 +11,8 @@ typedef struct gps_time_t {
 } GpsTime;
 
 typedef struct gps_t {
-// function pointers to driver functions
+    float (*getUtcTime)(void);
+    unsigned (*gpsConnected)(void);
 } Gps;
 
 ClockStatus Gps_Init(Gps *self);

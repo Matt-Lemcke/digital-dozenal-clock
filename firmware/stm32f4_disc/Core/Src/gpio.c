@@ -79,7 +79,6 @@
      PA10   ------> USART1_RX
      PA11   ------> LTDC_R4
      PA12   ------> LTDC_R5
-     PC10   ------> LTDC_R2
      PD0   ------> FMC_D2_DA2
      PD1   ------> FMC_D3_DA3
      PD3   ------> LTDC_G7
@@ -269,8 +268,8 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Alternate = GPIO_AF14_LTDC;
   HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PCPin PCPin PCPin */
-  GPIO_InitStruct.Pin = HSYNC_Pin|G6_Pin|R2_Pin;
+  /*Configure GPIO pins : PCPin PCPin */
+  GPIO_InitStruct.Pin = HSYNC_Pin|G6_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
