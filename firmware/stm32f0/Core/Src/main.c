@@ -17,28 +17,35 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
+//#include <rtc-module.h>
 #include "main.h"
 #include "adc.h"
 #include "dma.h"
 #include "i2c.h"
+#include "rtc.h"
+#include "spi.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "adc-light-sens.h"
+
 #include "clock_types.h"
+#include "doz_clock.h"
+#include "event_queue.h"
+#include "rtc_module.h"
 
 #include "buzzer.h"
 #include "display.h"
 #include "gps.h"
-#include "rtc.h"
-
+#include "adc-light-sens.h"
+#include "hub75-driver.h"
+#include "hub75-driver.h"
 #include "i2c-rtc.h"
+#include "gpio-buttons.h"
 #include "pwm-buzzer.h"
-#include "uart-display.h"
-#include "uart-gps.h"
+#include "rtc-internal.h"
 
 /* USER CODE END Includes */
 
@@ -59,8 +66,11 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+DozClock doz_clock;
+
 Display rgb_matrix;
-ExternVars display_vars;
+Gps neo6m;
+Rtc rtc_internal;
 Rtc ds3231;
 Buzzer buzzer;
 
@@ -112,50 +122,75 @@ int main(void)
   MX_TIM3_Init();
   MX_ADC_Init();
   MX_TIM6_Init();
+  MX_SPI2_Init();
+  MX_TIM7_Init();
+  MX_TIM15_Init();
+  MX_RTC_Init();
   /* USER CODE BEGIN 2 */
 
-  // Display
-//  if(!Esp8266Driver_Init(&huart2, 2000))
-//  {
-//      Error_Handler();
-//  }
-//  rgb_matrix.displayOff = Esp8266Driver_DisplayOff;
-//  rgb_matrix.displayOn = Esp8266Driver_DisplayOn;
-//  rgb_matrix.setBrightness = Esp8266Driver_SetDisplayBrightness;
-//  rgb_matrix.setBitmap = Esp8266Driver_SetBitmap;
-//  rgb_matrix.setColour = Esp8266Driver_SetColour;
-//  rgb_matrix.show = Esp8266Driver_Show;
-//  rgb_matrix.hide = Esp8266Driver_Hide;
-//  if(Display_Init(&rgb_matrix, &display_vars) != CLOCK_OK)
-//  {
-//      Error_Handler();
-//  }
-  
+
+
   // Buzzer
   PKM22E_Init(&htim3, TIM_CHANNEL_1);
-  buzzer.setDutyCycle = PKM22E_SetDutyCyle;
-  buzzer.startPwm = PKM22E_StartPwm;
-  buzzer.stopPwm = PKM22E_StopPwm;
-  if (Buzzer_Init(&buzzer) != CLOCK_OK)
-  {
-      Error_Handler();
-  }
+  buzzer.setDutyCycle   = PKM22E_SetDutyCyle;
+  buzzer.startPwm       = PKM22E_StartPwm;
+  buzzer.stopPwm        = PKM22E_StopPwm;
+  doz_clock.buzzer = &buzzer;
 
-  // RTC
-  DS3231_Init(&hi2c1);
+  // Internal RTC
+   RTC_Init(&hrtc);
+   rtc_internal.enableAlarm  = RTC_EnableAlarm;
+   rtc_internal.getAlarm     = RTC_GetAlarm;
+   rtc_internal.getDay       = RTC_GetDay;
+   rtc_internal.getMonth     = RTC_GetMonth;
+   rtc_internal.getTime      = RTC_GetTime;
+   rtc_internal.setAlarm     = RTC_SetAlarm;
+   rtc_internal.setDay       = RTC_SetDay;
+   rtc_internal.setMonth     = RTC_SetMonth;
+   rtc_internal.setRtcTime   = RTC_SetTime;
+   doz_clock.rtc = &rtc_internal;
 
-  // GPS
-  GPS_Init(&huart1);
+  // External RTC
+//  DS3231_Init(&hi2c1);
+//  ds3231.enableAlarm = DS3231_EnableAlarm;
+//  ds3231.getAlarm = DS3231_GetAlarm;
+//  ds3231.getTime = DS3231_GetTime;
+//  ds3231.getDay = DS3231_GetDate;
+//  ds3231.getMonth = DS3231_GetMonth;
+//  ds3231.setAlarm = DS3231_SetAlarm;
+//  ds3231.setDay = DS3231_SetDate;
+//  ds3231.setMonth = DS3231_SetMonth;
+//  ds3231.setRtcTime = DS3231_SetTime;
+//  doz_clock.rtc = &ds3231;
+
+  // Display
+  HUB75_Init(&hspi2, &htim15, TIM_CHANNEL_1);
+  rgb_matrix.displayOff     = HUB75_DisplayOff;
+  rgb_matrix.displayOn      = HUB75_DisplayOn;
+  rgb_matrix.setBrightness  = HUB75_SetDisplayBrightness;
+  rgb_matrix.setBitmap      = HUB75_SetBitmap;
+  rgb_matrix.setColour      = HUB75_SetColour;
+  rgb_matrix.show           = HUB75_Show;
+  rgb_matrix.hide           = HUB75_Hide;
+  doz_clock.display = &rgb_matrix;
+
+
+  // Doz Clock
+  doz_clock.error_handler = Error_Handler;
+  DozClock_Init(&doz_clock);
+
+
+  // Buttons
+  Buttons_Init();
 
   // Light sensor
-//  LightSens_Init(&hadc, 2800);
-
+  LightSens_Init(&hadc, 1600);
 
   // Start 2Hz timer
-//  HAL_TIM_Base_Start_IT(&htim6);
+  HAL_TIM_Base_Start_IT(&htim6);
 
-  float utc = 0;
-  unsigned status = 0;
+  // Start 6Hz timer
+  HAL_TIM_Base_Start_IT(&htim7);
 
   /* USER CODE END 2 */
 
@@ -163,7 +198,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-//    Display_Update();
+    DozClock_Update();
 
       utc = GPS_get_utc_time();
       status = GPS_get_gps_connected();
@@ -189,11 +224,13 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_HSI14;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_HSI14
+                              |RCC_OSCILLATORTYPE_LSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSI14State = RCC_HSI14_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
   RCC_OscInitStruct.HSI14CalibrationValue = 16;
+  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
@@ -212,9 +249,11 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART1|RCC_PERIPHCLK_I2C1;
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART1|RCC_PERIPHCLK_I2C1
+                              |RCC_PERIPHCLK_RTC;
   PeriphClkInit.Usart1ClockSelection = RCC_USART1CLKSOURCE_PCLK1;
   PeriphClkInit.I2c1ClockSelection = RCC_I2C1CLKSOURCE_HSI;
+  PeriphClkInit.RTCClockSelection = RCC_RTCCLKSOURCE_LSI;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
     Error_Handler();
@@ -225,17 +264,42 @@ void SystemClock_Config(void)
 
 void HAL_GPIO_EXTI_Callback(uint16_t pin)
 {
-
+    if (pin != RTC_SQW_Pin)
+    {
+        Buttons_GpioCallback(pin);
+    }
+    else
+    {
+    	if (DS3231_IsAlarm1Triggered()) {
+    		EventQ_TriggerAlarmEvent(ALARM_TRIG);
+    	} else if (DS3231_IsAlarm2Triggered()) {
+    		EventQ_TriggerAlarmEvent(TIMER_TRIG);
+    	}
+    }
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-    if(htim == &htim6)
+    if(htim == &htim7)
     {
-        // 2 Hz period
-        Display_PeriodicCallback();
-        LightSens_AdcSampleCallback();
+        // 6 Hz freq
+        Buttons_TimerCallback(167);
+        DozClock_TimerCallback();
     }
+    else if(htim == &htim6)
+    {
+        // 2 Hz freq
+        LightSens_AdcStartConversion();
+    }
+    else if(htim == &htim15)
+    {
+        HUB75_PwmStartPulse();
+    }
+}
+
+void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc)
+{
+    LightSens_AdcConversionCallback();
 }
 
 /* USER CODE END 4 */

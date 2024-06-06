@@ -8,13 +8,12 @@
 
 #include "adc-light-sens.h"
 
-// !!!! DEMO CODE !!!!
-#include "uart-display.h"
+#include "event_queue.h"
 
-#define ADC_BUF_LENGTH  50
+#define ADC_BUF_LENGTH  10
 #define MAX_LIGHT_LEVEL 4095    // Max value on 12-bit ADC
 #define ALPHA           70      // Alpha value for moving avg. (out of 100)
-#define TRANSITION_BUFF 100
+#define TRANSITION_BUFF 200
 
 ADC_HandleTypeDef *adc;
 static uint16_t light_threshold;
@@ -29,11 +28,16 @@ void LightSens_Init(ADC_HandleTypeDef *hadc, uint16_t threshold)
     is_dark_room = 0;
     light_threshold = threshold;
     moving_avg = MAX_LIGHT_LEVEL;
+}
+
+void LightSens_AdcStartConversion(void)
+{
     HAL_ADC_Start_DMA(adc, (uint32_t*)adc_buffer, ADC_BUF_LENGTH);
 }
 
-void LightSens_AdcSampleCallback(void)
+void LightSens_AdcConversionCallback(void)
 {
+    HAL_ADC_Stop_DMA(adc);
     // Basic average calculation for current sample
     sample_avg = 0;
     for(int i = 0; i < ADC_BUF_LENGTH; i++)
@@ -48,15 +52,11 @@ void LightSens_AdcSampleCallback(void)
     if(is_dark_room && moving_avg > (light_threshold + TRANSITION_BUFF))
     {
         is_dark_room = 0;
-
-        // !!!! DEMO CODE !!!!
-        Esp8266Driver_SetDisplayBrightness(255);
+        EventQ_TriggerLightEvent(LIGHT_ROOM);
     }
     else if(!is_dark_room && moving_avg < (light_threshold - TRANSITION_BUFF))
     {
         is_dark_room = 1;
-
-        // !!!! DEMO CODE !!!!
-        Esp8266Driver_SetDisplayBrightness(20);
+        EventQ_TriggerLightEvent(DARK_ROOM);
     }
 }

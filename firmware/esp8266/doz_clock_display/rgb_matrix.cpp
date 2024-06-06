@@ -112,7 +112,7 @@ void RgbMatrix_RegionSetColour(PixelRegion *region, PixelColour colour)
 void display_update_enable(bool is_enable)
 {
   if (is_enable)
-    display_ticker.attach(0.004, display_updater);
+    display_ticker.attach(0.006, display_updater);
   else
     display_ticker.detach();
 }

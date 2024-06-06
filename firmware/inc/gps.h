@@ -18,8 +18,7 @@ typedef struct gps_t {
 } Gps;
 
 ClockStatus Gps_Init(Gps *self);
-uint8_t Gps_Connected(Gps *self);
-GpsTime Gps_GetTime(Gps *self);
-ClockStatus Gps_SetTimezone(Gps *self, int8_t timezone);
+ClockStatus Gps_Connected();
+GpsTime Gps_GetTime();
 
 #endif  // FIRMWARE_INC_GPS_H_

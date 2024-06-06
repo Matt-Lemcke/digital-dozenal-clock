@@ -52,5 +52,5 @@ jobs:
           submodules: recursive
       - uses: actions/setup-python@v1
       - run: pip install cpplint
-      - run: cpplint --filter=-legal/copyright,-build/include_subdir,-runtime/printf,-whitespace/braces,-whitespace/newline, --recursive firmware/src
-      - run: cpplint --filter=-legal/copyright,-build/include_subdir,-runtime/printf,-whitespace/braces,-whitespace/newline, --recursive firmware/inc
+      - run: cpplint --filter=-legal/copyright,-build/include_subdir,-runtime/printf,-whitespace/braces,-whitespace/newline, --recursive firmware/src, --linelength=130
+      - run: cpplint --filter=-legal/copyright,-build/include_subdir,-runtime/printf,-whitespace/braces,-whitespace/newline, --recursive firmware/inc, --linelength=130

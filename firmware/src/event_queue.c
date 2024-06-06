@@ -22,6 +22,7 @@ ClockStatus EventQ_Init()
     ring_buff.head = 0;
     ring_buff.tail = 0;
     ring_buff.is_empty = 1;
+    return CLOCK_OK;
 }
 
 ClockStatus EventQ_GetEvent(EventId *event)

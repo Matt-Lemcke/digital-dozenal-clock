@@ -32,6 +32,7 @@ extern "C" {
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdbool.h>
+#include <string.h>
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -82,6 +83,20 @@ void Error_Handler(void);
 #define DISP_RESET_GPIO_Port GPIOA
 #define BUZZER_PWM_Pin GPIO_PIN_6
 #define BUZZER_PWM_GPIO_Port GPIOA
+#define DISP_A_Pin GPIO_PIN_4
+#define DISP_A_GPIO_Port GPIOC
+#define DISP_B_Pin GPIO_PIN_5
+#define DISP_B_GPIO_Port GPIOC
+#define DISP_C_Pin GPIO_PIN_0
+#define DISP_C_GPIO_Port GPIOB
+#define DISP_D_Pin GPIO_PIN_1
+#define DISP_D_GPIO_Port GPIOB
+#define DISP_E_Pin GPIO_PIN_2
+#define DISP_E_GPIO_Port GPIOB
+#define DISP_LAT_Pin GPIO_PIN_11
+#define DISP_LAT_GPIO_Port GPIOB
+#define DISP_OE_Pin GPIO_PIN_14
+#define DISP_OE_GPIO_Port GPIOB
 #define RTC_SQW_Pin GPIO_PIN_9
 #define RTC_SQW_GPIO_Port GPIOC
 #define RTC_SQW_EXTI_IRQn EXTI4_15_IRQn
@@ -106,6 +121,7 @@ void Error_Handler(void);
 #define BTN11_IN_Pin GPIO_PIN_8
 #define BTN11_IN_GPIO_Port GPIOB
 #define BTN11_IN_EXTI_IRQn EXTI4_15_IRQn
+
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

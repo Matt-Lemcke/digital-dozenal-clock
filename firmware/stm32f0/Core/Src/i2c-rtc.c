@@ -15,6 +15,7 @@ extern "C"{
 #endif
 
 I2C_HandleTypeDef *_ds3231_ui2c;
+static uint8_t Alarm2Seconds = 0;
 
 /**
  * @brief Initializes the DS3231 module. Set clock halt bit to 0 to start timing.
@@ -22,11 +23,13 @@ I2C_HandleTypeDef *_ds3231_ui2c;
  */
 void DS3231_Init(I2C_HandleTypeDef *hi2c) {
     _ds3231_ui2c = hi2c;
-    DS3231_EnableAlarm1(DS3231_DISABLED);
-    DS3231_EnableAlarm2(DS3231_DISABLED);
-    DS3231_ClearAlarm1Flag();
-    DS3231_ClearAlarm2Flag();
-    DS3231_SetInterruptMode(DS3231_ALARM_INTERRUPT);
+    DS3231_EnableAlarm1(false);
+	DS3231_EnableAlarm2(false);
+	DS3231_ClearAlarm1Flag();
+	DS3231_ClearAlarm2Flag();
+	DS3231_SetInterruptMode(DS3231_ALARM_INTERRUPT);
+	DS3231_SetAlarm1Mode(DS3231_A1_MATCH_S_M_H);
+	DS3231_SetAlarm2Mode(DS3231_A2_MATCH_M_H);
 }
 
 /**
@@ -53,9 +56,9 @@ uint8_t DS3231_GetRegByte(uint8_t regAddr) {
 
 /**
  * @brief Enables battery-backed square wave output at the INT#/SQW pin.
- * @param enable Enable, DS3231_ENABLED or DS3231_DISABLED.
+ * @param enable Enable, true or false.
  */
-void DS3231_EnableBatterySquareWave(DS3231_State enable){
+void DS3231_EnableBatterySquareWave(bool enable){
     uint8_t control = DS3231_GetRegByte(DS3231_REG_CONTROL);
     DS3231_SetRegByte(DS3231_REG_CONTROL, (control & 0xbf) | ((enable & 0x01) << DS3231_BBSQW));
 }
@@ -80,18 +83,18 @@ void DS3231_SetRateSelect(DS3231_Rate rate){
 
 /**
  * @brief Enables clock oscillator.
- * @param enable Enable, DS3231_ENABLED or DS3231_DISABLED.
+ * @param enable Enable, true or false.
  */
-void DS3231_EnableOscillator(DS3231_State enable){
+void DS3231_EnableOscillator(bool enable){
     uint8_t control = DS3231_GetRegByte(DS3231_REG_CONTROL);
     DS3231_SetRegByte(DS3231_REG_CONTROL, (control & 0x7f) | ((!enable & 0x01) << DS3231_EOSC));
 }
 
 /**
  * @brief Enables alarm 2.
- * @param enable Enable, DS3231_ENABLED or DS3231_DISABLED.
+ * @param enable Enable, true or false.
  */
-void DS3231_EnableAlarm2(DS3231_State enable){
+void DS3231_EnableAlarm2(bool enable){
     uint8_t control = DS3231_GetRegByte(DS3231_REG_CONTROL);
     DS3231_SetRegByte(DS3231_REG_CONTROL, (control & 0xfd) | ((enable & 0x01) << DS3231_A2IE));
     DS3231_SetInterruptMode(DS3231_ALARM_INTERRUPT);
@@ -111,7 +114,7 @@ void DS3231_ClearAlarm2Flag(){
  */
 void DS3231_SetAlarm2Minute(uint8_t minute){
     uint8_t temp = DS3231_GetRegByte(DS3231_A2_MINUTE) & 0x80;
-    uint8_t a2m2 = temp | (DS3231_EncodeBCD(minute) & 0x3f);
+    uint8_t a2m2 = temp | (DS3231_EncodeBCD(minute) & 0x7f);
     DS3231_SetRegByte(DS3231_A2_MINUTE, a2m2);
 }
 
@@ -161,9 +164,9 @@ void DS3231_SetAlarm2Mode(DS3231_Alarm2Mode alarmMode){
 
 /**
  * @brief Enables alarm 1.
- * @param enable Enable, DS3231_ENABLED or DS3231_DISABLED.
+ * @param enable Enable, true or false.
  */
-void DS3231_EnableAlarm1(DS3231_State enable){
+void DS3231_EnableAlarm1(bool enable){
     uint8_t control = DS3231_GetRegByte(DS3231_REG_CONTROL);
     DS3231_SetRegByte(DS3231_REG_CONTROL, (control & 0xfe) | ((enable & 0x01) << DS3231_A1IE));
     DS3231_SetInterruptMode(DS3231_ALARM_INTERRUPT);
@@ -183,7 +186,7 @@ void DS3231_ClearAlarm1Flag(){
  */
 void DS3231_SetAlarm1Second(uint8_t second){
     uint8_t temp = DS3231_GetRegByte(DS3231_A1_SECOND) & 0x80;
-    uint8_t a1m1 = temp | (DS3231_EncodeBCD(second) & 0x3f);
+    uint8_t a1m1 = temp | (DS3231_EncodeBCD(second) & 0x7f);
     DS3231_SetRegByte(DS3231_A1_SECOND, a1m1);
 }
 
@@ -193,7 +196,7 @@ void DS3231_SetAlarm1Second(uint8_t second){
  */
 void DS3231_SetAlarm1Minute(uint8_t minute){
     uint8_t temp = DS3231_GetRegByte(DS3231_A1_MINUTE) & 0x80;
-    uint8_t a1m2 = temp | (DS3231_EncodeBCD(minute) & 0x3f);
+    uint8_t a1m2 = temp | (DS3231_EncodeBCD(minute) & 0x7f);
     DS3231_SetRegByte(DS3231_A1_MINUTE, a1m2);
 }
 
@@ -439,9 +442,9 @@ uint8_t DS3231_EncodeBCD(uint8_t dec) {
 
 /**
  * @brief Enable the 32kHz output.
- * @param enable Enable, DS3231_ENABLE or DS3231_DISABLE.
+ * @param enable Enable, true or false.
  */
-void DS3231_Enable32kHzOutput(DS3231_State enable){
+void DS3231_Enable32kHzOutput(bool enable){
     uint8_t status = DS3231_GetRegByte(DS3231_REG_STATUS) & 0xfb;
     DS3231_SetRegByte(DS3231_REG_STATUS, status | (enable << DS3231_EN32KHZ));
 }
@@ -464,23 +467,107 @@ uint8_t DS3231_GetTemperatureFraction(){
 
 
 /**
- * @brief Set the current hour, minute, second, date, month, day of week and year.
+ * @brief Set the current hour, minute, second
  * @param hour_24mode Hour in 24h format, 0 to 23.
  * @param minute  Minute, 0 to 59.
  * @param second Second, 0 to 59.
- * @param date Date, 0 to 31.
- * @param month Month, 1 to 12.
- * @param dow Days since last Sunday, 1 to 7.
- * @param year Year, 2000 to 2199.
  */
-void DS3231_SetTime(uint8_t  hour_24mode, uint8_t minute, uint8_t second, uint8_t date, uint8_t month, uint8_t dow, uint16_t year){
-    DS3231_SetHour(hour_24mode);
-    DS3231_SetMinute(minute);
-    DS3231_SetSecond(second);
-    DS3231_SetDate(date);
-    DS3231_SetMonth(month);
-    DS3231_SetDayOfWeek(dow);
-    DS3231_SetYear(year);
+void DS3231_SetTime(uint8_t  hour_24mode, uint8_t minute, uint8_t second){
+	DS3231_SetHour(hour_24mode);
+	DS3231_SetMinute(minute);
+	DS3231_SetSecond(second);
+}
+
+void DS3231_GetTime(uint8_t *hour_24mode, uint8_t *minute, uint8_t *second)
+{
+    *hour_24mode    = DS3231_GetHour();
+    *minute         = DS3231_GetMinute();
+    *second         = DS3231_GetSecond();
+}
+
+/**
+ * @brief Enable alarm1 or alarm2
+ * @param alarm_id Alarm ID, ALARM_ID(1) or TIMER_ID(2).
+ * @param enable Enable, true or false
+ */
+void DS3231_EnableAlarm(uint8_t alarm_id, bool enable) {
+	if (alarm_id == ALARM_ID) {
+		DS3231_EnableAlarm1(enable);
+		DS3231_ClearAlarm1Flag();
+	} else if (alarm_id == TIMER_ID) {
+		DS3231_EnableAlarm2(enable);
+		DS3231_ClearAlarm2Flag();
+	}
+}
+
+/**
+ * @brief Set time of alarm1 or alarm2
+ * @param alarm_id Alarm ID, ALARM_ID(1) or TIMER_ID(2).
+ * @param hour_24mode Hour in 24h format, 0 to 23.
+ * @param minute  Minute, 0 to 59.
+ * @param second Second, 0 to 59.
+ */
+void DS3231_SetAlarm(uint8_t alarm_id, uint8_t hour_24mode, uint8_t minute, uint8_t second) {
+	if (alarm_id == ALARM_ID) {
+		DS3231_SetAlarm1Second(second);
+		DS3231_SetAlarm1Minute(minute);
+		DS3231_SetAlarm1Hour(hour_24mode);
+		DS3231_ClearAlarm1Flag();
+	} else if (alarm_id == TIMER_ID) {
+		Alarm2Seconds = second;
+		DS3231_SetAlarm2Minute(minute);
+		DS3231_SetAlarm2Hour(hour_24mode);
+		DS3231_ClearAlarm2Flag();
+	}
+}
+
+void DS3231_GetAlarm(uint8_t alarm_id, uint8_t *hour_24mode, uint8_t *minute, uint8_t *second)
+{
+    *second         = DS3231_GetAlarmSecond(alarm_id);
+    *minute         = DS3231_GetAlarmMinute(alarm_id);
+    *hour_24mode    = DS3231_GetAlarmHour(alarm_id);
+}
+
+/**
+ * @brief Get alarm1 or alarm2 hour
+ * @param alarm_id Alarm ID, ALARM_ID(1) or TIMER_ID(2).
+ * @return Hour in 24h format, 0 to 23.
+ */
+uint8_t DS3231_GetAlarmHour(uint8_t alarm_id) {
+	if (alarm_id == ALARM_ID) {
+		return DS3231_DecodeBCD(DS3231_GetRegByte(DS3231_A1_HOUR) & 0x3f);
+	} else if (alarm_id == TIMER_ID) {
+		return DS3231_DecodeBCD(DS3231_GetRegByte(DS3231_A2_HOUR) & 0x3f);
+	}
+	return 0;
+}
+
+/**
+ * @brief Get alarm1 or alarm2 minute
+ * @param alarm_id Alarm ID, ALARM_ID(1) or TIMER_ID(2).
+ * @return Minute, 0 to 59.
+ */
+uint8_t DS3231_GetAlarmMinute(uint8_t alarm_id) {
+	if (alarm_id == ALARM_ID) {
+		return DS3231_DecodeBCD(DS3231_GetRegByte(DS3231_A1_MINUTE) & 0x7f);
+	} else if (alarm_id == TIMER_ID) {
+		return DS3231_DecodeBCD(DS3231_GetRegByte(DS3231_A2_MINUTE) & 0x7f);
+	}
+	return 0;
+}
+
+/**
+ * @brief Get alarm1 or alarm2 second
+ * @param alarm_id Alarm ID, ALARM_ID(1) or TIMER_ID(2).
+ * @return Second, 0 to 59.
+ */
+uint8_t DS3231_GetAlarmSecond(uint8_t alarm_id) {
+	if (alarm_id == ALARM_ID) {
+		return DS3231_DecodeBCD(DS3231_GetRegByte(DS3231_A1_SECOND) & 0x7f);
+	} else if (alarm_id == TIMER_ID) {
+		return Alarm2Seconds;
+	}
+	return 0;
 }
 
 #ifdef __cplusplus
