@@ -11,8 +11,6 @@ typedef struct gps_time_t {
 } GpsTime;
 
 typedef struct gps_t {
-    int8_t timezone_offset;
-
     float (*getUtcTime)(void);
     unsigned (*gpsConnected)(void);
 } Gps;

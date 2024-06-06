@@ -9,10 +9,23 @@ ClockStatus Gps_Init(Gps *self)
 }
 ClockStatus Gps_Connected()
 {
-    return CLOCK_OK;
+    if (g_gps->gpsConnected != NULL && g_gps->gpsConnected())
+    {
+        return CLOCK_OK;
+    }
+    return CLOCK_FAIL;
 }
 GpsTime Gps_GetTime()
 {
-    GpsTime zero = { 0 };
-    return zero;
+    GpsTime time = { 0 };
+    if (g_gps->getUtcTime != NULL)
+    {
+        int utc_time = (int)g_gps->getUtcTime();
+        time.sec = utc_time % 100;
+        utc_time = utc_time/100;
+        time.min = utc_time % 100;
+        utc_time = utc_time/100;
+        time.hr  = utc_time % 100;
+    }
+    return time;
 }

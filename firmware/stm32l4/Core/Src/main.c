@@ -25,6 +25,7 @@
 #include "rtc.h"
 #include "spi.h"
 #include "tim.h"
+#include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -42,6 +43,7 @@
 #include "i2c-rtc.h"
 #include "pwm-buzzer.h"
 #include "rtc-internal.h"
+#include "uart-gps.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -68,6 +70,7 @@ DozClock    doz_clock;
 
 Display rgb_matrix;
 Buzzer  buzzer;
+Gps     neo6m;
 
 #ifdef USE_EXTERNAL_RTC
 Rtc ds3231;
@@ -127,6 +130,7 @@ int main(void)
   MX_RTC_Init();
   MX_DAC1_Init();
   MX_TIM16_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 
 #ifdef USE_DAC_BUZZER
@@ -188,6 +192,12 @@ int main(void)
   rtc_internal.max_calib        = MAX_CALIBRATION_OFFSET;
   doz_clock.rtc = &rtc_internal;
 #endif
+
+  // GPS
+  GPS_Init(&huart1);
+  neo6m.gpsConnected    = GPS_get_gps_connected;
+  neo6m.getUtcTime      = GPS_get_utc_time;
+  doz_clock.gps = &neo6m;
 
   // Doz Clock
   doz_clock.error_handler = Error_Handler;
@@ -313,6 +323,16 @@ void HAL_GPIO_EXTI_Callback(uint16_t pin)
 	#else
 	Buttons_GpioCallback(pin);
 	#endif
+}
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+    GPS_UART_CallBack();
+}
+
+void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
+{
+    GPS_UART_CallBack();
 }
 /* USER CODE END 4 */
 
