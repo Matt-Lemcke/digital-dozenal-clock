@@ -45,7 +45,7 @@ static uint8_t timer_delay = 0;
 
 static TimeFormats trad_format_list[] = {TRAD_24H, TRAD_12H};
 static TimeFormats doz_format_list[] = {DOZ_SEMI, DOZ_DRN4, DOZ_DRN5};
-static TimeFormats curr_format;
+static TimeFormats curr_format = DOZ_DRN4, timer_prev_format = DOZ_DRN4;
 
 static uint8_t trad_index = 0, doz_index = 1;
 static uint8_t cancel_pressed = 0;
@@ -404,6 +404,7 @@ void SetAlarm_Exit(DozClock *ctx)
 }
 void SetTimer_Entry(DozClock *ctx)
 {
+    timer_prev_format = curr_format;
     if (curr_format == TRAD_12H) {
         curr_format = TRAD_24H;
     } else if (curr_format == DOZ_DRN4 || curr_format == DOZ_SEMI) {
@@ -493,6 +494,8 @@ void SetTimer_Exit(DozClock *ctx)
     msToRtcTime(timer_end_ms, &timerTime);
     Rtc_SetAlarm(&timerTime, TIMER);
     Rtc_EnableAlarm(TIMER, ctx->timer_set);
+
+    Display_SetFormat(timer_prev_format);
 }
 void SetTime_Entry(DozClock *ctx)
 {

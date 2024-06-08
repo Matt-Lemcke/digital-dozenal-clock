@@ -6,7 +6,7 @@ ClockStatus Buzzer_Init(Buzzer *self)
 {
     g_buzzer = self;
     g_buzzer->is_active = false;
-    g_buzzer->volume = MIN_VOLUME;
+    g_buzzer->volume = MAX_VOLUME;
 
     if (g_buzzer->start == NULL
         || g_buzzer->stop == NULL
