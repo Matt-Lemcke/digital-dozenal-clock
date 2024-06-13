@@ -67,7 +67,7 @@ ClockStatus TimeTrack_Update()
     if (n >= 3600)
     {
         // Attempt to re-sync internal time and RTC to GPS every hour
-        if (Gps_Connected())
+        if (Gps_Connected() == CLOCK_OK)
         {
             // GPS connected
             gps_lost = 0;

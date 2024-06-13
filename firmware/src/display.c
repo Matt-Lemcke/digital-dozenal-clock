@@ -260,6 +260,9 @@ static const uint8_t row3_5digit_radix_pos[6] = {
     RADIX_POS5_ROW3_5DIGIT_DISPLAY_INDEX
 };
 
+static Colour row3_colour;
+static Colour row3_colour_old;
+
 /*
     Public functions
 */
@@ -485,14 +488,24 @@ static void ShowTime_Update(Display *ctx)
 
     memset(row3_bitmap.p_bitmap, 0, row3_bitmap.bitmap_size);
     if (*ctx->clock_vars->timer_set && *ctx->clock_vars->alarm_set) {
-        if (*ctx->clock_vars->timer_alarm_displayed == DISPLAY_ALARM)
+        if (*ctx->clock_vars->timer_alarm_displayed == DISPLAY_ALARM) {
+            row3_colour = BLUE;
             displayTime(&row3_bitmap, *ctx->clock_vars->user_alarm_ms);
-        else if (*ctx->clock_vars->timer_alarm_displayed == DISPLAY_TIMER)
+        } else if (*ctx->clock_vars->timer_alarm_displayed == DISPLAY_TIMER) {
+            row3_colour = GREEN;
             displayTime(&row3_bitmap, *ctx->clock_vars->user_timer_ms);
+        }
     } else if (*ctx->clock_vars->timer_set) {
+        row3_colour = GREEN;
         displayTime(&row3_bitmap, *ctx->clock_vars->user_timer_ms);
     } else if (*ctx->clock_vars->alarm_set) {
+        row3_colour = BLUE;
         displayTime(&row3_bitmap, *ctx->clock_vars->user_alarm_ms);
+    }
+
+    if (row3_colour != row3_colour_old) {
+        row3_colour_old = row3_colour;
+        ctx->setColour(row3_bitmap.num, row3_colour);
     }
 
     ctx->setBitmap(row1_bitmap.num, row1_bitmap.p_bitmap);
@@ -524,14 +537,24 @@ static void SetTime_Update(Display *ctx)
 
     memset(row3_bitmap.p_bitmap, 0, row3_bitmap.bitmap_size);
     if (*ctx->clock_vars->timer_set && *ctx->clock_vars->alarm_set) {
-        if (*ctx->clock_vars->timer_alarm_displayed == DISPLAY_ALARM)
+        if (*ctx->clock_vars->timer_alarm_displayed == DISPLAY_ALARM) {
+            row3_colour = BLUE;
             displayTime(&row3_bitmap, *ctx->clock_vars->user_alarm_ms);
-        else if (*ctx->clock_vars->timer_alarm_displayed == DISPLAY_TIMER)
+        } else if (*ctx->clock_vars->timer_alarm_displayed == DISPLAY_TIMER) {
+            row3_colour = GREEN;
             displayTime(&row3_bitmap, *ctx->clock_vars->user_timer_ms);
+        }
     } else if (*ctx->clock_vars->timer_set) {
+        row3_colour = GREEN;
         displayTime(&row3_bitmap, *ctx->clock_vars->user_timer_ms);
     } else if (*ctx->clock_vars->alarm_set) {
+        row3_colour = BLUE;
         displayTime(&row3_bitmap, *ctx->clock_vars->user_alarm_ms);
+    }
+
+    if (row3_colour != row3_colour_old) {
+        row3_colour_old = row3_colour;
+        ctx->setColour(row3_bitmap.num, row3_colour);
     }
 
     memset(row2_bitmap.p_bitmap, 0, row2_bitmap.bitmap_size);
@@ -570,6 +593,10 @@ static void SetTimer_Entry(Display *ctx)
     ctx->show(ROW_1);
     ctx->show(ROW_2);
     ctx->show(ROW_3);
+
+    row3_colour = GREEN;
+    row3_colour_old = row3_colour;
+    ctx->setColour(row3_bitmap.num, row3_colour);
 }
 static void SetTimer_Update(Display *ctx)
 {
@@ -612,6 +639,10 @@ static void SetAlarm_Entry(Display *ctx)
     ctx->show(ROW_1);
     ctx->show(ROW_2);
     ctx->show(ROW_3);
+    
+    row3_colour = BLUE;
+    row3_colour_old = row3_colour;
+    ctx->setColour(row3_bitmap.num, row3_colour);
 }
 static void SetAlarm_Update(Display *ctx)
 {
