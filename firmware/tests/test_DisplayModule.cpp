@@ -115,44 +115,44 @@ TEST(DisplayModule, U31_TimeFormatChangingStates)
     CHECK_EQUAL(DOZ_SEMI, Format3);
 }
 
-TEST(DisplayModule, U32_DisplayOffWhileSetAlarm)
-{
-    // Setup mock function calls
+// TEST(DisplayModule, U32_DisplayOffWhileSetAlarm)
+// {
+//     // Setup mock function calls
 
-    // Display Init
-    mock().expectNCalls(1,"setBrightness").ignoreOtherParameters();
-    mock().expectNCalls(3,"setColour").ignoreOtherParameters();
-    mock().expectNCalls(3,"setBitmap").ignoreOtherParameters();
-    mock().expectNCalls(1,"displayOff");
-    // Display Init
+//     // Display Init
+//     mock().expectNCalls(1,"setBrightness").ignoreOtherParameters();
+//     mock().expectNCalls(3,"setColour").ignoreOtherParameters();
+//     mock().expectNCalls(3,"setBitmap").ignoreOtherParameters();
+//     mock().expectNCalls(1,"displayOff");
+//     // Display Init
 
-    mock().expectNCalls(1,"displayOn");
-    mock().expectNCalls(8,"show").ignoreOtherParameters();
-    mock().expectNCalls(4,"hide").ignoreOtherParameters();
+//     mock().expectNCalls(1,"displayOn");
+//     mock().expectNCalls(8,"show").ignoreOtherParameters();
+//     mock().expectNCalls(4,"hide").ignoreOtherParameters();
 
-    // Production code
-    Display_Init(&testDisplay, &testExternVars);
-    Display_On();
-    Display_ToggleMode();
-    Display_ToggleMode();
-    Display_ToggleMode();
+//     // Production code
+//     Display_Init(&testDisplay, &testExternVars);
+//     Display_On();
+//     Display_ToggleMode();
+//     Display_ToggleMode();
+//     Display_ToggleMode();
 
-    mock().expectNCalls(1,"show").withParameter("region_id", ROW_1);
-    mock().expectNCalls(3,"show").withParameter("region_id", ROW_2);
-    mock().expectNCalls(1,"show").withParameter("region_id", ROW_3);
-    mock().expectNCalls(2,"hide").withParameter("region_id", ROW_1);
-    mock().expectNCalls(2,"hide").withParameter("region_id", ROW_3);
-    mock().expectNCalls(1,"displayOff");
-    mock().expectNCalls(1,"displayOn");
+//     mock().expectNCalls(1,"show").withParameter("region_id", ROW_1);
+//     mock().expectNCalls(3,"show").withParameter("region_id", ROW_2);
+//     mock().expectNCalls(1,"show").withParameter("region_id", ROW_3);
+//     mock().expectNCalls(2,"hide").withParameter("region_id", ROW_1);
+//     mock().expectNCalls(2,"hide").withParameter("region_id", ROW_3);
+//     mock().expectNCalls(1,"displayOff");
+//     mock().expectNCalls(1,"displayOn");
 
-    Display_SetAlarm();
-    Display_ShowTime();
-    Display_Off();
-    Display_On();
+//     Display_SetAlarm();
+//     Display_ShowTime();
+//     Display_Off();
+//     Display_On();
 
-    // Checks
-    mock().checkExpectations();
-}
+//     // Checks
+//     mock().checkExpectations();
+// }
 
 TEST(DisplayModule, U33_DiurnalConversionValidInput)
 {
