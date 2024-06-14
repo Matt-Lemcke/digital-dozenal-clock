@@ -207,7 +207,7 @@ int main(void)
   Buttons_Init();
 
   // Light sensor
-  LightSens_Init(&hadc1, &htim6, 1000);
+  LightSens_Init(&hadc1, &htim6);
 
   // Start 6Hz timer
   HAL_TIM_Base_Start_IT(&htim7);

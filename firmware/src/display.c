@@ -758,8 +758,7 @@ static void displayTime(Bitmap *row_bitmap, uint32_t time_ms)
 
         if (g_fsm.ctx->time_format == TRAD_24H || g_fsm.ctx->time_format == TRAD_12H)
         {
-            displayChar(row_bitmap, SEMICOLON1_ROW2_DISPLAY_INDEX, large_numbers[SEMICOLON_INDEX], LARGE_DIGIT_ROWS);
-            displayChar(row_bitmap, SEMICOLON2_ROW2_DISPLAY_INDEX, large_numbers[SEMICOLON_INDEX], LARGE_DIGIT_ROWS);
+
 
             uint8_t hr, min, sec;
             msToTrad(time_ms, &hr, &min, &sec);
@@ -767,12 +766,28 @@ static void displayTime(Bitmap *row_bitmap, uint32_t time_ms)
             {
                 hr -= 12;
             }
-            displayChar(row_bitmap, TRAD_DIGIT_1_ROW2_DISPLAY_INDEX, large_numbers[hr / 10], LARGE_DIGIT_ROWS);
-            displayChar(row_bitmap, TRAD_DIGIT_2_ROW2_DISPLAY_INDEX, large_numbers[hr % 10], LARGE_DIGIT_ROWS);
-            displayChar(row_bitmap, TRAD_DIGIT_3_ROW2_DISPLAY_INDEX, large_numbers[min / 10], LARGE_DIGIT_ROWS);
-            displayChar(row_bitmap, TRAD_DIGIT_4_ROW2_DISPLAY_INDEX, large_numbers[min % 10], LARGE_DIGIT_ROWS);
-            displayChar(row_bitmap, TRAD_DIGIT_5_ROW2_DISPLAY_INDEX, large_numbers[sec / 10], LARGE_DIGIT_ROWS);
-            displayChar(row_bitmap, TRAD_DIGIT_6_ROW2_DISPLAY_INDEX, large_numbers[sec % 10], LARGE_DIGIT_ROWS);
+            if (g_fsm.curr_state->state_code == STATE_SETTIME)
+            {
+                displayChar(row_bitmap, SEMICOLON1_ROW2_DISPLAY_INDEX, large_numbers[SEMICOLON_INDEX], LARGE_DIGIT_ROWS);
+                displayChar(row_bitmap, SEMICOLON2_ROW2_DISPLAY_INDEX, large_numbers[SEMICOLON_INDEX], LARGE_DIGIT_ROWS);
+
+                displayChar(row_bitmap, TRAD_DIGIT_1_ROW2_DISPLAY_INDEX, large_numbers[hr / 10], LARGE_DIGIT_ROWS);
+                displayChar(row_bitmap, TRAD_DIGIT_2_ROW2_DISPLAY_INDEX, large_numbers[hr % 10], LARGE_DIGIT_ROWS);
+                displayChar(row_bitmap, TRAD_DIGIT_3_ROW2_DISPLAY_INDEX, large_numbers[min / 10], LARGE_DIGIT_ROWS);
+                displayChar(row_bitmap, TRAD_DIGIT_4_ROW2_DISPLAY_INDEX, large_numbers[min % 10], LARGE_DIGIT_ROWS);
+                displayChar(row_bitmap, TRAD_DIGIT_5_ROW2_DISPLAY_INDEX, large_numbers[sec / 10], LARGE_DIGIT_ROWS);
+                displayChar(row_bitmap, TRAD_DIGIT_6_ROW2_DISPLAY_INDEX, large_numbers[sec % 10], LARGE_DIGIT_ROWS);
+            }
+            else
+            {
+                displayChar(row_bitmap, SEMICOLON1_ROW2_DISPLAY_INDEX + TRAD_HIDE_SECONDS_INDEX_SHIFT, large_numbers[SEMICOLON_INDEX], LARGE_DIGIT_ROWS);
+
+                displayChar(row_bitmap, TRAD_DIGIT_1_ROW2_DISPLAY_INDEX + TRAD_HIDE_SECONDS_INDEX_SHIFT, large_numbers[hr / 10], LARGE_DIGIT_ROWS);
+                displayChar(row_bitmap, TRAD_DIGIT_2_ROW2_DISPLAY_INDEX + TRAD_HIDE_SECONDS_INDEX_SHIFT, large_numbers[hr % 10], LARGE_DIGIT_ROWS);
+                displayChar(row_bitmap, TRAD_DIGIT_3_ROW2_DISPLAY_INDEX + TRAD_HIDE_SECONDS_INDEX_SHIFT, large_numbers[min / 10], LARGE_DIGIT_ROWS);
+                displayChar(row_bitmap, TRAD_DIGIT_4_ROW2_DISPLAY_INDEX + TRAD_HIDE_SECONDS_INDEX_SHIFT, large_numbers[min % 10], LARGE_DIGIT_ROWS);
+            }
+
         }
         else if (g_fsm.ctx->time_format == DOZ_DRN5)
         {

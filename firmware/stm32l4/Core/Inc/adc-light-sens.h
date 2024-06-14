@@ -11,7 +11,7 @@
 #include "main.h"
 #include "clock_types.h"
 
-void LightSens_Init(ADC_HandleTypeDef *hadc, TIM_HandleTypeDef *htim, uint16_t threshold);
+void LightSens_Init(ADC_HandleTypeDef *hadc, TIM_HandleTypeDef *htim);
 void LightSens_AdcStartConversion(void);
 void LightSens_AdcConversionCallback(void);
 

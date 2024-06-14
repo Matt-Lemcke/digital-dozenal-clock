@@ -9,7 +9,7 @@
 #include "tim.h"
 
 #define MIN_PWM_CCR 8000
-#define MAX_PWM_CCR 22500
+#define MAX_PWM_CCR htim->Instance->ARR - 1
 #define BRIGHTNESS_TO_CCR(x)    MAX_PWM_CCR - (MAX_PWM_CCR-MIN_PWM_CCR)/MAX_BRIGHTNESS*x
 
 #define MAX_SCAN_ROWS       16
