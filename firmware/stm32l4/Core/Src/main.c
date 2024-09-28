@@ -59,7 +59,7 @@
 /* USER CODE BEGIN PM */
 
 //#define USE_EXTERNAL_RTC
-#define USE_DAC_BUZZER
+//#define USE_DAC_BUZZER
 
 /* USER CODE END PM */
 

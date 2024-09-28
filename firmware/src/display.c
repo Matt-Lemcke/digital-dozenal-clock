@@ -766,7 +766,7 @@ static void displayTime(Bitmap *row_bitmap, uint32_t time_ms)
             {
                 hr -= 12;
             }
-            if (g_fsm.curr_state->state_code == STATE_SETTIME)
+            if (DISPLAY_TRAD_SECONDS || g_fsm.curr_state->state_code == STATE_SETTIME)
             {
                 displayChar(row_bitmap, SEMICOLON1_ROW2_DISPLAY_INDEX, large_numbers[SEMICOLON_INDEX], LARGE_DIGIT_ROWS);
                 displayChar(row_bitmap, SEMICOLON2_ROW2_DISPLAY_INDEX, large_numbers[SEMICOLON_INDEX], LARGE_DIGIT_ROWS);
