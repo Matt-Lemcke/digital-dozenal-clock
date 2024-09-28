@@ -728,8 +728,18 @@ static void transition_digits(TimeFormats timeFormat, uint32_t ms, uint8_t *vals
             else
                 vals[6] = 0;
         }
-        vals[0] = hr / 10;
-        vals[1] = hr % 10;
+        if (timeFormat == TRAD_12H && hr == 0)
+        {
+            vals[0] = 1;
+            vals[1] = 2;
+            vals[6] = 0;
+        }
+        else
+        {
+            vals[0] = hr / 10;
+            vals[1] = hr % 10;
+        }
+
         vals[2] = min / 10;
         vals[3] = min % 10;
         vals[4] = sec / 10;
@@ -1292,13 +1302,20 @@ static void digit_value_increase(TimeFormats timeFormat, uint8_t *val, uint8_t s
     if (timeFormat == TRAD_12H)
     {
         if (sel == 0)
-            *val = (*val + 1) % 2;
+            if (g_clock_fsm.ctx->digit_vals[1] == 0)
+                *val = 1;
+            else
+                *val = (*val + 2 + 1) % 2;
         else if (sel == 1) 
         {
             if (g_clock_fsm.ctx->digit_vals[0] == 1)
                 *val = (*val + 1) % 3;
             else
+            {
                 *val = (*val + 1) % 10;
+                if (*val == 0)
+                    *val = 1;
+            }
         }
         else if (sel == 2 || sel == 4)
             *val = (*val + 1) % 6;
@@ -1311,11 +1328,6 @@ static void digit_value_increase(TimeFormats timeFormat, uint8_t *val, uint8_t s
         if (g_clock_fsm.ctx->digit_vals[0] == 1 && g_clock_fsm.ctx->digit_vals[1] > 2)
                 g_clock_fsm.ctx->digit_vals[1] = 0;
 
-        if (g_clock_fsm.ctx->digit_vals[0] == 1 && g_clock_fsm.ctx->digit_vals[1] == 2 && g_clock_fsm.ctx->digit_vals[6] == 0) {
-            g_clock_fsm.ctx->digit_vals[6] = 1;
-        } else if (g_clock_fsm.ctx->digit_vals[0] == 0 && g_clock_fsm.ctx->digit_vals[1] == 0 && g_clock_fsm.ctx->digit_vals[6] == 1) {
-            g_clock_fsm.ctx->digit_vals[6] = 0;
-        }
     }
     else if (timeFormat == TRAD_24H)
     {
@@ -1358,32 +1370,33 @@ static void digit_value_decrease(TimeFormats timeFormat, uint8_t *val, uint8_t s
     if (timeFormat == TRAD_12H)
     {
         if (sel == 0)
-            *val = (*val + 2 - 1) % 2;
+        {
+            if (g_clock_fsm.ctx->digit_vals[1] == 0)
+                *val = 1;
+            else
+                *val = (*val + 2 - 1) % 2;
+        }
         else if (sel == 1) 
         {
             if (g_clock_fsm.ctx->digit_vals[0] == 1)
                 *val = (*val + 3 - 1) % 3;
             else
+            {
                 *val = (*val + 10 - 1) % 10;
+                if (*val == 0)
+                    *val = 9;
+            }
         }
         else if (sel == 2 || sel == 4)
             *val = (*val + 6 - 1) % 6;
         else if (sel == 3 || sel == 5)
             *val = (*val + 10 - 1) % 10;
         else if (sel == 6) 
-        {
             *val = (*val + 1) % 2;
-        }
 
 
         if (g_clock_fsm.ctx->digit_vals[0] == 1 && g_clock_fsm.ctx->digit_vals[1] > 2)
                 g_clock_fsm.ctx->digit_vals[1] = 0;
-
-        if (g_clock_fsm.ctx->digit_vals[0] == 1 && g_clock_fsm.ctx->digit_vals[1] == 2 && g_clock_fsm.ctx->digit_vals[6] == 0) {
-            g_clock_fsm.ctx->digit_vals[6] = 1;
-        } else if (g_clock_fsm.ctx->digit_vals[0] == 0 && g_clock_fsm.ctx->digit_vals[1] == 0 && g_clock_fsm.ctx->digit_vals[6] == 1) {
-            g_clock_fsm.ctx->digit_vals[6] = 0;
-        }
     }
     else if (timeFormat == TRAD_24H)
     {

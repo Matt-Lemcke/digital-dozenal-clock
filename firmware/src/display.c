@@ -764,15 +764,26 @@ static void displayTime(Bitmap *row_bitmap, uint32_t time_ms)
             msToTrad(time_ms, &hr, &min, &sec);
             if (g_fsm.ctx->time_format == TRAD_12H && hr > 12)
             {
-                hr -= 12;
+                hr-=12;
             }
+
             if (DISPLAY_TRAD_SECONDS || g_fsm.curr_state->state_code == STATE_SETTIME)
             {
+                // Workaround to prevent 00:00:00 AM from appearing
+                if (g_fsm.ctx->time_format == TRAD_12H && hr == 0)
+                {
+                    displayChar(row_bitmap, TRAD_DIGIT_1_ROW2_DISPLAY_INDEX, large_numbers[1], LARGE_DIGIT_ROWS);
+                    displayChar(row_bitmap, TRAD_DIGIT_2_ROW2_DISPLAY_INDEX, large_numbers[2], LARGE_DIGIT_ROWS);
+                }
+                else
+                {
+                    displayChar(row_bitmap, TRAD_DIGIT_1_ROW2_DISPLAY_INDEX, large_numbers[hr / 10], LARGE_DIGIT_ROWS);
+                    displayChar(row_bitmap, TRAD_DIGIT_2_ROW2_DISPLAY_INDEX, large_numbers[hr % 10], LARGE_DIGIT_ROWS);
+                }
+
                 displayChar(row_bitmap, SEMICOLON1_ROW2_DISPLAY_INDEX, large_numbers[SEMICOLON_INDEX], LARGE_DIGIT_ROWS);
                 displayChar(row_bitmap, SEMICOLON2_ROW2_DISPLAY_INDEX, large_numbers[SEMICOLON_INDEX], LARGE_DIGIT_ROWS);
 
-                displayChar(row_bitmap, TRAD_DIGIT_1_ROW2_DISPLAY_INDEX, large_numbers[hr / 10], LARGE_DIGIT_ROWS);
-                displayChar(row_bitmap, TRAD_DIGIT_2_ROW2_DISPLAY_INDEX, large_numbers[hr % 10], LARGE_DIGIT_ROWS);
                 displayChar(row_bitmap, TRAD_DIGIT_3_ROW2_DISPLAY_INDEX, large_numbers[min / 10], LARGE_DIGIT_ROWS);
                 displayChar(row_bitmap, TRAD_DIGIT_4_ROW2_DISPLAY_INDEX, large_numbers[min % 10], LARGE_DIGIT_ROWS);
                 displayChar(row_bitmap, TRAD_DIGIT_5_ROW2_DISPLAY_INDEX, large_numbers[sec / 10], LARGE_DIGIT_ROWS);
@@ -780,10 +791,20 @@ static void displayTime(Bitmap *row_bitmap, uint32_t time_ms)
             }
             else
             {
+                // Workaround to prevent 00:00:00 AM from appearing
+                if (g_fsm.ctx->time_format == TRAD_12H && hr == 0)
+                {
+                    displayChar(row_bitmap, TRAD_DIGIT_1_ROW2_DISPLAY_INDEX + TRAD_HIDE_SECONDS_INDEX_SHIFT, large_numbers[1], LARGE_DIGIT_ROWS);
+                    displayChar(row_bitmap, TRAD_DIGIT_2_ROW2_DISPLAY_INDEX + TRAD_HIDE_SECONDS_INDEX_SHIFT, large_numbers[2], LARGE_DIGIT_ROWS);
+                }
+                else
+                {
+                    displayChar(row_bitmap, TRAD_DIGIT_1_ROW2_DISPLAY_INDEX + TRAD_HIDE_SECONDS_INDEX_SHIFT, large_numbers[hr / 10], LARGE_DIGIT_ROWS);
+                    displayChar(row_bitmap, TRAD_DIGIT_2_ROW2_DISPLAY_INDEX + TRAD_HIDE_SECONDS_INDEX_SHIFT, large_numbers[hr % 10], LARGE_DIGIT_ROWS);
+                }
+
                 displayChar(row_bitmap, SEMICOLON1_ROW2_DISPLAY_INDEX + TRAD_HIDE_SECONDS_INDEX_SHIFT, large_numbers[SEMICOLON_INDEX], LARGE_DIGIT_ROWS);
 
-                displayChar(row_bitmap, TRAD_DIGIT_1_ROW2_DISPLAY_INDEX + TRAD_HIDE_SECONDS_INDEX_SHIFT, large_numbers[hr / 10], LARGE_DIGIT_ROWS);
-                displayChar(row_bitmap, TRAD_DIGIT_2_ROW2_DISPLAY_INDEX + TRAD_HIDE_SECONDS_INDEX_SHIFT, large_numbers[hr % 10], LARGE_DIGIT_ROWS);
                 displayChar(row_bitmap, TRAD_DIGIT_3_ROW2_DISPLAY_INDEX + TRAD_HIDE_SECONDS_INDEX_SHIFT, large_numbers[min / 10], LARGE_DIGIT_ROWS);
                 displayChar(row_bitmap, TRAD_DIGIT_4_ROW2_DISPLAY_INDEX + TRAD_HIDE_SECONDS_INDEX_SHIFT, large_numbers[min % 10], LARGE_DIGIT_ROWS);
             }
@@ -849,8 +870,18 @@ static void displayTime(Bitmap *row_bitmap, uint32_t time_ms)
                     displayChar(row_bitmap, AM_PM_ROW3_DISPLAY_INDEX, small_symbols[AM_INDEX], SMALL_DIGIT_ROWS);
                 }
             }
-            displayChar(row_bitmap, TRAD_DIGIT_1_ROW3_DISPLAY_INDEX, small_numbers[hr / 10], SMALL_DIGIT_ROWS);
-            displayChar(row_bitmap, TRAD_DIGIT_2_ROW3_DISPLAY_INDEX, small_numbers[hr % 10], SMALL_DIGIT_ROWS);
+
+            // Workaround to prevent 00:00:00 AM from appearing
+            if (g_fsm.ctx->time_format == TRAD_12H && hr == 0)
+            {
+                displayChar(row_bitmap, TRAD_DIGIT_1_ROW3_DISPLAY_INDEX, small_numbers[1], SMALL_DIGIT_ROWS);
+                displayChar(row_bitmap, TRAD_DIGIT_2_ROW3_DISPLAY_INDEX, small_numbers[2], SMALL_DIGIT_ROWS);
+            }
+            else
+            {
+                displayChar(row_bitmap, TRAD_DIGIT_1_ROW3_DISPLAY_INDEX, small_numbers[hr / 10], SMALL_DIGIT_ROWS);
+                displayChar(row_bitmap, TRAD_DIGIT_2_ROW3_DISPLAY_INDEX, small_numbers[hr % 10], SMALL_DIGIT_ROWS);
+            }
             displayChar(row_bitmap, TRAD_DIGIT_3_ROW3_DISPLAY_INDEX, small_numbers[min / 10], SMALL_DIGIT_ROWS);
             displayChar(row_bitmap, TRAD_DIGIT_4_ROW3_DISPLAY_INDEX, small_numbers[min % 10], SMALL_DIGIT_ROWS);
             displayChar(row_bitmap, TRAD_DIGIT_5_ROW3_DISPLAY_INDEX, small_numbers[sec / 10], SMALL_DIGIT_ROWS);
