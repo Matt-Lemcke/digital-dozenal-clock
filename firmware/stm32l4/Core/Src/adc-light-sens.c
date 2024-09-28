@@ -15,22 +15,23 @@
 
 
 #define LIGHT_THRESHOLD         900
-#define DARK_THRESHOLD          20
+#define DARK_THRESHOLD          25
 #define LIGHT_TRANSITION_BUFF   100
-#define DARK_TRANSITION_BUFF    5
+#define DARK_TRANSITION_BUFF    10
 
 ADC_HandleTypeDef *adc;
 TIM_HandleTypeDef *tim;
 static uint16_t adc_buffer[ADC_BUF_LENGTH];
 static uint32_t sample_avg;
 static uint32_t moving_avg;
-static bool is_dim_room;
+static bool is_dim_room, is_dark_room;
 
 void LightSens_Init(ADC_HandleTypeDef *hadc, TIM_HandleTypeDef *htim)
 {
     adc = hadc;
     tim = htim;
     is_dim_room = 0;
+    is_dark_room = 0;
     moving_avg = LIGHT_THRESHOLD;
     HAL_TIM_Base_Start_IT(tim);
 }
@@ -54,19 +55,22 @@ void LightSens_AdcConversionCallback(void)
     // Moving average filter applied to samples
     moving_avg = (moving_avg * ALPHA + sample_avg * (100-ALPHA)) / 100;
 
-    if(is_dim_room && moving_avg > (LIGHT_THRESHOLD + LIGHT_TRANSITION_BUFF))
+    if((is_dim_room || is_dark_room) && moving_avg > (LIGHT_THRESHOLD + LIGHT_TRANSITION_BUFF))
     {
         is_dim_room = 0;
+        is_dark_room = 0;
         EventQ_TriggerLightEvent(LIGHT_ROOM);
     }
-    else if(is_dim_room && moving_avg < (DARK_THRESHOLD - DARK_TRANSITION_BUFF))
+    else if(!is_dark_room && moving_avg < (DARK_THRESHOLD - DARK_TRANSITION_BUFF))
     {
         is_dim_room = 0;
+        is_dark_room = 1;
         EventQ_TriggerLightEvent(DARK_ROOM);
     }
     else if(!is_dim_room && moving_avg < (LIGHT_THRESHOLD - LIGHT_TRANSITION_BUFF) && moving_avg > (DARK_THRESHOLD + DARK_TRANSITION_BUFF))
     {
         is_dim_room = 1;
+        is_dark_room = 0;
         EventQ_TriggerLightEvent(DIM_ROOM);
     }
 }
