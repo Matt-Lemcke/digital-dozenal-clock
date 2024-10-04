@@ -30,6 +30,7 @@ typedef enum btnPressType
 typedef enum lightEventType
 {
     LIGHT_ROOM,
+    DIM_ROOM,
     DARK_ROOM
 } LightEventType;
 
@@ -49,6 +50,7 @@ typedef enum eventIdType
 
     // Light events
     E_ROOM_DARK,
+    E_ROOM_DIM,
     E_ROOM_LIGHT,
 
     // Long btn events

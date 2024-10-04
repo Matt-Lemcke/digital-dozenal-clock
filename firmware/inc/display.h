@@ -44,6 +44,8 @@
 #define TRAD_DIGIT_5_ROW2_DISPLAY_INDEX     45
 #define TRAD_DIGIT_6_ROW2_DISPLAY_INDEX     55
 
+#define TRAD_HIDE_SECONDS_INDEX_SHIFT       11
+
 #define DRN4_DIGIT_1_ROW2_DISPLAY_INDEX     11
 #define DRN4_DIGIT_2_ROW2_DISPLAY_INDEX     21
 #define DRN4_DIGIT_3_ROW2_DISPLAY_INDEX     31
@@ -113,9 +115,9 @@
 
 typedef enum brightness_levels_t
 {
-    LOW_BRIGHTNESS = 30,
-    MED_BRIGHTNESS = 130,
-    HIGH_BRIGHTNESS = 255,
+    LOW_BRIGHTNESS = 0,
+    MED_BRIGHTNESS = 30,
+    HIGH_BRIGHTNESS = 150,
 } BrightnessLevels;
 
 typedef enum time_formats_t

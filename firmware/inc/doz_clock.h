@@ -15,6 +15,7 @@
 #define TIMER_PERIOD_MS  167
 #define MAX_DIGITS       7
 #define PM_12H_MS       (43200000 - 1)
+#define DISPLAY_TRAD_SECONDS    1
 
 typedef struct doz_clock_t
 {

@@ -109,6 +109,9 @@ ClockStatus EventQ_TriggerLightEvent(LightEventType type)
         case LIGHT_ROOM:
             bufferPush(E_ROOM_LIGHT);
             break;
+        case DIM_ROOM:
+            bufferPush(E_ROOM_DIM);
+            break;
         case DARK_ROOM:
             bufferPush(E_ROOM_DARK);
             break;

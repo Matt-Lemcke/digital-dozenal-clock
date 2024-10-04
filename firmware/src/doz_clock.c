@@ -728,8 +728,18 @@ static void transition_digits(TimeFormats timeFormat, uint32_t ms, uint8_t *vals
             else
                 vals[6] = 0;
         }
-        vals[0] = hr / 10;
-        vals[1] = hr % 10;
+        if (timeFormat == TRAD_12H && hr == 0)
+        {
+            vals[0] = 1;
+            vals[1] = 2;
+            vals[6] = 0;
+        }
+        else
+        {
+            vals[0] = hr / 10;
+            vals[1] = hr % 10;
+        }
+
         vals[2] = min / 10;
         vals[3] = min % 10;
         vals[4] = sec / 10;
@@ -824,6 +834,7 @@ static void transition_timer_disp_on(void);
 static void transition_alarm_disp_off(void);
 static void transition_timer_disp_off(void);
 static void set_low_brightness(void);
+static void set_med_brightness(void);
 static void set_high_brightness(void);
 static void set_state_right_short(void);
 static void set_state_left_short(void);
@@ -864,6 +875,7 @@ static void state_event_map_init()
     state_event_map[STATE_IDLE_DISP_ON][E_TIMER_SHORT]              = toggle_timer_set;
     state_event_map[STATE_IDLE_DISP_ON][E_TIMER_LONG]               = transition_set_timer;
     state_event_map[STATE_IDLE_DISP_ON][E_ROOM_DARK]                = set_low_brightness;
+    state_event_map[STATE_IDLE_DISP_ON][E_ROOM_DIM]                 = set_med_brightness;
     state_event_map[STATE_IDLE_DISP_ON][E_ROOM_LIGHT]               = set_high_brightness;
     state_event_map[STATE_IDLE_DISP_ON][E_CANCEL_LONG]              = start_calibration;
     state_event_map[STATE_IDLE_DISP_ON][E_VOLUP_SHORT]              = vol_up_short;
@@ -880,6 +892,7 @@ static void state_event_map_init()
     // IDLE OFF
     state_event_map[STATE_IDLE_DISP_OFF][E_DISPLAY_LONG]            = transition_idle_disp_on;
     state_event_map[STATE_IDLE_DISP_OFF][E_ROOM_DARK]               = set_low_brightness;
+    state_event_map[STATE_IDLE_DISP_OFF][E_ROOM_DIM]                = set_med_brightness;
     state_event_map[STATE_IDLE_DISP_OFF][E_ROOM_LIGHT]              = set_high_brightness;
     state_event_map[STATE_IDLE_DISP_OFF][E_VOLUP_SHORT]             = vol_up_short;
     state_event_map[STATE_IDLE_DISP_OFF][E_VOLUP_LONG]              = vol_up_long;
@@ -902,6 +915,7 @@ static void state_event_map_init()
     state_event_map[STATE_SET_ALARM][E_VOLDOWN_LONG]                = vol_down_long;
     state_event_map[STATE_SET_ALARM][E_ALARM_LONG]                  = transition_idle_disp_on;
     state_event_map[STATE_SET_ALARM][E_ROOM_DARK]                   = set_low_brightness;
+    state_event_map[STATE_SET_ALARM][E_ROOM_DIM]                    = set_med_brightness;
     state_event_map[STATE_SET_ALARM][E_ROOM_LIGHT]                  = set_high_brightness;
 
     // SET TIMER
@@ -918,6 +932,7 @@ static void state_event_map_init()
     state_event_map[STATE_SET_TIMER][E_VOLDOWN_LONG]                = vol_down_long;
     state_event_map[STATE_SET_TIMER][E_TIMER_LONG]                  = transition_idle_disp_on;
     state_event_map[STATE_SET_TIMER][E_ROOM_DARK]                   = set_low_brightness;
+    state_event_map[STATE_SET_TIMER][E_ROOM_DIM]                    = set_med_brightness;
     state_event_map[STATE_SET_TIMER][E_ROOM_LIGHT]                  = set_high_brightness;
 
     // SET TIME
@@ -935,11 +950,13 @@ static void state_event_map_init()
     state_event_map[STATE_SET_TIME][E_VOLDOWN_SHORT]                = vol_down_short;
     state_event_map[STATE_SET_TIME][E_VOLDOWN_LONG]                 = vol_down_long;
     state_event_map[STATE_SET_TIME][E_ROOM_DARK]                    = set_low_brightness;
+    state_event_map[STATE_SET_TIME][E_ROOM_DIM]                    = set_med_brightness;
     state_event_map[STATE_SET_TIME][E_ROOM_LIGHT]                   = set_high_brightness;
 
     // ALARM TIMER TRIGGERED DISP ON
     state_event_map[STATE_ALARM_TIMER_DISP_ON][E_CANCEL_SHORT]      = transition_idle_disp_on;
     state_event_map[STATE_ALARM_TIMER_DISP_ON][E_ROOM_DARK]         = set_low_brightness;
+    state_event_map[STATE_ALARM_TIMER_DISP_ON][E_ROOM_DIM]          = set_med_brightness;
     state_event_map[STATE_ALARM_TIMER_DISP_ON][E_ROOM_LIGHT]        = set_high_brightness;
     state_event_map[STATE_ALARM_TIMER_DISP_ON][E_VOLUP_SHORT]       = vol_up_short;
     state_event_map[STATE_ALARM_TIMER_DISP_ON][E_VOLUP_LONG]        = vol_up_long;
@@ -949,6 +966,7 @@ static void state_event_map_init()
     // ALARM TIMER TRIGGERED DISP OFF
     state_event_map[STATE_ALARM_TIMER_DISP_OFF][E_CANCEL_SHORT]     = transition_idle_disp_off;
     state_event_map[STATE_ALARM_TIMER_DISP_OFF][E_ROOM_DARK]        = set_low_brightness;
+    state_event_map[STATE_ALARM_TIMER_DISP_OFF][E_ROOM_DIM]         = set_med_brightness;
     state_event_map[STATE_ALARM_TIMER_DISP_OFF][E_ROOM_LIGHT]       = set_high_brightness;
     state_event_map[STATE_ALARM_TIMER_DISP_OFF][E_VOLUP_SHORT]      = vol_up_short;
     state_event_map[STATE_ALARM_TIMER_DISP_OFF][E_VOLUP_LONG]       = vol_up_long;
@@ -971,6 +989,7 @@ static void state_event_map_init()
     state_event_map[STATE_SET_CALIB][E_VOLDOWN_SHORT]               = vol_down_short;
     state_event_map[STATE_SET_CALIB][E_VOLDOWN_LONG]                = vol_down_long;
     state_event_map[STATE_SET_CALIB][E_ROOM_DARK]                   = set_low_brightness;
+    state_event_map[STATE_SET_CALIB][E_ROOM_DIM]                    = set_med_brightness;
     state_event_map[STATE_SET_CALIB][E_ROOM_LIGHT]                  = set_high_brightness;
     
 }
@@ -1010,6 +1029,10 @@ static void set_state_down_short(void)
 static void set_low_brightness(void)
 {
     Display_SetBrightness(LOW_BRIGHTNESS);
+}
+static void set_med_brightness(void)
+{
+    Display_SetBrightness(MED_BRIGHTNESS);
 }
 static void set_high_brightness(void)
 {
@@ -1279,13 +1302,20 @@ static void digit_value_increase(TimeFormats timeFormat, uint8_t *val, uint8_t s
     if (timeFormat == TRAD_12H)
     {
         if (sel == 0)
-            *val = (*val + 1) % 2;
+            if (g_clock_fsm.ctx->digit_vals[1] == 0)
+                *val = 1;
+            else
+                *val = (*val + 2 + 1) % 2;
         else if (sel == 1) 
         {
             if (g_clock_fsm.ctx->digit_vals[0] == 1)
                 *val = (*val + 1) % 3;
             else
+            {
                 *val = (*val + 1) % 10;
+                if (*val == 0)
+                    *val = 1;
+            }
         }
         else if (sel == 2 || sel == 4)
             *val = (*val + 1) % 6;
@@ -1298,11 +1328,6 @@ static void digit_value_increase(TimeFormats timeFormat, uint8_t *val, uint8_t s
         if (g_clock_fsm.ctx->digit_vals[0] == 1 && g_clock_fsm.ctx->digit_vals[1] > 2)
                 g_clock_fsm.ctx->digit_vals[1] = 0;
 
-        if (g_clock_fsm.ctx->digit_vals[0] == 1 && g_clock_fsm.ctx->digit_vals[1] == 2 && g_clock_fsm.ctx->digit_vals[6] == 0) {
-            g_clock_fsm.ctx->digit_vals[6] = 1;
-        } else if (g_clock_fsm.ctx->digit_vals[0] == 0 && g_clock_fsm.ctx->digit_vals[1] == 0 && g_clock_fsm.ctx->digit_vals[6] == 1) {
-            g_clock_fsm.ctx->digit_vals[6] = 0;
-        }
     }
     else if (timeFormat == TRAD_24H)
     {
@@ -1345,32 +1370,33 @@ static void digit_value_decrease(TimeFormats timeFormat, uint8_t *val, uint8_t s
     if (timeFormat == TRAD_12H)
     {
         if (sel == 0)
-            *val = (*val + 2 - 1) % 2;
+        {
+            if (g_clock_fsm.ctx->digit_vals[1] == 0)
+                *val = 1;
+            else
+                *val = (*val + 2 - 1) % 2;
+        }
         else if (sel == 1) 
         {
             if (g_clock_fsm.ctx->digit_vals[0] == 1)
                 *val = (*val + 3 - 1) % 3;
             else
+            {
                 *val = (*val + 10 - 1) % 10;
+                if (*val == 0)
+                    *val = 9;
+            }
         }
         else if (sel == 2 || sel == 4)
             *val = (*val + 6 - 1) % 6;
         else if (sel == 3 || sel == 5)
             *val = (*val + 10 - 1) % 10;
         else if (sel == 6) 
-        {
             *val = (*val + 1) % 2;
-        }
 
 
         if (g_clock_fsm.ctx->digit_vals[0] == 1 && g_clock_fsm.ctx->digit_vals[1] > 2)
                 g_clock_fsm.ctx->digit_vals[1] = 0;
-
-        if (g_clock_fsm.ctx->digit_vals[0] == 1 && g_clock_fsm.ctx->digit_vals[1] == 2 && g_clock_fsm.ctx->digit_vals[6] == 0) {
-            g_clock_fsm.ctx->digit_vals[6] = 1;
-        } else if (g_clock_fsm.ctx->digit_vals[0] == 0 && g_clock_fsm.ctx->digit_vals[1] == 0 && g_clock_fsm.ctx->digit_vals[6] == 1) {
-            g_clock_fsm.ctx->digit_vals[6] = 0;
-        }
     }
     else if (timeFormat == TRAD_24H)
     {
