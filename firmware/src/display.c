@@ -296,7 +296,7 @@ ClockStatus Display_Init(Display *self, ExternVars *vars)
 
     g_fsm.ctx->setColour(row1_bitmap.num, RED);    // Row1 Red
     g_fsm.ctx->setColour(row2_bitmap.num, CYAN);    // Row2 Cyan
-    g_fsm.ctx->setColour(row3_bitmap.num, MAGENTA);    // Row3 Blue
+    g_fsm.ctx->setColour(row3_bitmap.num, BLUE);    // Row3 Blue
 
     g_fsm.ctx->setBitmap(row1_bitmap.num, row1_bitmap.p_bitmap);
     g_fsm.ctx->setBitmap(row2_bitmap.num, row2_bitmap.p_bitmap);
@@ -489,7 +489,7 @@ static void ShowTime_Update(Display *ctx)
     memset(row3_bitmap.p_bitmap, 0, row3_bitmap.bitmap_size);
     if (*ctx->clock_vars->timer_set && *ctx->clock_vars->alarm_set) {
         if (*ctx->clock_vars->timer_alarm_displayed == DISPLAY_ALARM) {
-            row3_colour = MAGENTA;
+            row3_colour = BLUE;
             displayTime(&row3_bitmap, *ctx->clock_vars->user_alarm_ms);
         } else if (*ctx->clock_vars->timer_alarm_displayed == DISPLAY_TIMER) {
             row3_colour = GREEN;
@@ -499,7 +499,7 @@ static void ShowTime_Update(Display *ctx)
         row3_colour = GREEN;
         displayTime(&row3_bitmap, *ctx->clock_vars->user_timer_ms);
     } else if (*ctx->clock_vars->alarm_set) {
-        row3_colour = MAGENTA;
+        row3_colour = BLUE;
         displayTime(&row3_bitmap, *ctx->clock_vars->user_alarm_ms);
     }
 
@@ -538,7 +538,7 @@ static void SetTime_Update(Display *ctx)
     memset(row3_bitmap.p_bitmap, 0, row3_bitmap.bitmap_size);
     if (*ctx->clock_vars->timer_set && *ctx->clock_vars->alarm_set) {
         if (*ctx->clock_vars->timer_alarm_displayed == DISPLAY_ALARM) {
-            row3_colour = MAGENTA;
+            row3_colour = BLUE;
             displayTime(&row3_bitmap, *ctx->clock_vars->user_alarm_ms);
         } else if (*ctx->clock_vars->timer_alarm_displayed == DISPLAY_TIMER) {
             row3_colour = GREEN;
@@ -548,7 +548,7 @@ static void SetTime_Update(Display *ctx)
         row3_colour = GREEN;
         displayTime(&row3_bitmap, *ctx->clock_vars->user_timer_ms);
     } else if (*ctx->clock_vars->alarm_set) {
-        row3_colour = MAGENTA;
+        row3_colour = BLUE;
         displayTime(&row3_bitmap, *ctx->clock_vars->user_alarm_ms);
     }
 
@@ -640,7 +640,7 @@ static void SetAlarm_Entry(Display *ctx)
     ctx->show(ROW_2);
     ctx->show(ROW_3);
     
-    row3_colour = MAGENTA;
+    row3_colour = BLUE;
     row3_colour_old = row3_colour;
     ctx->setColour(row3_bitmap.num, row3_colour);
 }
