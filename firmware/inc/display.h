@@ -115,7 +115,7 @@
 
 typedef enum brightness_levels_t
 {
-    LOW_BRIGHTNESS = 0,
+    LOW_BRIGHTNESS = 7,
     MED_BRIGHTNESS = 30,
     HIGH_BRIGHTNESS = 150,
 } BrightnessLevels;
