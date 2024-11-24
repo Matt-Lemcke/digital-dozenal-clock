@@ -352,6 +352,8 @@ void SetAlarm_Update(DozClock *ctx)
             } else { // TRAD_12H
                 if (ctx->digit_vals[6] == 1 && (10*ctx->digit_vals[0] + ctx->digit_vals[1]) != 12) // PM && hour != 12
                     ctx->user_alarm_ms += (uint32_t) (10*ctx->digit_vals[0] + ctx->digit_vals[1] + 12) * 3600000;
+                else if (ctx->digit_vals[6] == 0 && (10*ctx->digit_vals[0] + ctx->digit_vals[1]) == 12) // AM && hour == 12
+                    ctx->user_alarm_ms += 0;
                 else
                     ctx->user_alarm_ms += (uint32_t) (10*ctx->digit_vals[0] + ctx->digit_vals[1]) * 3600000;
             }
@@ -530,6 +532,8 @@ void SetTime_Update(DozClock *ctx)
             } else { // TRAD_12H
                 if (ctx->digit_vals[6] == 1 && (10*ctx->digit_vals[0] + ctx->digit_vals[1]) != 12) // PM && hour != 12
                     ctx->user_time_ms += (uint32_t) (10*ctx->digit_vals[0] + ctx->digit_vals[1] + 12) * 3600000;
+                else if (ctx->digit_vals[6] == 0 && (10*ctx->digit_vals[0] + ctx->digit_vals[1]) == 12) // AM && hour == 12
+                    ctx->user_alarm_ms += 0;
                 else
                     ctx->user_time_ms += (uint32_t) (10*ctx->digit_vals[0] + ctx->digit_vals[1]) * 3600000;
             }
