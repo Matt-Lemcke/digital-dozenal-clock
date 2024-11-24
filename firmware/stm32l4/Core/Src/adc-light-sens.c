@@ -15,9 +15,9 @@
 
 
 #define LIGHT_THRESHOLD         900
-#define DARK_THRESHOLD          25
+#define DARK_THRESHOLD          20
 #define LIGHT_TRANSITION_BUFF   100
-#define DARK_TRANSITION_BUFF    10
+#define DARK_TRANSITION_BUFF    5
 
 ADC_HandleTypeDef *adc;
 TIM_HandleTypeDef *tim;
