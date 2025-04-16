@@ -356,21 +356,6 @@ void SetAlarm_Entry(DozClock *ctx)
 void SetAlarm_Update(DozClock *ctx)
 {
     TimeTrack_GetTimeMs(&ctx->time_ms);
-//    if (curr_format == DOZ_DRN4 || curr_format == DOZ_DRN5 || curr_format == DOZ_SEMI)
-//    {
-//        if (calculate_time_shift(&ctx->time_ms, ctx->time_ms))
-//        {
-//            Display_UseTimeShiftColour(true);
-//        }
-//        else
-//        {
-//            Display_UseTimeShiftColour(false);
-//        }
-//    }
-//    else
-//    {
-//        Display_UseTimeShiftColour(false);
-//    }
 
     if (!digits_changed) {
         ctx->user_alarm_ms = TimeTrack_ConvertToShiftedTime(curr_alarm_ms);
@@ -468,21 +453,6 @@ void SetTimer_Entry(DozClock *ctx)
 void SetTimer_Update(DozClock *ctx)
 {
     TimeTrack_GetTimeMs(&ctx->time_ms);
-//    if (curr_format == DOZ_DRN4 || curr_format == DOZ_DRN5 || curr_format == DOZ_SEMI)
-//    {
-//        if (calculate_time_shift(&ctx->time_ms, ctx->time_ms))
-//        {
-//            Display_UseTimeShiftColour(true);
-//        }
-//        else
-//        {
-//            Display_UseTimeShiftColour(false);
-//        }
-//    }
-//    else
-//    {
-//        Display_UseTimeShiftColour(false);
-//    }
 
     if (!digits_changed) {
         ctx->user_timer_ms = curr_timer_ms;
