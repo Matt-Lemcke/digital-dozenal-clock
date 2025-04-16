@@ -234,4 +234,5 @@ void Display_ShowTime(void);
 void Display_SetFormat(TimeFormats format);
 void Display_SetBrightness(BrightnessLevels brightness);
 void Display_SetCalib(void);
+void Display_UseTimeShiftColour(bool state);
 #endif  // FIRMWARE_INC_DISPLAY_H_
