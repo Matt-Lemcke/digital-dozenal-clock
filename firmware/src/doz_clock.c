@@ -64,6 +64,8 @@ static RtcTime demo_reset = {
 
 static RtcTime alarm_time;
 
+static TimeShift current_shift = SHIFT_0;
+
 static uint32_t curr_timer_ms, curr_time_ms, curr_alarm_ms;
 static bool digits_changed = false;
 
@@ -275,9 +277,10 @@ void Init_Update(DozClock *ctx)
     if (ctx->alarm_set)
     {
         Rtc_GetAlarm(&alarm_time, ALARM);
-        ctx->user_alarm_ms = (uint32_t) (alarm_time.sec) * 1000 +   // sec
-                             (uint32_t) (alarm_time.min) * 60000 +  // min
-                             (uint32_t) (alarm_time.hr) * 3600000;  // hour
+        curr_alarm_ms = (uint32_t) (alarm_time.sec) * 1000 +   // sec
+                        (uint32_t) (alarm_time.min) * 60000 +  // min
+                        (uint32_t) (alarm_time.hr) * 3600000;  // hour
+        ctx->user_alarm_ms = TimeTrack_ConvertToShiftedTime(curr_alarm_ms);
         Rtc_EnableAlarm(ALARM, ctx->alarm_set);
     }
 
@@ -302,6 +305,21 @@ void IdleDispOn_Update(DozClock *ctx)
 {
     UNUSED(ctx);
     TimeTrack_GetTimeMs(&ctx->time_ms);
+    if (curr_format == DOZ_DRN4 || curr_format == DOZ_DRN5 || curr_format == DOZ_SEMI)
+    {
+        if (TimeTrack_ShiftToDifferentDay())
+        {
+            Display_UseTimeShiftColour(true);
+        }
+        else
+        {
+            Display_UseTimeShiftColour(false);
+        }
+    }
+    else
+    {
+        Display_UseTimeShiftColour(false);
+    }
 }
 void IdleDispOff_Entry(DozClock *ctx)
 {
@@ -319,11 +337,11 @@ void IdleDispOff_Exit(DozClock *ctx)
 }
 void SetAlarm_Entry(DozClock *ctx)
 {
-    user_alarm_ms_old = ctx->user_alarm_ms;
+    user_alarm_ms_old = TimeTrack_ConvertToNonShiftedTime(ctx->user_alarm_ms);
     alarm_set_old = ctx->alarm_set;
     ctx->digit_sel = 0;
     ctx->alarm_set = false;
-    curr_alarm_ms = ctx->user_alarm_ms;
+    curr_alarm_ms = TimeTrack_ConvertToNonShiftedTime(ctx->user_alarm_ms);
     digits_changed = false;
 
     transition_digits(curr_format, ctx->user_alarm_ms, ctx->digit_vals);
@@ -340,7 +358,7 @@ void SetAlarm_Update(DozClock *ctx)
     TimeTrack_GetTimeMs(&ctx->time_ms);
 
     if (!digits_changed) {
-        ctx->user_alarm_ms = curr_alarm_ms;
+        ctx->user_alarm_ms = TimeTrack_ConvertToShiftedTime(curr_alarm_ms);
     } else {
         if (curr_format == TRAD_24H || curr_format == TRAD_12H) {
 
@@ -380,7 +398,7 @@ void SetAlarm_Update(DozClock *ctx)
 
         }
 
-        curr_alarm_ms = ctx->user_alarm_ms;
+        curr_alarm_ms = TimeTrack_ConvertToNonShiftedTime(ctx->user_alarm_ms);
     }
 }
 void SetAlarm_Exit(DozClock *ctx)
@@ -389,7 +407,7 @@ void SetAlarm_Exit(DozClock *ctx)
     Rtc_EnableAlarm(TIMER, ctx->timer_set);
 
     if (cancel_pressed) {
-        ctx->user_alarm_ms = user_alarm_ms_old;
+        ctx->user_alarm_ms = TimeTrack_ConvertToShiftedTime(user_alarm_ms_old);
         ctx->alarm_set = alarm_set_old;
         Rtc_EnableAlarm(ALARM, ctx->alarm_set);
         return;
@@ -501,9 +519,10 @@ void SetTimer_Exit(DozClock *ctx)
 }
 void SetTime_Entry(DozClock *ctx)
 {
+    TimeTrack_GetTimeMs(&ctx->time_ms);
     ctx->digit_sel = 0;
     ctx->user_time_ms = ctx->time_ms;
-    curr_time_ms = ctx->time_ms;
+    curr_time_ms = TimeTrack_ConvertToNonShiftedTime(ctx->time_ms);
     digits_changed = false;
 
     transition_digits(curr_format, ctx->user_time_ms, ctx->digit_vals);
@@ -522,7 +541,7 @@ void SetTime_Update(DozClock *ctx)
     TimeTrack_GetTimeMs(&ctx->time_ms);
 
     if (!digits_changed) {
-        ctx->user_time_ms = curr_time_ms;
+        ctx->user_time_ms = TimeTrack_ConvertToShiftedTime(curr_time_ms);
     } else {
         if (curr_format == TRAD_24H || curr_format == TRAD_12H) {
             ctx->user_time_ms = (uint32_t) (10*ctx->digit_vals[4] + ctx->digit_vals[5]) * 1000 +
@@ -559,7 +578,7 @@ void SetTime_Update(DozClock *ctx)
 
         }
 
-        curr_time_ms = ctx->user_time_ms;
+        curr_time_ms = TimeTrack_ConvertToNonShiftedTime(ctx->user_time_ms);
     }
 }
 void SetTime_Exit(DozClock *ctx)
@@ -574,7 +593,7 @@ void SetTime_Exit(DozClock *ctx)
     }
 
     RtcTime time;
-    msToRtcTime(ctx->user_time_ms, &time);
+    msToRtcTime(curr_time_ms, &time);
     Rtc_SetTime(&time);
     if (TimeTrack_SyncToRtc() != CLOCK_OK)
     {
@@ -860,6 +879,8 @@ static void calib_increase(void);
 static void calib_large_increase(void);
 static void calib_decrease(void);
 static void calib_large_decrease(void);
+static void time_shift_increase(void);
+static void time_shift_decrease(void);
 
 // Helper functions
 static void digit_value_increase(TimeFormats timeFormat, uint8_t *val, uint8_t sel);
@@ -889,7 +910,9 @@ static void state_event_map_init()
     state_event_map[STATE_IDLE_DISP_ON][E_ALARM_TRIG]               = transition_alarm_disp_on;
     state_event_map[STATE_IDLE_DISP_ON][E_TIMER_TRIG]               = transition_timer_disp_on;
     state_event_map[STATE_IDLE_DISP_ON][E_LEFT_SHORT]               = radix_pos_left;
+    state_event_map[STATE_IDLE_DISP_ON][E_LEFT_LONG]                = time_shift_decrease;
     state_event_map[STATE_IDLE_DISP_ON][E_RIGHT_SHORT]              = radix_pos_right;
+    state_event_map[STATE_IDLE_DISP_ON][E_RIGHT_LONG]               = time_shift_increase;
     state_event_map[STATE_IDLE_DISP_ON][E_UP_SHORT]                 = toggle_timer_alarm_displayed;
     state_event_map[STATE_IDLE_DISP_ON][E_DOWN_SHORT]               = toggle_timer_alarm_displayed;
 
@@ -1147,6 +1170,10 @@ static void toggle_trad_mode(void)
     }
     digits_changed = false;
 
+    TimeTrack_UseTimeShift(SHIFT_0);
+    g_clock_fsm.ctx->user_alarm_ms = TimeTrack_ConvertToShiftedTime(curr_alarm_ms);
+    Display_UseTimeShiftColour(false);
+
     Display_SetFormat(curr_format);
 }
 static void toggle_doz_mode(void) 
@@ -1167,6 +1194,16 @@ static void toggle_doz_mode(void)
     if (curr_format == DOZ_DRN4 && g_clock_fsm.ctx->diurn_radix_pos == RADIX_POS5)
         g_clock_fsm.ctx->diurn_radix_pos = RADIX_POS4;
 
+    TimeTrack_UseTimeShift(current_shift);
+    g_clock_fsm.ctx->user_alarm_ms = TimeTrack_ConvertToShiftedTime(curr_alarm_ms);
+    if (TimeTrack_ShiftToDifferentDay())
+    {
+        Display_UseTimeShiftColour(true);
+    }
+    else
+    {
+        Display_UseTimeShiftColour(false);
+    }
     Display_SetFormat(curr_format);
 }
 static void toggle_doz_timer(void)
@@ -1436,6 +1473,25 @@ static void digit_value_decrease(TimeFormats timeFormat, uint8_t *val, uint8_t s
             *val = (*val + 2 - 1) % 2;
         else
             *val = (*val + 12 - 1) % 12;
+    }
+}
+
+static void time_shift_increase(void)
+{
+    if (curr_format == DOZ_DRN4 || curr_format == DOZ_DRN5 || curr_format == DOZ_SEMI)
+    {
+        current_shift = (current_shift + 1) % NUM_SHIFTS;
+        TimeTrack_UseTimeShift(current_shift);
+        g_clock_fsm.ctx->user_alarm_ms = TimeTrack_ConvertToShiftedTime(curr_alarm_ms);
+    }
+}
+static void time_shift_decrease(void)
+{
+    if (curr_format == DOZ_DRN4 || curr_format == DOZ_DRN5 || curr_format == DOZ_SEMI)
+    {
+        current_shift = (current_shift + NUM_SHIFTS -1) % NUM_SHIFTS;
+        TimeTrack_UseTimeShift(current_shift);
+        g_clock_fsm.ctx->user_alarm_ms = TimeTrack_ConvertToShiftedTime(curr_alarm_ms);
     }
 }
 

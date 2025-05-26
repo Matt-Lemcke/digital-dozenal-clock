@@ -19,6 +19,14 @@ uint16_t n = 0;
 uint32_t time_ms = 0;
 static RtcTime rtc_time = { 0 }, prev_rtc_time = { 0 };
 static GpsTime gps_time = { 0 };
+static TimeShift current_shift = SHIFT_0;
+
+static const uint32_t timeshift_lookup_ms[NUM_SHIFTS] = {
+        [SHIFT_0] = 0,
+        [SHIFT_6] = 6 * 3600 * 1000,
+        [SHIFT_12] = 12 * 3600 * 1000,
+        [SHIFT_18] = 18 * 3600 * 1000
+};
 
 static uint8_t rtcTimesEqual(RtcTime *time_a, RtcTime *time_b);
 static uint32_t rtcTimeToMs(RtcTime *time);
@@ -103,8 +111,42 @@ ClockStatus TimeTrack_PeriodicCallback(uint32_t period_ms)
 
 ClockStatus TimeTrack_GetTimeMs(uint32_t *output_ms)
 {
-    *output_ms = time_ms;
+    *output_ms = (time_ms + timeshift_lookup_ms[current_shift]) % TIME_24H_MS;
     return CLOCK_OK;
+}
+
+ClockStatus TimeTrack_UseTimeShift(TimeShift shift)
+{
+    current_shift = shift;
+    return CLOCK_OK;
+}
+
+uint32_t TimeTrack_ConvertToShiftedTime(uint32_t reg_time_ms)
+{
+    return (reg_time_ms + timeshift_lookup_ms[current_shift]) % TIME_24H_MS;
+}
+
+uint32_t TimeTrack_ConvertToNonShiftedTime(uint32_t shift_time_ms)
+{
+    return (shift_time_ms + TIME_24H_MS - timeshift_lookup_ms[current_shift]) % TIME_24H_MS;
+}
+
+bool TimeTrack_ShiftToDifferentDay()
+{
+    uint32_t shifted_time = time_ms + timeshift_lookup_ms[current_shift] % TIME_24H_MS;
+    if (current_shift == SHIFT_18 && shifted_time > time_ms)
+    {
+        return true;
+    }
+    else if(current_shift == SHIFT_12 && shifted_time > time_ms)
+    {
+        return true;
+    }
+    else if(current_shift == SHIFT_6 && shifted_time < time_ms)
+    {
+        return true;
+    }
+    return false;
 }
 
 uint8_t rtcTimesEqual(RtcTime *time_a, RtcTime *time_b)
