@@ -133,7 +133,7 @@ uint32_t TimeTrack_ConvertToNonShiftedTime(uint32_t shift_time_ms)
 
 bool TimeTrack_ShiftToDifferentDay()
 {
-    uint32_t shifted_time = time_ms + timeshift_lookup_ms[current_shift] % TIME_24H_MS;
+    uint32_t shifted_time = (time_ms + timeshift_lookup_ms[current_shift]) % TIME_24H_MS;
     if (current_shift == SHIFT_18 && shifted_time > time_ms)
     {
         return true;
