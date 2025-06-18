@@ -910,9 +910,9 @@ static void state_event_map_init()
     state_event_map[STATE_IDLE_DISP_ON][E_ALARM_TRIG]               = transition_alarm_disp_on;
     state_event_map[STATE_IDLE_DISP_ON][E_TIMER_TRIG]               = transition_timer_disp_on;
     state_event_map[STATE_IDLE_DISP_ON][E_LEFT_SHORT]               = radix_pos_left;
-    state_event_map[STATE_IDLE_DISP_ON][E_LEFT_LONG]                = time_shift_decrease;
+    state_event_map[STATE_IDLE_DISP_ON][E_DOWN_LONG]                = time_shift_decrease;
     state_event_map[STATE_IDLE_DISP_ON][E_RIGHT_SHORT]              = radix_pos_right;
-    state_event_map[STATE_IDLE_DISP_ON][E_RIGHT_LONG]               = time_shift_increase;
+    state_event_map[STATE_IDLE_DISP_ON][E_UP_LONG]                  = time_shift_increase;
     state_event_map[STATE_IDLE_DISP_ON][E_UP_SHORT]                 = toggle_timer_alarm_displayed;
     state_event_map[STATE_IDLE_DISP_ON][E_DOWN_SHORT]               = toggle_timer_alarm_displayed;
 
